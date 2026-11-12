@@ -3,6 +3,27 @@
 - 日期：2026-11-12（網路查詢結果，價格與庫存會變動，購買前請再確認）
 - 相關：[ADR-0005 §2.2](../../docs/adr/ADR-0005-compute-and-sensor-upgrade.md#22-感測器)、[ADR-0003 §4](../../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md#4-找人被叫醒後走去找是誰叫它)
 
+## 決定（2026-11-12）
+
+使用者決定購買 **reSpeaker Flex XVF3800 Circular-4（USB 版、不含 XIAO）**，裝在鴨子頭上。
+
+### 與 FamilyRecorder 的關係
+
+使用者的 [FamilyRecorder](https://github.com/pcpcchen-coder/FamilyRecorder) 專案（Mac 上的常駐錄音與逐字稿）用的是**標準版** reSpeaker XVF3800 USB 4-Mic Array（USB VID `0x2886`、PID `0x001A`），**不是 Flex**。兩者是同一顆 XMOS XVF3800 晶片，所以 FamilyRecorder 已經做好的這些可以參考或沿用（Apache-2.0）：
+
+- 方向遙測：USB vendor control 讀原始 DoA 角度與語音旗標、四束 Speech Energy（`src/family_recorder/direction.py`）。
+- 角度環狀分群、多方向判斷、正前方校準（`docs/hardware.md`）。
+- USB 斷線後自動恢復收音（FamilyRecorder #10）。
+
+要注意的差異：
+
+| | FamilyRecorder | 鴨子 |
+|---|---|---|
+| 型號 | 標準版 XVF3800 | Flex Circular-4 |
+| 主機 | Mac（Apple Silicon、CoreAudio） | Pi 4（Linux、ALSA、libusb 需 udev 權限） |
+| 擺放 | 固定在房間 | 裝在會轉動的頭上、旁邊有舵機噪音 |
+| 驗證狀態 | Mac 上已使用 | **尚未驗證**：Flex 的 USB ID、韌體版本、控制指令是否相同，到貨後確認 |
+
 ## 需求
 
 | 需求 | 原因 |
@@ -26,7 +47,7 @@
 
 ## 建議
 
-1. 首選 **reSpeaker Flex XVF3800 Circular-4（不含 XIAO ESP32S3 的 USB 版本）**。購買時注意：
+1. 首選（**已決定購買**）**reSpeaker Flex XVF3800 Circular-4（不含 XIAO ESP32S3 的 USB 版本）**。購買時注意：
    - 選**不含 XIAO** 的版本；含 XIAO 的版本出廠是 I2S 韌體（給 MCU 用），不是 USB。
    - 同系列還有 Linear-4（線性陣列、長約 110 mm），只能判斷半平面方向，**要選 Circular-4**。
 2. 買不到時改用標準版 **reSpeaker XVF3800 USB 4-Mic Array（不含 XIAO）**，並先量頭內空間。
@@ -35,7 +56,7 @@
 ## 到貨後要驗證的事（尚未做）
 
 - 在 Pi 4 上以 USB 音訊裝置辨識、錄音品質。
-- DoA 的輸出方式與讀取方法（查詢時零售頁面沒有說明輸出格式，要看 Seeed wiki 與 GitHub `respeaker/reSpeaker_Flex`）。
+- DoA 讀取：先試 FamilyRecorder 的 USB control 指令（resource 20／command 18）在 Flex 上是否一樣；不一樣再查 Seeed wiki 與 GitHub `respeaker/reSpeaker_Flex`。
 - 在鴨子走路時的噪音下，喚醒率與 DoA 準確度。
 - 鴨子自己說話時的回音消除效果。
 - 重量與裝在頭上後的頸部舵機負載。

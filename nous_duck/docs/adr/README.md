@@ -8,8 +8,8 @@
 | [ADR-0002](ADR-0002-indoor-localization-and-navigation.md) | 室內定位與導航（AprilTag＋視覺慣性里程計，不用步數） | 草案 | 2026-11-12 |
 | [ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md) | 行動終端、喚醒詞與找人 | 草案 | 2026-11-12 |
 | [ADR-0004](ADR-0004-docking-and-charging.md) | 充電座與自動回充（背後觸點） | 部分採用 | 2026-11-12 |
-| [ADR-0005](ADR-0005-compute-and-sensor-upgrade.md) | 運算與感測硬體升級（身體板 Pi Zero 2 W＋感知板 Pi 4、AR0144） | 部分採用 | 2026-11-12 |
-| [ADR-0006](ADR-0006-privacy-settings.md) | 可開關的隱私設定 | 草案 | 2026-11-12 |
+| [ADR-0005](ADR-0005-compute-and-sensor-upgrade.md) | 運算與感測硬體升級（Pi Zero 2 W＋Pi 4、AR0144 與 Flex 麥克風裝頭上） | 部分採用 | 2026-11-12 |
+| [ADR-0006](ADR-0006-privacy-settings.md) | 可開關的隱私設定（預設值已同意） | 部分採用 | 2026-11-12 |
 
 編號說明：本序列只屬於本 repo 的 `nous_duck/docs/adr/`，與 AIOS repo 的 `docs/adr/`（ADR-0001 本機家人辨識等）是不同的序列。
 

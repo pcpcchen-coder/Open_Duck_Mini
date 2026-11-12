@@ -19,12 +19,13 @@
 | 事項 | 狀態 | 文件 |
 |---|---|---|
 | ~~雙板或單板運算、感知板型號~~ | 已決定（2026-11-12）：雙板，Pi Zero 2 W＋Pi 4 | ADR-0005 |
-| ~~雙目鏡頭型號~~ | 已決定：AR0144；**仍待決：裝頭上或身上** | ADR-0005 §2.3 |
-| 麥克風陣列型號 | 建議 reSpeaker Flex XVF3800 Circular-4，**待確認購買** | [選型](../hardware/sensor_head/mic_array_selection.md) |
+| ~~雙目鏡頭型號與位置~~ | 已決定：AR0144，裝在頭上（`head` 要重新設計） | ADR-0005 §2.3 |
+| ~~麥克風陣列型號~~ | 已決定：reSpeaker Flex XVF3800 Circular-4（方向讀取參考 FamilyRecorder） | [選型](../hardware/sensor_head/mic_array_selection.md) |
 | ~~充電觸點方案~~ | 已決定：背後（`body_back` 要改、暫緩列印） | ADR-0004 |
 | ~~是否接受在家裡貼 AprilTag~~ | 已同意 | ADR-0002 |
 | 鴨子的喚醒詞 | 使用者表示晚一點再取 | ADR-0003 §8 |
-| 隱私設定的預設值、是否加實體隱私開關 | 設計已改為可開關，**預設值待確認** | [ADR-0006](adr/ADR-0006-privacy-settings.md) §5、§7 |
+| ~~隱私設定的預設值~~ | 已同意建議預設值 | [ADR-0006](adr/ADR-0006-privacy-settings.md) §5 |
+| 是否加實體隱私開關、鏡頭提示方式 | 待決 | ADR-0006 §7 |
 
 ## AIOS 端需要的批次（在 AIOS repo 進行）
 

@@ -1,6 +1,6 @@
 # ADR-0005：運算與感測硬體升級
 
-- 狀態：**部分採用**（2026-11-12 使用者決定：雙板＝Pi Zero 2 W＋**Pi 4**、鏡頭沿用 **AR0144**；麥克風陣列建議型號待使用者確認）；其餘仍為草案
+- 狀態：**部分採用**（2026-11-12 使用者決定：雙板＝Pi Zero 2 W＋**Pi 4**、鏡頭沿用 **AR0144** 並**裝在頭上**、麥克風陣列買 **reSpeaker Flex XVF3800 Circular-4**）；其餘仍為草案
 - 日期：2026-11-12
 - 相關：[R-001](../requirements/R-001-mobile-companion.md)、[ADR-0002](ADR-0002-indoor-localization-and-navigation.md)、[ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md)、[ADR-0004](ADR-0004-docking-and-charging.md)
 
@@ -52,7 +52,7 @@ Pi Zero 2 W 的 512 MB 記憶體與 A53 核心，不可能同時做到上表全�
 | 感測器 | 用途 | 建議 | 待決 |
 |---|---|---|---|
 | 雙目鏡頭 | 定位（視覺里程計、AprilTag）、避障深度、找人 | **已決定：Waveshare AR0144 Stereo USB Camera (A)**（沿用 AIOS 的經驗）：雙全域快門、單眼 1280×720、基線 52 mm、水平視角 65°、UVC 免驅動、輸出 2560×720 MJPG 併排（規格引自 AIOS `docs/11`） | 裝頭上還是身上（§2.3）；模組尺寸與重量要量；基線 52 mm 的深度有效距離要實測 |
-| 麥克風陣列 | 喚醒詞、對話、**聲源方向（DOA）** | **建議 reSpeaker Flex XVF3800 Circular-4（USB、不含 XIAO）**，備案為標準版 reSpeaker XVF3800 USB 4-Mic Array；選型比較見 [`hardware/sensor_head/mic_array_selection.md`](../../hardware/sensor_head/mic_array_selection.md) | 待使用者確認購買；eMeet M0 Plus 是會議喇叭，不適合放上鴨子 |
+| 麥克風陣列 | 喚醒詞、對話、**聲源方向（DOA）** | **已決定：reSpeaker Flex XVF3800 Circular-4（USB、不含 XIAO）**；與使用者的 FamilyRecorder 專案用的標準版 XVF3800 同晶片，方向讀取可沿用其作法；選型見 [`hardware/sensor_head/mic_array_selection.md`](../../hardware/sensor_head/mic_array_selection.md) | Flex 的 USB ID 與控制指令是否與標準版相同，到貨後驗證 |
 | 喇叭＋功放 | 說話、叫人起床 | 上游 BOM 已有小喇叭與功放（表情套件）；叫人起床可能需要更大音量，要實測 | 音量是否足夠 |
 | IMU | 姿態、跌倒、視覺里程計融合 | 沿用上游 BNO055 | — |
 | 電流感測（選配） | 電量估算、回充判斷（ADR-0004） | INA219／INA226 一類 | 是否加裝 |
@@ -65,7 +65,11 @@ Pi Zero 2 W 的 512 MB 記憶體與 A53 核心，不可能同時做到上表全�
 | 定位與避障 | 鏡頭位姿要經 4 個頸頭關節換算，需要讀舵機位置並做時間同步 | 鏡頭與 IMU 固定，最單純 |
 | 重量 | 加在頭部，頸部舵機負擔變大，重心變高 | 加在軀幹，對步態影響較小 |
 
-建議：**先評估頭上**（找人與互動是主要價值，轉頭掃描找 AprilTag 也有幫助），但必須量測頸部舵機負載與步態影響；不行再改身上。
+**使用者 2026-11-12 決定裝在頭上。** 因此：
+
+- 頭殼 `head.stl` 要重新設計，容納 AR0144 與 Flex 麥克風陣列（改裝件放 `hardware/sensor_head/`）；麥克風陣列也裝在頭上，聲源方向與鏡頭同一個座標系，換算最單純。
+- 定位要用 4 個頸頭關節（ID 30–33）的回讀角度換算鏡頭位姿，影像與關節讀值要時間同步（ADR-0002 §4）。
+- 頭部變重、重心變高：先量 AR0144、麥克風陣列、新頭殼的重量，在模擬中檢查頸部舵機扭力餘裕與步態（§2.4）。頸部撐不住時的退路是只把鏡頭移到身上、麥克風留在頭上。
 
 ### 2.4 重量與步態策略
 
@@ -85,8 +89,8 @@ Pi Zero 2 W 的 512 MB 記憶體與 A53 核心，不可能同時做到上表全�
 ## 4. 待決（需要使用者決定）
 
 1. ~~採用 A 或 B~~：已決定 A，感知板 Pi 4。
-2. ~~雙目鏡頭型號~~：已決定 AR0144。仍待決：裝在頭上或身上。
-3. 麥克風陣列：建議 reSpeaker Flex XVF3800 Circular-4，待使用者確認。
+2. ~~雙目鏡頭型號與位置~~：已決定 AR0144，裝在頭上。
+3. ~~麥克風陣列~~：已決定 reSpeaker Flex XVF3800 Circular-4。
 4. 是否願意為了感測器與充電觸點修改尚未列印的外殼件。
 5. 是否接受重新訓練步態策略的工作量（需要 GPU 環境）。
 6. 是否加裝切斷鏡頭與麥克風電源的實體隱私開關（[ADR-0006](ADR-0006-privacy-settings.md) §4）。
