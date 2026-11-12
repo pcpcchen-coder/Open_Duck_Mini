@@ -1,0 +1,24 @@
+name: nous-duck-ci
+
+on:
+  push:
+    branches: [v2, "claude/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  upstream-untouched:
+    name: 上游檔案未修改
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 取得上游 v2
+        run: |
+          git remote add upstream https://github.com/apirrone/Open_Duck_Mini.git
+          git fetch --no-tags upstream v2
+      - name: 檢查差異只在 nous_duck/、CLAUDE.md、.github/
+        run: bash nous_duck/tools/check_upstream_untouched.sh upstream/v2
