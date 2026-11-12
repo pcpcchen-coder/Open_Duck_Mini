@@ -16,6 +16,7 @@ duck-link 是鴨子（Pi Zero 2 W）與 Nous（Mac mini）之間**唯一**的介
 | `schemas/state.schema.json` | 鴨子 → Nous：狀態快照（模式、電池電壓、姿態、溫度摘要、可用能力、時間戳） | 規劃中 |
 | `schemas/event.schema.json` | 鴨子 → Nous：事件（fell、picked_up、battery_low、overheat、motor_error、link_lost／link_restored、estop）與指令的 ack | 規劃中 |
 | `schemas/mission.schema.json` | 長時間任務：開始（go_to、find_person、return_home）、取消、進度、完成、失敗（原因代碼）（[ADR-0001 §7.2](../docs/adr/ADR-0001-duck-role-in-nous.md#72-長時間任務mission)） | 規劃中 |
+| `schemas/privacy_policy.schema.json` | 隱私設定文件（全域、房間、家人、模式、時段；只含 ID、版本化），由 Nous 同步到鴨子（[ADR-0006](../docs/adr/ADR-0006-privacy-settings.md)） | 規劃中 |
 | `examples/` | 每個 schema 的合法與不合法範例，供兩端測試共用 | 規劃中 |
 
 R-001（2026-11-12）後，`state` 還要加入：所在房間／地點、位姿與定位不確定度、地圖版本、充電狀態與電量估算；`event` 加入 `mission_*`、`lost`、`door_closed`、`docked`／`undocked`、`wake_detected`（含聲源方向）。

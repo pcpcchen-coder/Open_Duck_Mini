@@ -4,6 +4,7 @@
 
 - 共 36 種、51 件；已印完 **36 件**、待印 **15 件**。
 - 全部 PLA 15% 填充，只有 `foot_bottom_tpu.stl` 用 TPU 40%。
+- 2026-11-12：`body_back` 暫緩（要改設計）、`head`／`body_middle_bottom`／`battery_pack_lid` 暫緩（可能要改），其餘 11 件可以照原版印。
 - 「CAD 無擺放位置」的 7 件只有列印檔，上游 `robot.xml` 沒有它們，組裝檢視器只能以示意位置呈現。
 
 | 檔案 | 數量 | 材料與填充 | 狀態 | 備註 |
@@ -26,17 +27,17 @@
 | `head_pitch_to_yaw.stl` | 1 | PLA 15% | 已印完 |  |
 | `head_yaw_to_roll.stl` | 1 | PLA 15% | 已印完 |  |
 | `head_roll_mount.stl` | 1 | PLA 15% | 已印完 |  |
-| `head.stl` | 1 | PLA 15% | 待印 |  |
+| `head.stl` | 1 | PLA 15% | **暫緩** | 可能為 AR0144 與麥克風陣列改（ADR-0005） |
 | `head_bot_sheet.stl` | 1 | PLA 15% | 待印 |  |
 | `left_antenna_holder.stl` | 1 | PLA 15% | 已印完 |  |
 | `right_antenna_holder.stl` | 1 | PLA 15% | 已印完 |  |
 | `left_cache.stl` | 1 | PLA 15% | 待印 |  |
 | `right_cache.stl` | 1 | PLA 15% | 待印 |  |
 | `body_front.stl` | 1 | PLA 15% | 待印 |  |
-| `body_middle_bottom.stl` | 1 | PLA 15% | 待印 |  |
+| `body_middle_bottom.stl` | 1 | PLA 15% | **暫緩** | 可能為 Pi 4 安裝改（ADR-0005） |
 | `body_middle_top.stl` | 1 | PLA 15% | 已印完 |  |
-| `body_back.stl` | 1 | PLA 15% | 待印 |  |
-| `battery_pack_lid.stl` | 1 | PLA 15% | 待印 |  |
+| `body_back.stl` | 1 | PLA 15% | **暫緩：不要印原版** | 要改成背後充電觸點（ADR-0004） |
+| `battery_pack_lid.stl` | 1 | PLA 15% | **暫緩** | 可能為 Pi 4 散熱改（ADR-0005） |
 | `bulb.stl` | 1 | PLA 15% | 待印 | CAD 無擺放位置（表情套件） |
 | `flash_light_module.stl` | 1 | PLA 15% | 待印 | CAD 無擺放位置（表情套件） |
 | `flash_reflector_interface.stl` | 1 | PLA 15% | 待印 | CAD 無擺放位置（表情套件） |

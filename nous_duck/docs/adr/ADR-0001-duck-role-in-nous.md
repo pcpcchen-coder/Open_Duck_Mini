@@ -113,6 +113,7 @@ Nous Agent 收到完成事件後接續下一步，需要 AIOS 支援（見 [路�
 | `app.duck.return_home` | `reversible_write` | 回充電座並確認開始充電 | 無 | 同上；「已充電」以電氣訊號為準 |
 | `app.duck.cancel_mission` | `reversible_write` | 取消目前任務並停下 | `mission_id`（可省略） | state 無進行中任務 → `confirmed` |
 | `app.duck.announce` | `reversible_write` | 用鴨子的喇叭播一段話（不開啟對話） | `text` | 待定；若 AIOS 能把語音工作階段指定到鴨子終端，可能不需要這個工具 |
+| `app.duck.privacy_tighten` | `reversible_write` | **只能收緊**隱私設定（切到更嚴格的模式或關掉某項）；沒有給模型放寬的工具（[ADR-0006](ADR-0006-privacy-settings.md)） | `mode` 或 `switch` | 鴨子回讀目前隱私設定版本 |
 
 刻意不提供給模型的操作，新增：
 
@@ -121,3 +122,4 @@ Nous Agent 收到完成事件後接續下一步，需要 AIOS 支援（見 [路�
 | 建圖、編輯地圖、畫禁區、刪除地圖 | 會影響安全（樓梯禁區）；由使用者在 Mac 上的工具操作 |
 | 開關 safety 的樓梯／禁區保護 | 安全是鴨子本機的權威 |
 | 讀取或傳送原始影像、錄音 | 違反隱私規則（ADR-0003 §6） |
+| 放寬隱私設定 | 只能在 Mac 的 Nous 設定頁操作（ADR-0006 §3） |

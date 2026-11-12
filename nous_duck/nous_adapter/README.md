@@ -48,6 +48,7 @@
 | `app.duck.return_home` | reversible_write（R-001 新增，非同步任務） |
 | `app.duck.cancel_mission` | reversible_write（R-001 新增） |
 | `app.duck.announce` | reversible_write（R-001 新增，是否需要待定） |
+| `app.duck.privacy_tighten` | reversible_write（只能收緊隱私設定，見 ADR-0006） |
 
 參數、確認方式、刻意不提供的操作見 [ADR-0001 §4](../docs/adr/ADR-0001-duck-role-in-nous.md#4-appduck-工具清單草案) 與 [§7.3](../docs/adr/ADR-0001-duck-role-in-nous.md#73-工具清單修訂後草案)。導航類工具走**非同步任務**：工具回 `confirmed` 代表「鴨子已出發」，完成與失敗以事件回到 Nous（[§7.2](../docs/adr/ADR-0001-duck-role-in-nous.md#72-長時間任務mission)）。
 

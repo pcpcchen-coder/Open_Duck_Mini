@@ -1,6 +1,6 @@
 # ③ 機上程式（robot）
 
-狀態：**規劃中**（尚無程式）。目標平台：身體板 Raspberry Pi Zero 2 W；R-001 後另加感知板（型號待定，見 [ADR-0005](../docs/adr/ADR-0005-compute-and-sensor-upgrade.md)）。語言：Python。
+狀態：**規劃中**（尚無程式）。目標平台：身體板 Raspberry Pi Zero 2 W；R-001 後另加感知板 **Raspberry Pi 4**（2026-11-12 決定，見 [ADR-0005](../docs/adr/ADR-0005-compute-and-sensor-upgrade.md)）。語言：Python。
 
 ## 職責
 

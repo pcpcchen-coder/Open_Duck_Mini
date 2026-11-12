@@ -1,7 +1,8 @@
 # R-001：行動夥伴需求（導航、行動對話、喚醒找人、自動回充）
 
 - 提出：使用者，2026-11-12
-- 狀態：**需求已記錄；設計為草案**（[ADR-0002](../adr/ADR-0002-indoor-localization-and-navigation.md)～[ADR-0005](../adr/ADR-0005-compute-and-sensor-upgrade.md)）；尚無程式、尚無硬體
+- 狀態：**需求已記錄；設計為草案**（[ADR-0002](../adr/ADR-0002-indoor-localization-and-navigation.md)～[ADR-0006](../adr/ADR-0006-privacy-settings.md)）；尚無程式、尚無硬體
+- 2026-11-12 使用者決定：雙板（Pi Zero 2 W＋Pi 4）、鏡頭 AR0144、充電觸點在背後、可以貼 AprilTag、喚醒詞晚點取名、隱私規則要能開關設定
 - 隱私：本 repo 是公開的，文件中的人與房間一律用 ID（例如 `brother`、`brother_room`）。真實姓名與房間對照只存在 Nous 本機設定，不進版控。
 
 ## 1. 使用者原始需求（姓名以 ID 代替）
@@ -41,4 +42,5 @@
 | 2 行動對話 | [ADR-0003 行動終端、喚醒與找人](../adr/ADR-0003-mobile-terminal-wake-and-find.md) |
 | 3 喚醒詞與找人 | [ADR-0003](../adr/ADR-0003-mobile-terminal-wake-and-find.md) |
 | 4 充電座與回家 | [ADR-0004 充電座與自動回充](../adr/ADR-0004-docking-and-charging.md) |
+| 隱私（使用者追加：要能開關） | [ADR-0006 可開關的隱私設定](../adr/ADR-0006-privacy-settings.md) |
 | 全部的前提 | [ADR-0005 運算與感測硬體升級](../adr/ADR-0005-compute-and-sensor-upgrade.md)、[路線圖](../roadmap.md) |
