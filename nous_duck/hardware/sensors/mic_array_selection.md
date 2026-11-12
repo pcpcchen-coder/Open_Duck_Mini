@@ -5,7 +5,7 @@
 
 ## 決定（2026-11-12）
 
-使用者決定購買 **reSpeaker Flex XVF3800 Circular-4（USB 版、不含 XIAO）**，裝在鴨子頭上。
+使用者決定購買 **reSpeaker Flex XVF3800 Circular-4（USB 版、不含 XIAO）**，**裝在鴨子身體上**（水平安裝在機身頂面，讓 0° 固定是身體正前方；見 [ADR-0005 §2.3.1](../../docs/adr/ADR-0005-compute-and-sensor-upgrade.md#231-麥克風陣列裝在身體上2026-11-12-使用者決定)）。
 
 ### 與 FamilyRecorder 的關係
 
@@ -21,7 +21,7 @@
 |---|---|---|
 | 型號 | 標準版 XVF3800 | Flex Circular-4 |
 | 主機 | Mac（Apple Silicon、CoreAudio） | Pi 4（Linux、ALSA、libusb 需 udev 權限） |
-| 擺放 | 固定在房間 | 裝在會轉動的頭上、旁邊有舵機噪音 |
+| 擺放 | 固定在房間 | 裝在會走動的身體上、靠近髖部舵機噪音 |
 | 驗證狀態 | Mac 上已使用 | **尚未驗證**：Flex 的 USB ID、韌體版本、控制指令是否相同，到貨後確認 |
 
 ## 需求
@@ -32,7 +32,7 @@
 | 回音消除（AEC） | 鴨子自己在說話時，仍要聽得到使用者（插話）；也避免自我觸發 |
 | 降噪、波束成形 | 舵機與腳步噪音大 |
 | USB 隨插即用，接 **Raspberry Pi 4**（感知板） | 不佔 GPIO、Linux 免驅動 |
-| 放得進頭部 | 原版 `head.stl` 外形約 200×197×59 mm（從 STL 量的外框，內部可用空間要再量） |
+| 放得進機身（原本評估頭部） | 機身頂面要能水平放 73 mm 圓形陣列；原版 `body_middle_top` 外框約 150×110 mm（從 STL 量的）。頭部外形約 200×197×59 mm 也放得下，但已決定裝身體 |
 | 重量輕 | 頭部舵機負擔與步態（ADR-0005 §2.4） |
 
 ## 候選比較
@@ -59,7 +59,7 @@
 - DoA 讀取：先試 FamilyRecorder 的 USB control 指令（resource 20／command 18）在 Flex 上是否一樣；不一樣再查 Seeed wiki 與 GitHub `respeaker/reSpeaker_Flex`。
 - 在鴨子走路時的噪音下，喚醒率與 DoA 準確度。
 - 鴨子自己說話時的回音消除效果。
-- 重量與裝在頭上後的頸部舵機負載。
+- 重量與裝上身體後對步態的影響；被頭頸遮擋時後方聲音的方向準確度。
 
 ## 查詢來源
 

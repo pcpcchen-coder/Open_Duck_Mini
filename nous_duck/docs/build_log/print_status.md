@@ -27,7 +27,7 @@
 | `head_pitch_to_yaw.stl` | 1 | PLA 15% | 已印完 |  |
 | `head_yaw_to_roll.stl` | 1 | PLA 15% | 已印完 |  |
 | `head_roll_mount.stl` | 1 | PLA 15% | 已印完 |  |
-| `head.stl` | 1 | PLA 15% | **暫緩：不要印原版** | 要重新設計，容納 AR0144 與麥克風陣列（ADR-0005） |
+| `head.stl` | 1 | PLA 15% | **暫緩：不要印原版** | 要重新設計，容納 AR0144（ADR-0005） |
 | `head_bot_sheet.stl` | 1 | PLA 15% | 待印 |  |
 | `left_antenna_holder.stl` | 1 | PLA 15% | 已印完 |  |
 | `right_antenna_holder.stl` | 1 | PLA 15% | 已印完 |  |

@@ -48,7 +48,7 @@
 - Feetech STS3215-C001（7.4 V、1:345）× 14；ID：右腿 10–14、左腿 20–24、頸部與頭部 30–33。
 - Raspberry Pi Zero 2 W、Waveshare Bus Servo Adapter、BNO055 IMU、2S 18650 電池（依[上游 BOM](docs/handoff/upstream_bom.csv)）。
 - 手上 5 顆 MG995 只用於頭部原型。
-- R-001 加裝（規劃中）：感知板 Raspberry Pi 4、Waveshare AR0144 雙目鏡頭、麥克風陣列 reSpeaker Flex XVF3800 Circular-4（與鏡頭都裝在頭上）、背後充電觸點與充電座。
+- R-001 加裝（規劃中）：感知板 Raspberry Pi 4、Waveshare AR0144 雙目鏡頭、麥克風陣列 reSpeaker Flex XVF3800 Circular-4（鏡頭裝頭上、麥克風裝身體上）、實體隱私開關、RGB 眼燈、背後充電觸點與充電座。
 
 ## 依賴
 
