@@ -6,7 +6,7 @@
 
 ## 開工前
 
-1. 讀 [`nous_duck/README.md`](nous_duck/README.md)、[`nous_duck/docs/handoff/handoff_summary.md`](nous_duck/docs/handoff/handoff_summary.md)、[`nous_duck/docs/architecture.md`](nous_duck/docs/architecture.md) 與 [`nous_duck/docs/adr/`](nous_duck/docs/adr/README.md)。
+1. 讀 [`nous_duck/README.md`](nous_duck/README.md)、[`nous_duck/docs/roadmap.md`](nous_duck/docs/roadmap.md)、[`nous_duck/docs/handoff/handoff_summary.md`](nous_duck/docs/handoff/handoff_summary.md)、[`nous_duck/docs/architecture.md`](nous_duck/docs/architecture.md) 與 [`nous_duck/docs/adr/`](nous_duck/docs/adr/README.md)。
 2. 讀要動的模組的 README，確認它的職責、輸入輸出與「目前狀態」。
 3. 一次只做一個可驗收的批次。
 
@@ -30,7 +30,7 @@
 | `nous_duck/sim/` | ⑤ MuJoCo 模擬 | Python |
 | `nous_duck/hardware/` | ⑥ 硬體改裝（MG995 頭部原型、表情模組、接線） | 文件、CAD、STL |
 | `nous_duck/tools/` | 開發輔助腳本 | Python／shell |
-| `nous_duck/docs/` | 交接、架構、ADR、進度、驗證紀錄 | Markdown |
+| `nous_duck/docs/` | 交接、需求、架構、ADR、路線圖、進度、驗證紀錄 | Markdown |
 
 系統分工（詳見 [ADR-0001](nous_duck/docs/adr/ADR-0001-duck-role-in-nous.md)）：
 
@@ -59,6 +59,12 @@
 - 尚未實作的模組在 README 標「規劃中」，**不寫假程式、不放空殼函式充數**。空資料夾用 `.gitkeep`。
 - 工具失敗、逾時、缺資料，回報真實狀態，不顯示假成功。
 - 數字先計算再陳述；計算方式寫進測試或 `nous_duck/docs/validation/`。
+
+## 隱私（本 repo 是公開的）
+
+- **不把家人的真實姓名、房間照片、平面圖、地圖資料、錄音或影像放進 repo**（包括 commit 訊息、PR 與 issue）。文件與程式只用 ID（例如 `brother`、`brother_room`），ID 與真實名稱的對照只存在 Nous 本機設定。
+- 測試用的地圖、影像、音訊一律用合成或公開資料，並標示為 fixture。
+- 鴨子的鏡頭與麥克風沿用 AIOS 紅線：原始影像與未喚醒音訊不寫檔、不進 trace、不外傳（見 `nous_duck/docs/adr/ADR-0003-mobile-terminal-wake-and-find.md` §6）。
 
 ## 6. Commit 與 PR
 

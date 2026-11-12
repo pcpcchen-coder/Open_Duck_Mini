@@ -15,7 +15,12 @@ duck-link 是鴨子（Pi Zero 2 W）與 Nous（Mac mini）之間**唯一**的介
 | `schemas/command.schema.json` | Nous → 鴨子：意圖指令（walk、stop、look、gesture、antennas、express），含 `request_id`、`ttl_ms` | 規劃中 |
 | `schemas/state.schema.json` | 鴨子 → Nous：狀態快照（模式、電池電壓、姿態、溫度摘要、可用能力、時間戳） | 規劃中 |
 | `schemas/event.schema.json` | 鴨子 → Nous：事件（fell、picked_up、battery_low、overheat、motor_error、link_lost／link_restored、estop）與指令的 ack | 規劃中 |
+| `schemas/mission.schema.json` | 長時間任務：開始（go_to、find_person、return_home）、取消、進度、完成、失敗（原因代碼）（[ADR-0001 §7.2](../docs/adr/ADR-0001-duck-role-in-nous.md#72-長時間任務mission)） | 規劃中 |
 | `examples/` | 每個 schema 的合法與不合法範例，供兩端測試共用 | 規劃中 |
+
+R-001（2026-11-12）後，`state` 還要加入：所在房間／地點、位姿與定位不確定度、地圖版本、充電狀態與電量估算；`event` 加入 `mission_*`、`lost`、`door_closed`、`docked`／`undocked`、`wake_detected`（含聲源方向）。
+
+**語音與影像不走 duck-link 的 JSON 訊息**：語音串流走另外的媒體通道（沿用 AIOS 終端的即時語音路徑或之後決定的方式，見 [ADR-0003 §2.1](../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md#21-終端軟體兩條路線先做可行性-spike)）；原始影像不離開鴨子，只送臉部特徵（[ADR-0003 §6](../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md#6-隱私)）。
 
 ## 設計原則
 

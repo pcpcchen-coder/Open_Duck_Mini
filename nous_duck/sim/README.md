@@ -10,6 +10,11 @@
 - duck-link 端到端：mock Nous → `robot/nous_link` → 模擬中的鴨子 → state／event 回報。
 - 決定 safety 門檻（跌倒判定、TTL、心跳）的初始值；最終值仍要實機確認。
 
+R-001（2026-11-12）後新增：
+
+- **加裝後的質量模型**：在本目錄複製上游 MJCF，加入感知板、鏡頭、麥克風、喇叭、充電觸點的質量與位置，測試原步態策略是否仍穩定；不穩定就用上游訓練流程重新訓練（[ADR-0005 §2.4](../docs/adr/ADR-0005-compute-and-sensor-upgrade.md#24-重量與步態策略)）。
+- **導航場景**：牆、門、家具、AprilTag 貼圖、模擬雙目鏡頭，用來測試定位與導航（[ADR-0002](../docs/adr/ADR-0002-indoor-localization-and-navigation.md)）與回充對位（[ADR-0004](../docs/adr/ADR-0004-docking-and-charging.md)）。
+
 ## 輸入
 
 - 上游模型 `mini_bdx/robots/open_duck_mini_v2/`（`robot.xml`、`scene.xml` 等，唯讀）。

@@ -4,7 +4,11 @@
 
 | 編號 | 標題 | 狀態 | 日期 |
 |---|---|---|---|
-| [ADR-0001](ADR-0001-duck-role-in-nous.md) | 鴨子在 Nous 中的角色＝身體 adapter 加終端 | 草案 | 2026-11-12 |
+| [ADR-0001](ADR-0001-duck-role-in-nous.md) | 鴨子在 Nous 中的角色＝身體 adapter 加終端（§7 依 R-001 修訂） | 草案 | 2026-11-12 |
+| [ADR-0002](ADR-0002-indoor-localization-and-navigation.md) | 室內定位與導航（AprilTag＋視覺慣性里程計，不用步數） | 草案 | 2026-11-12 |
+| [ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md) | 行動終端、喚醒詞與找人 | 草案 | 2026-11-12 |
+| [ADR-0004](ADR-0004-docking-and-charging.md) | 充電座與自動回充 | 草案 | 2026-11-12 |
+| [ADR-0005](ADR-0005-compute-and-sensor-upgrade.md) | 運算與感測硬體升級（身體板＋感知板） | 草案 | 2026-11-12 |
 
 編號說明：本序列只屬於本 repo 的 `nous_duck/docs/adr/`，與 AIOS repo 的 `docs/adr/`（ADR-0001 本機家人辨識等）是不同的序列。
 
