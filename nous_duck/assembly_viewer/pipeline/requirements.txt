@@ -1,0 +1,3 @@
+# assembly_viewer pipeline 執行依賴（鎖定版本）
+numpy==2.5.3
+PyYAML==6.0.3

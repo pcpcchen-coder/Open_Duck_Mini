@@ -1,0 +1,5 @@
+# 測試依賴（鎖定版本）
+-r requirements.txt
+pytest==9.2.0
+# 只用在測試：拿 MuJoCo 算的零位姿態交叉驗證運動樹（沒裝時該項測試會跳過）
+mujoco==4.0.1
