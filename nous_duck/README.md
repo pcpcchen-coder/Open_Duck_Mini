@@ -10,7 +10,8 @@
 
 | 項目 | 狀態 |
 |---|---|
-| 列印 | 51 件已印 36 件、剩 15 件（[進度](docs/build_log/print_status.md)） |
+| 列印 | 原版 51／51 件已印完（[進度](docs/build_log/print_status.md)） |
+| 採購 | 周邊零件採購中（[清單與賣場](docs/build_log/README.md)） |
 | 組裝 | 尚未開始 |
 | 軟體 | 組裝檢視器的資料處理程式（pipeline）已完成：從上游 CAD 算出 138 個零件的位置、對上 14 顆舵機 ID，單元測試與 MuJoCo 交叉驗證通過（[驗證紀錄](docs/validation/viewer-pipeline-2026-11-13.md)）。前端與其他模組仍是「規劃中」 |
 | 設計 | 行動夥伴需求 [R-001](docs/requirements/R-001-mobile-companion.md)（導航、行動對話、喚醒找人、自動回充）與 ADR-0002～0006（含可開關的隱私設定）為草案或部分採用；階段見 [路線圖](docs/roadmap.md) |
@@ -33,7 +34,7 @@
 | [`docs/architecture.md`](docs/architecture.md) | 鴨子與 Nous 的分工和資料流 | 草案 |
 | [`docs/roadmap.md`](docs/roadmap.md) | 階段與 gate、待使用者決定的事 | 草案 |
 | [`docs/adr/`](docs/adr/README.md) | 架構決策紀錄 | ADR-0001～0006 |
-| [`docs/build_log/`](docs/build_log/README.md) | 列印、組裝、校正進度 | 列印進度 |
+| [`docs/build_log/`](docs/build_log/README.md) | 列印、採購、組裝、校正進度 | 列印完成，周邊採購中 |
 | [`docs/validation/`](docs/validation/README.md) | 實機與測試紀錄 | 尚無紀錄 |
 | [`assembly_viewer/`](assembly_viewer/README.md) | ① 離線單一 HTML 3D 組裝檢視器（第一個交付） | pipeline 已完成；BOM、步驟、前端規劃中 |
 | [`protocol/`](protocol/README.md) | ② duck-link 協定（JSON Schema） | 規劃中 |

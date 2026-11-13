@@ -1,0 +1,1025 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Duck Mini v2｜採購清單</title>
+<style>
+  :root { color-scheme: light; --ink:#17252b; --muted:#495f67; --line:#d8e3e6; --paper:#f2f6f6; --green:#07564c; --tint:#e2f2ed; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font:15px/1.55 "Noto Sans TC",system-ui,sans-serif; }
+  header { background:#123b3a; color:white; padding:30px max(18px,calc((100% - 1450px)/2)); }
+  header p { margin:5px 0 0; color:#d8eeea; }
+  h1 { margin:0; font-size:clamp(25px,4vw,38px); line-height:1.2; }
+  main { max-width:1486px; margin:auto; padding:20px 18px 38px; }
+  a { color:var(--green); text-underline-offset:3px; }
+  header a { color:white; }
+  button,input,select { font:inherit; }
+  button,input:not([type=checkbox]),select { border:1px solid #a7bbbf; border-radius:6px; background:white; color:var(--ink); padding:5px 8px; }
+  button { cursor:pointer; }
+  button.primary { color:white; background:var(--green); border-color:var(--green); }
+  :focus-visible { outline:3px solid #246b9a; outline-offset:2px; }
+  input[type=checkbox] { width:18px; height:18px; margin:0; accent-color:var(--green); vertical-align:middle; }
+  input[type=number] { width:68px; text-align:right; }
+  .summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:12px; }
+  .summary > div { padding:12px 14px; border:1px solid var(--line); border-radius:8px; background:white; }
+  .summary > div:first-child { background:var(--tint); }
+  .summary strong { display:block; font-size:1.3rem; font-variant-numeric:tabular-nums; }
+  .summary span,.note,small { color:var(--muted); }
+  .bar { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin:12px 0; }
+  .bar label { display:flex; align-items:center; gap:6px; }
+  #search { width:min(220px,70vw); }
+  .table-wrap { overflow:auto; background:white; border:1px solid var(--line); border-radius:8px; }
+  table { border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums; }
+  th,td { border-bottom:1px solid var(--line); padding:9px 8px; vertical-align:top; text-align:left; }
+  thead th { background:#e9f0f0; font-weight:650; }
+  tbody tr[data-done=true] { background:#eef7f3; }
+  tbody tr[hidden],tbody[hidden] { display:none; }
+  .item { min-width:300px; }
+  .item small { display:block; margin-top:3px; }
+  .shops { min-width:128px; }
+  .shops a { display:block; }
+  .value,.check { text-align:center; white-space:nowrap; }
+  .price input { width:98px; }
+  .price small { display:block; white-space:nowrap; margin-top:3px; }
+  .sum { white-space:nowrap; }
+  .group th { background:#e4eeed; color:#163d3b; padding:6px 8px; }
+  #storage { color:#8a3419; }
+  .note { margin:8px 0; }
+  @media(max-width:650px) { main { padding:14px 12px 26px; } th,td { padding:8px 6px; } .item { min-width:245px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Open Duck Mini v2 採購清單</h1>
+  <p>原版機構｜51／51 件已列印｜台灣通路查價 2026-11-13｜<a href="https://github.com/apirrone/Open_Duck_Mini/blob/v2/docs/assembly_guide.md" target="_blank" rel="noopener noreferrer">原版組裝指南</a> · <a href="https://docs.google.com/spreadsheets/d/1gq4iWWHEJVgAA_eemkTEsshXqrYlFxXAPwO515KpCJc/edit" target="_blank" rel="noopener noreferrer">原作者 BOM</a></p>
+</header>
+<main>
+  <section class="summary" aria-label="採購統計">
+    <div><span>計畫總額（含預估運費）</span><strong id="planned">—</strong><small id="missing"></small></div>
+    <div><span>已購金額（含已付運費）</span><strong id="spent">—</strong><small id="missingBought"></small></div>
+    <div><span>待購金額（零件）</span><strong id="remaining">—</strong><small id="missingRemaining"></small></div>
+    <div><span>已備齊／列入品項</span><strong id="progress">—</strong><small>現有量與已購包數合計</small></div>
+  </section>
+  <p class="note">先填現有量，再確認每包數與每包價。「購齊」會填入所需包數，也可直接登記部分到貨或已下單的包數。結帳後可將每包價改成實付單價。</p>
+  <p class="note">預設列入原版基本件及螺絲膠。表情套件與工具依需求勾選。金額為新台幣，空白價不加總並顯示待補價數。頁面價、缺貨參考價和預算估列均以欄內標籤為準。</p>
+  <div class="bar">
+    <label>搜尋 <input id="search" type="search" placeholder="品名、型號或賣場"></label>
+    <label>顯示 <select id="filter"><option value="all">全部</option><option value="planned">已列入</option><option value="remaining">待購</option><option value="done">已備齊</option><option value="extra">原版選配</option></select></label>
+    <label>預估總運費 <input id="shippingPlan" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0"></label>
+    <label>已付總運費 <input id="shippingPaid" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0"></label>
+    <button id="export" class="primary" type="button">匯出 CSV</button>
+  </div>
+  <p id="storage" role="status" hidden>此瀏覽器無法儲存進度。關閉前可匯出 CSV 留存。</p>
+  <p id="empty" role="status" hidden>沒有符合條件的項目。</p>
+  <div class="table-wrap" tabindex="0" aria-label="採購明細，可橫向捲動">
+    <table>
+      <thead><tr><th>列入</th><th>零件與下單確認</th><th>賣場</th><th class="value">需用量</th><th class="value">現有量</th><th class="value">每包數</th><th>每包價</th><th class="value">要買包數</th><th class="value">已購包數</th><th class="check">購齊</th><th>計畫小計</th></tr></thead>
+    </table>
+  </div>
+  <p class="note">勾選、價格及數量會留在目前瀏覽器。更換瀏覽器或檔案位置前，可匯出 CSV 留存。所有加總都涵蓋目前列入的項目，搜尋與篩選只影響畫面。</p>
+</main>
+<script id="catalog" type="application/json">[
+  {
+    "id": "sts",
+    "group": "drive",
+    "name": "主舵機｜Feetech STS3215-C001",
+    "need": 14,
+    "pack": 1,
+    "price": 651,
+    "priceType": "頁面含稅價",
+    "note": "7.4 V、1:345、19 kg·cm 級。機器人王國頁面列 1 顆、可缺貨下單，先問 14 顆交期並確認附舵盤及線。",
+    "shops": [
+      [
+        "機器人王國",
+        "https://robotkingdom.com.tw/product/feetech-st-3215-c001-servo/"
+      ],
+      [
+        "iCShop（NT$1,009 參考）",
+        "https://www.icshop.com.tw/products/388400200025"
+      ]
+    ]
+  },
+  {
+    "id": "antenna",
+    "group": "drive",
+    "name": "天線 9 g 舵機｜SG90 候選",
+    "need": 2,
+    "pack": 1,
+    "price": 279,
+    "priceType": "頁面價",
+    "note": "選一般角度式 PWM，核對支架、輸出軸與舵盤；查看是否附固定螺絲。",
+    "shops": [
+      [
+        "iCShop",
+        "https://www.icshop.com.tw/products/388400200020"
+      ],
+      [
+        "機器人王國",
+        "https://robotkingdom.com.tw/product/sg90-9g-servo/"
+      ]
+    ]
+  },
+  {
+    "id": "pi",
+    "group": "drive",
+    "name": "Raspberry Pi Zero 2 W",
+    "need": 1,
+    "pack": 1,
+    "price": 609,
+    "priceType": "缺貨參考價",
+    "note": "台灣樹莓派查價時售完。德源頁面可選裸板或代焊，結帳前確認。已焊排針版本要核對頭殼高度，可取消 GPIO 排針那列。",
+    "shops": [
+      [
+        "德源／蝦皮",
+        "https://shopee.tw/product/6760059/10668327641"
+      ],
+      [
+        "台灣樹莓派（售完）",
+        "https://piepie.com.tw/product/raspberry-pi-zero-2-w/"
+      ],
+      [
+        "勝特力",
+        "https://www.100y.com.tw/product/154523"
+      ]
+    ]
+  },
+  {
+    "id": "sd",
+    "group": "drive",
+    "name": "microSD 記憶卡｜32 GB",
+    "need": 1,
+    "pack": 1,
+    "price": 399,
+    "priceType": "頁面價",
+    "note": "32 GB 是採購建議，手邊已有可用卡可登記現有數量。",
+    "shops": [
+      [
+        "PChome",
+        "https://24h.pchome.com.tw/prod/DCBE24-A900HNN7I"
+      ]
+    ]
+  },
+  {
+    "id": "adapter",
+    "group": "drive",
+    "name": "Waveshare Bus Servo Adapter (A)",
+    "need": 1,
+    "pack": 1,
+    "price": 250,
+    "priceType": "預算估列",
+    "note": "以下單頁標示的 Part No. 與官方接頭圖核對 A 版、USB-C 與 DC 端子；台灣候選頁需確認版本。",
+    "shops": [
+      [
+        "機器人王國（確認 A 版）",
+        "https://robotkingdom.com.tw/product/waveshare-serial-bus-servo-driver-board/"
+      ],
+      [
+        "Waveshare 官方",
+        "https://www.waveshare.com/bus-servo-adapter-a.htm"
+      ]
+    ]
+  },
+  {
+    "id": "imu",
+    "group": "drive",
+    "name": "BNO055 九軸 IMU 模組",
+    "need": 1,
+    "pack": 1,
+    "price": 1265,
+    "priceType": "頁面價",
+    "note": "DigiKey 為 Adafruit 2472 模組的商品價格，庫存與配送費以結帳為準。GY-BNO055 是候選，需核對孔位及 Runtime 相容性。",
+    "shops": [
+      [
+        "DigiKey 台灣",
+        "https://www.digikey.tw/zh/products/detail/adafruit-industries-llc/2472/5699182"
+      ],
+      [
+        "iCShop（售完）",
+        "https://www.icshop.com.tw/products/368031000977"
+      ],
+      [
+        "蝦皮 GY-BNO055 候選",
+        "https://shopee.tw/product/1653964132/56266468882"
+      ]
+    ]
+  },
+  {
+    "id": "ss10",
+    "group": "drive",
+    "name": "足底觸地開關｜SS-10",
+    "need": 4,
+    "pack": 1,
+    "price": 65,
+    "priceType": "預算估列",
+    "note": "原 BOM 買 4 顆，組裝圖與 GPIO 表各腳示範一個訊號。對照腳座的按壓方向、外形、端子位置和行程後選 SS-10 子型號。",
+    "shops": [
+      [
+        "露天（選 SS-10 款）",
+        "https://www.ruten.com.tw/item/22607152163803/"
+      ],
+      [
+        "原 BOM 賣場",
+        "https://www.aliexpress.com/item/1005006164610609.html"
+      ]
+    ]
+  },
+  {
+    "id": "gpio",
+    "group": "wire",
+    "name": "GPIO 雙排直公排針｜2×20、2.54 mm",
+    "need": 1,
+    "pack": 1,
+    "price": 25,
+    "priceType": "預算估列",
+    "note": "按裸板估列；若買代焊或已備有可取消。確認頭殼淨空。",
+    "shops": [
+      [
+        "蝦皮",
+        "https://shopee.tw/product/53420649/7842542439"
+      ],
+      [
+        "iCShop 排針分類",
+        "https://www.icshop.com.tw/categories/pin-header"
+      ]
+    ]
+  },
+  {
+    "id": "cell",
+    "group": "power",
+    "name": "18650 高放電電芯｜Molicel P30B",
+    "need": 2,
+    "pack": 1,
+    "price": 180,
+    "priceType": "多規格頁參考",
+    "note": "同批新電芯配對，確認 3000 mAh、平頭、來源及可配送。蝦皮頁同列 P28A／P30B，NT$180 為頁面參考，須點選 P30B 核對。",
+    "shops": [
+      [
+        "蝦皮",
+        "https://shopee.tw/product/1051684202/25170101869"
+      ],
+      [
+        "Molicel 規格",
+        "https://www.molicel.com/cn/product/inr-18650-p30b/"
+      ]
+    ]
+  },
+  {
+    "id": "holder",
+    "group": "power",
+    "name": "兩槽 18650 電池座｜2S 串聯",
+    "need": 1,
+    "pack": 1,
+    "price": 100,
+    "priceType": "預算估列",
+    "note": "候選須確認平頭接觸、可引出電芯中點、機艙尺寸及整機峰值電流下的接點／導線額定。",
+    "shops": [
+      [
+        "翔林電子（確認規格）",
+        "https://www.shallin.com.tw/tw/product/show.aspx?num=4943"
+      ],
+      [
+        "原 BOM 尺寸參考",
+        "https://www.amazon.fr/dp/B08YDTSML8"
+      ]
+    ]
+  },
+  {
+    "id": "bms",
+    "group": "power",
+    "name": "2S 鋰電 BMS｜8.4 V、均衡版",
+    "need": 1,
+    "pack": 1,
+    "price": 180,
+    "priceType": "預算估列",
+    "note": "賣場標稱 20 A 是候選。確認連續與峰值電流、散熱、均衡與保護規格，以及充放電端子配置。",
+    "shops": [
+      [
+        "蝦皮候選",
+        "https://shopee.tw/product/3134047/43958035011"
+      ]
+    ]
+  },
+  {
+    "id": "ubec",
+    "group": "power",
+    "name": "5 V UBEC 穩壓器｜支援 2S",
+    "need": 1,
+    "pack": 1,
+    "price": 380,
+    "priceType": "頁面價",
+    "note": "好盈 2–6S 3 A 可切換 5/6 V，須選 5 V。確認尺寸及 Pi、天線舵機與選配周邊的合計負載。",
+    "shops": [
+      [
+        "露天",
+        "https://www.ruten.com.tw/item/22538921299091/"
+      ],
+      [
+        "Hobbywing 規格",
+        "https://www.hobbywing.com/en/products/ubec-3a-2-6s99"
+      ]
+    ]
+  },
+  {
+    "id": "switch",
+    "group": "power",
+    "name": "小型電源開關",
+    "need": 1,
+    "pack": 1,
+    "price": 100,
+    "priceType": "預算估列",
+    "note": "先量後殼開孔，再核對直流額定值及實際切換支路電流。廣華候選為 20 mm 圓孔。",
+    "shops": [
+      [
+        "原 BOM 開關",
+        "https://www.amazon.fr/dp/B0CH3JCQM5"
+      ],
+      [
+        "廣華（不同外形候選）",
+        "https://shop.cpu.com.tw/product/53184/info/"
+      ]
+    ]
+  },
+  {
+    "id": "charger",
+    "group": "power",
+    "name": "USB-C 2S 鋰電充電板｜8.4 V",
+    "need": 1,
+    "pack": 1,
+    "price": 150,
+    "priceType": "預算估列",
+    "note": "確認商品選 2S／8.4 V CC/CV 及 USB-C 插座，並對照 BMS 與電芯充電規格。TP4056 適用 1S。",
+    "shops": [
+      [
+        "蝦皮 IP2326 候選",
+        "https://shopee.tw/product/1382906033/43517351492"
+      ],
+      [
+        "原 BOM 充電板",
+        "https://www.amazon.fr/dp/B0BWTK7SVN"
+      ]
+    ]
+  },
+  {
+    "id": "dc",
+    "group": "power",
+    "name": "焊接式 DC 公頭｜5.5×2.1 mm",
+    "need": 2,
+    "pack": 1,
+    "price": 8,
+    "priceType": "頁面價",
+    "note": "原 BOM 兩個。核對插入深度、中心極性、插座配合與額定電流。",
+    "shops": [
+      [
+        "彥翔（選 5.5×2.1）",
+        "https://www.hla.com.tw/shop/welded-dc-power-plug-14mm-dc-male/"
+      ],
+      [
+        "順悅",
+        "https://www.sun-yes.com.tw/portal_c1_cnt_page.php?button_num=c1&cnt_id=794183&folder_id=158796&owner_num=c1_82425"
+      ]
+    ]
+  },
+  {
+    "id": "xt30",
+    "group": "power",
+    "name": "電池快接頭｜XT30 公母一對候選",
+    "need": 1,
+    "pack": 1,
+    "price": 32,
+    "priceType": "缺貨參考價",
+    "note": "上游寫 XT15／XT30 待定，連結指向 XT30。數量單位為一對，確認空間與對接規格。",
+    "shops": [
+      [
+        "大山電子（NT$32，確認庫存）",
+        "https://www.diy3.com.tw/products/xt30-公母接頭-20211109131020"
+      ],
+      [
+        "露天",
+        "https://www.ruten.com.tw/item/22322850028936/"
+      ]
+    ]
+  },
+  {
+    "id": "usb15",
+    "group": "wire",
+    "name": "Micro USB ↔ USB-C 線｜約 15 cm",
+    "need": 1,
+    "pack": 1,
+    "price": 200,
+    "priceType": "預算估列",
+    "note": "上游列兩種長度，線材用途依接線圖和走線確認。Pi 資料埠接舵機板時，確認能傳資料及 Micro USB 端能作 OTG 主端；一般充電線或反向 OTG 可能不適用。",
+    "shops": [
+      [
+        "展新（問長度及主端）",
+        "https://jodapc.com.tw/product/ty2003/"
+      ],
+      [
+        "原 BOM 線材",
+        "https://www.amazon.fr/dp/B01LONQ7R6"
+      ]
+    ]
+  },
+  {
+    "id": "usb50",
+    "group": "wire",
+    "name": "Micro USB ↔ USB-C 線｜約 50 cm",
+    "need": 1,
+    "pack": 1,
+    "price": 200,
+    "priceType": "預算估列",
+    "note": "先比對機身走線、接頭方向與資料／供電用途；若用於資料，確認 OTG 主端在 Pi 的 Micro USB 側。",
+    "shops": [
+      [
+        "廣華",
+        "https://shop.cpu.com.tw/product/57761/info/"
+      ],
+      [
+        "PChome",
+        "https://24h.pchome.com.tw/prod/DCACL8-A900IFDWL"
+      ]
+    ]
+  },
+  {
+    "id": "sleeve",
+    "group": "wire",
+    "name": "編織理線套管｜6 mm 候選",
+    "need": 1,
+    "pack": 1,
+    "price": 60,
+    "priceType": "頁面價",
+    "note": "一包估列 1 m。先量線束外徑及插頭能否穿過。",
+    "shops": [
+      [
+        "聯騰電子",
+        "https://www.ltc.com.tw/products/wisr0601"
+      ]
+    ]
+  },
+  {
+    "id": "wire",
+    "group": "wire",
+    "name": "動力／訊號線、熱縮套管",
+    "need": 1,
+    "pack": 1,
+    "price": 250,
+    "priceType": "預算估列",
+    "note": "一組為採購預留。動力線依實際電流、線長與溫升選線徑；可先盤點舵機附線與端子。",
+    "shops": [
+      [
+        "iCShop 線材",
+        "https://www.icshop.com.tw/categories/wire-cable"
+      ],
+      [
+        "聯騰電子",
+        "https://www.ltc.com.tw/"
+      ]
+    ]
+  },
+  {
+    "id": "bearing",
+    "group": "hardware",
+    "name": "薄壁軸承｜6804ZZ、20×32×7 mm",
+    "need": 3,
+    "pack": 1,
+    "price": 15,
+    "priceType": "頁面價",
+    "note": "原 BOM 3 顆；按原 BOM 連結及印件試配，軀幹 2 顆、頭部 1 顆。",
+    "shops": [
+      [
+        "露天／冠軍軸承",
+        "https://www.ruten.com.tw/item/21839697183434/"
+      ],
+      [
+        "台灣軸承規格",
+        "https://iskbearing.com.tw/product-details/6804zz"
+      ]
+    ]
+  },
+  {
+    "id": "inserts",
+    "group": "hardware",
+    "name": "M3 黃銅熱熔螺母",
+    "need": 50,
+    "pack": 50,
+    "price": 200,
+    "priceType": "預算估列",
+    "note": "50 顆為首批備料估算，上游未列總數。量印件孔徑與深度再選外徑及長度，賣場多規格需換算包裝。",
+    "shops": [
+      [
+        "露天／3DPRT",
+        "https://www.ruten.com.tw/item/21530197065852/"
+      ]
+    ]
+  },
+  {
+    "id": "m36",
+    "group": "hardware",
+    "name": "M3×6 螺絲｜兩腳",
+    "need": 4,
+    "pack": 10,
+    "price": 50,
+    "priceType": "預算估列",
+    "note": "原組裝指南每腳 2 支。暫以 10 支一包估算，依沉孔試配頭型。",
+    "shops": [
+      [
+        "iCShop 螺絲分類",
+        "https://www.icshop.com.tw/categories/screws-nuts"
+      ],
+      [
+        "鈺倉（核對頭型）",
+        "https://www.yu-cang.com.tw/products/e252960e-8681-4736-9fc9-0c81fa256c91"
+      ]
+    ]
+  },
+  {
+    "id": "m310",
+    "group": "hardware",
+    "name": "M3×10 螺絲｜主軀幹",
+    "need": 2,
+    "pack": 10,
+    "price": 50,
+    "priceType": "預算估列",
+    "note": "原組裝指南軀幹 2 支。暫以 10 支一包估算。",
+    "shops": [
+      [
+        "iCShop 螺絲分類",
+        "https://www.icshop.com.tw/categories/screws-nuts"
+      ],
+      [
+        "鈺倉（核對頭型）",
+        "https://www.yu-cang.com.tw/products/e252960e-8681-4736-9fc9-0c81fa256c91"
+      ]
+    ]
+  },
+  {
+    "id": "m3more",
+    "group": "hardware",
+    "name": "其餘 M3 螺絲｜各長度配包",
+    "need": 1,
+    "pack": 1,
+    "price": 150,
+    "priceType": "預算估列",
+    "note": "1 組為預留，上游未列完整總數或長度。盤點舵機附件及印件後再選。",
+    "shops": [
+      [
+        "iCShop",
+        "https://www.icshop.com.tw/categories/screws-nuts"
+      ],
+      [
+        "廣華電子",
+        "https://shop.cpu.com.tw/"
+      ]
+    ]
+  },
+  {
+    "id": "loctite",
+    "group": "tools",
+    "name": "Loctite 243 藍色螺絲固定劑",
+    "need": 1,
+    "pack": 1,
+    "price": 350,
+    "priceType": "預算估列",
+    "note": "原組裝指南指定用於金屬對金屬；塑膠螺絲跳過。",
+    "shops": [
+      [
+        "聯億授權經銷",
+        "https://www.lym.com.tw/products/adhesives/threadlockers/threadlockers-lt243/"
+      ]
+    ]
+  },
+  {
+    "id": "tools",
+    "group": "tools",
+    "name": "電烙鐵及基本組裝工具",
+    "need": 1,
+    "pack": 1,
+    "price": null,
+    "priceType": "待詢價",
+    "note": "依手上工具盤點，含烙鐵、錫材、萬用表、M3 內六角。預設未選。",
+    "shops": [
+      [
+        "廣華電子",
+        "https://shop.cpu.com.tw/"
+      ]
+    ]
+  },
+  {
+    "id": "speaker",
+    "group": "extra",
+    "name": "小喇叭｜原支架試配",
+    "need": 1,
+    "pack": 1,
+    "price": 100,
+    "priceType": "預算估列",
+    "note": "4 Ω／3 W 為候選，先量原版支架開口及深度，再選外形。",
+    "shops": [
+      [
+        "iCShop",
+        "https://www.icshop.com.tw/products/368011200105"
+      ],
+      [
+        "原 BOM",
+        "https://www.amazon.fr/dp/B086JH2BTD"
+      ]
+    ]
+  },
+  {
+    "id": "amp",
+    "group": "extra",
+    "name": "MAX98357A I²S 功放模組",
+    "need": 1,
+    "pack": 1,
+    "price": 120,
+    "priceType": "預算估列",
+    "note": "選完整模組，確認腳位與喇叭規格。",
+    "shops": [
+      [
+        "iCShop",
+        "https://www.icshop.com.tw/products/368030501761"
+      ],
+      [
+        "台灣物聯／蝦皮",
+        "https://shopee.tw/product/10207300/20987569256"
+      ]
+    ]
+  },
+  {
+    "id": "led",
+    "group": "extra",
+    "name": "眼燈／投射 LED",
+    "need": 3,
+    "pack": 1,
+    "price": 10,
+    "priceType": "預算估列",
+    "note": "2 眼＋1 投射。5 mm 白光是候選，對照孔徑和原 BOM，依 LED 規格選限流。",
+    "shops": [
+      [
+        "大山電子",
+        "https://www.diy3.com.tw/products/超高亮-單色-led燈-5mm"
+      ],
+      [
+        "原 BOM",
+        "https://www.amazon.fr/dp/B07C97WKHD"
+      ]
+    ]
+  },
+  {
+    "id": "resistor",
+    "group": "extra",
+    "name": "LED 限流電阻或驅動所需小料",
+    "need": 1,
+    "pack": 1,
+    "price": 30,
+    "priceType": "預算估列",
+    "note": "補充備料。確認選用的 LED、驅動電壓與控制電路再定規格與數量。",
+    "shops": [
+      [
+        "iCShop",
+        "https://www.icshop.com.tw/"
+      ]
+    ]
+  },
+  {
+    "id": "diffuser",
+    "group": "extra",
+    "name": "眼睛擴散片／透明半球",
+    "need": 4,
+    "pack": 4,
+    "price": null,
+    "priceType": "待詢價",
+    "note": "原 BOM 4 個；上游賣場可能整包販售。量頭殼孔位後再核對外徑及曲率，更新每包數。",
+    "shops": [
+      [
+        "原 BOM",
+        "https://www.amazon.fr/dp/B0C4H3PT7W"
+      ],
+      [
+        "蝦皮規格搜尋",
+        "https://shopee.tw/search?keyword=透明半球%20壓克力"
+      ]
+    ]
+  },
+  {
+    "id": "reflector",
+    "group": "extra",
+    "name": "投射燈反光杯",
+    "need": 1,
+    "pack": 1,
+    "price": null,
+    "priceType": "待詢價",
+    "note": "先量印件內外徑及厚度，原 BOM 連結優先用來比外形。",
+    "shops": [
+      [
+        "原 BOM",
+        "https://www.aliexpress.com/item/1005004447866125.html"
+      ],
+      [
+        "蝦皮規格搜尋",
+        "https://shopee.tw/search?keyword=LED%20反光杯"
+      ]
+    ]
+  },
+  {
+    "id": "mic",
+    "group": "extra",
+    "name": "迷你 USB 麥克風",
+    "need": 1,
+    "pack": 1,
+    "price": 229,
+    "priceType": "缺貨參考價",
+    "note": "上游標未整合。確認 Pi Zero 的 USB 主端與舵機板共用方式，可能需要另外準備 OTG Hub。",
+    "shops": [
+      [
+        "iCShop（售完）",
+        "https://www.icshop.com.tw/zh-hant/products/388340500001"
+      ],
+      [
+        "順悅候選",
+        "https://scccltd.com/zh-tw/products/mini-usb-microphone-for-pc-raspberry-pi-etc"
+      ]
+    ]
+  },
+  {
+    "id": "camera",
+    "group": "extra",
+    "name": "Pi CSI 相機｜Camera V2 候選",
+    "need": 1,
+    "pack": 1,
+    "price": 750,
+    "priceType": "頁面未稅價換算",
+    "note": "上游標未整合；Camera V2 是台灣通路候選，固定孔位、外形及驅動先核對。",
+    "shops": [
+      [
+        "台灣樹莓派",
+        "https://piepie.com.tw/product/camera-module-v2/"
+      ],
+      [
+        "原 BOM",
+        "https://www.aliexpress.com/item/32988983058.html"
+      ]
+    ]
+  },
+  {
+    "id": "csi",
+    "group": "extra",
+    "name": "Pi Zero CSI 相機排線｜22 pin 轉 15 pin",
+    "need": 1,
+    "pack": 1,
+    "price": 200,
+    "priceType": "預算估列",
+    "note": "採購補充，只在相機未附相容排線時買。確認端子、接觸面及所需長度。",
+    "shops": [
+      [
+        "台灣樹莓派",
+        "https://piepie.com.tw/product/rpi-zero-camera-cable/"
+      ],
+      [
+        "台灣物聯",
+        "https://www.taiwaniot.com.tw/product/raspberry-22pin-to-15pin-csi-30cm/"
+      ]
+    ]
+  }
+]</script>
+<script>
+'use strict';
+const catalog = JSON.parse(document.getElementById('catalog').textContent);
+const groups = {
+  drive: '控制、舵機與感測',
+  power: '電池、供電與接頭',
+  wire: '線材與排針',
+  hardware: '軸承與螺絲',
+  tools: '工具與耗材',
+  extra: '原版表情套件與配件'
+};
+const storageKey = 'open-duck-mini-v2-procurement-v1';
+const byId = id => document.getElementById(id);
+const currency = new Intl.NumberFormat('zh-TW', {style:'currency', currency:'TWD', maximumFractionDigits:2});
+const money = cents => currency.format(cents / 100);
+const asCount = value => Math.min(99999, Math.max(0, Math.floor(Number(value) || 0)));
+const asPrice = value => value === '' || value === null || value === undefined ? null : Math.round(Math.min(99999999, Math.max(0, Number(value) || 0)) * 100);
+const saved = readSaved();
+const state = Object.fromEntries(catalog.map(item => {
+  const old = saved.items?.[item.id];
+  return [item.id, {
+    include: typeof old?.include === 'boolean' ? old.include : item.group !== 'extra' && item.id !== 'tools',
+    owned: asCount(old?.owned),
+    pack: Math.max(1, asCount(old?.pack ?? item.pack)),
+    price: asPrice(old && Object.hasOwn(old, 'price') ? old.price : item.price),
+    bought: asCount(old?.bought)
+  }];
+}));
+const fees = {shippingPlan: asPrice(saved.shippingPlan) ?? 0, shippingPaid: asPrice(saved.shippingPaid) ?? 0};
+const rows = new Map();
+const groupBodies = new Map();
+
+function readSaved() {
+  try {
+    const value = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    return value && typeof value === 'object' ? value : {};
+  } catch (error) {
+    byId('storage').hidden = false;
+    return {};
+  }
+}
+
+function save() {
+  const items = Object.fromEntries(Object.entries(state).map(([id, row]) =>
+    [id, {...row, price: row.price === null ? null : row.price / 100}]));
+  try {
+    localStorage.setItem(storageKey, JSON.stringify({
+      items, shippingPlan: fees.shippingPlan / 100, shippingPaid: fees.shippingPaid / 100
+    }));
+  } catch (error) {
+    byId('storage').hidden = false;
+  }
+}
+
+function calc(item, row) {
+  const needed = Math.ceil(Math.max(0, item.need - row.owned) / row.pack);
+  return {
+    needed,
+    planned: Math.max(needed, row.bought),
+    remaining: Math.max(0, needed - row.bought),
+    done: row.owned + row.bought * row.pack >= item.need
+  };
+}
+
+function element(tag, text, className) {
+  const node = document.createElement(tag);
+  if (text !== undefined) node.textContent = text;
+  if (className) node.className = className;
+  return node;
+}
+
+function inputFor(item, field, label, type) {
+  const input = element('input');
+  input.type = type;
+  input.setAttribute('aria-label', item.name + ' ' + label);
+  if (type === 'number') {
+    input.min = field === 'pack' ? 1 : 0;
+    input.step = field === 'price' ? '0.01' : '1';
+    input.inputMode = field === 'price' ? 'decimal' : 'numeric';
+  }
+  return input;
+}
+
+function addRow(item, body) {
+  const row = state[item.id];
+  const tr = element('tr');
+  tr.dataset.id = item.id;
+  body.append(tr);
+  const cell = (content, className) => {
+    const td = element('td', typeof content === 'string' ? content : undefined, className);
+    if (content instanceof Node) td.append(content);
+    tr.append(td);
+    return td;
+  };
+  const include = inputFor(item, 'include', '列入', 'checkbox');
+  include.checked = row.include;
+  cell(include, 'check');
+  const title = element('strong', item.name);
+  cell(title, 'item').append(element('small', item.note));
+  const links = cell('', 'shops');
+  for (const [name, href] of item.shops) {
+    const link = element('a', name);
+    link.href = href;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    links.append(link);
+  }
+  cell(String(item.need), 'value');
+  const numberField = (field, label, className) => {
+    const input = inputFor(item, field, label, 'number');
+    const display = () => row[field] === null ? '' : String(field === 'price' ? row[field] / 100 : row[field]);
+    input.value = display();
+    input.addEventListener('input', () => {
+      row[field] = field === 'price' ? asPrice(input.value) : Math.max(field === 'pack' ? 1 : 0, asCount(input.value));
+      if (field === 'bought' && row.bought > 0) row.include = include.checked = true;
+      update();
+    });
+    input.addEventListener('change', () => { input.value = display(); });
+    cell(input, className);
+    return input;
+  };
+  numberField('owned', '現有量', 'value');
+  numberField('pack', '每包數', 'value');
+  const price = numberField('price', '每包價', 'price');
+  price.placeholder = '待詢價';
+  const priceLabel = element('small', item.priceType);
+  price.parentElement.append(priceLabel);
+  const needed = cell('', 'value');
+  const bought = numberField('bought', '已購包數', 'value');
+  const done = inputFor(item, 'done', '購齊', 'checkbox');
+  cell(done, 'check');
+  const amount = cell('', 'sum');
+  include.addEventListener('change', () => { row.include = include.checked; update(); });
+  done.addEventListener('change', () => {
+    const {needed} = calc(item, row);
+    row.bought = done.checked ? needed : 0;
+    if (done.checked) row.include = include.checked = true;
+    bought.value = String(row.bought);
+    update();
+  });
+  rows.set(item.id, {tr, needed, done, amount, priceLabel});
+}
+
+function render() {
+  const search = byId('search').value.trim().toLocaleLowerCase();
+  const filter = byId('filter').value;
+  const totals = {planned:fees.shippingPlan, spent:fees.shippingPaid, remaining:0, unknown:0, unknownBought:0, unknownRemaining:0, included:0, ready:0};
+  const visibleGroups = new Set();
+  for (const item of catalog) {
+    const row = state[item.id];
+    const ui = rows.get(item.id);
+    const order = calc(item, row);
+    ui.needed.textContent = order.needed;
+    ui.done.checked = order.done;
+    ui.done.disabled = row.owned >= item.need;
+    ui.tr.dataset.done = String(order.done && row.include);
+    ui.priceLabel.textContent = row.price === asPrice(item.price) ? item.priceType : '手動輸入';
+    ui.amount.textContent = row.include ? (order.planned && row.price === null ? '待補價' : money(order.planned * (row.price ?? 0))) : '—';
+
+    const text = [item.name, item.note, ...item.shops.map(shop => shop[0])].join(' ').toLocaleLowerCase();
+    const matches = {
+      all: true,
+      planned: row.include,
+      remaining: row.include && !order.done,
+      done: row.include && order.done,
+      extra: item.group === 'extra'
+    };
+    ui.tr.hidden = !matches[filter] || !text.includes(search);
+    if (!ui.tr.hidden) visibleGroups.add(item.group);
+
+    if (!row.include) continue;
+    totals.included++;
+    totals.ready += Number(order.done);
+    totals.planned += order.planned * (row.price ?? 0);
+    totals.spent += row.bought * (row.price ?? 0);
+    totals.remaining += order.remaining * (row.price ?? 0);
+    totals.unknown += Number(row.price === null && order.planned > 0);
+    totals.unknownBought += Number(row.price === null && row.bought > 0);
+    totals.unknownRemaining += Number(row.price === null && order.remaining > 0);
+  }
+  for (const [key, body] of groupBodies) body.hidden = !visibleGroups.has(key);
+  byId('empty').hidden = visibleGroups.size > 0;
+  byId('planned').textContent = money(totals.planned);
+  byId('spent').textContent = money(totals.spent);
+  byId('remaining').textContent = money(totals.remaining);
+  byId('progress').textContent = totals.ready + '／' + totals.included;
+  byId('missing').textContent = '待補價 ' + totals.unknown + ' 項';
+  byId('missingBought').textContent = '待補價 ' + totals.unknownBought + ' 項';
+  byId('missingRemaining').textContent = '待補價 ' + totals.unknownRemaining + ' 項';
+}
+
+function update() {
+  render();
+  save();
+}
+
+function exportCsv() {
+  const records = [['類別','零件','列入','需求量','現有量','每包數','每包價 NTD','需買包數','已購包數','購齊','計畫金額 NTD','已購金額 NTD','待購金額 NTD','賣場','規格備註']];
+  for (const item of catalog) {
+    const row = state[item.id];
+    const order = calc(item, row);
+    const subtotal = packs => row.include && row.price !== null ? packs * row.price / 100 : '';
+    records.push([groups[item.group], item.name, row.include ? '是' : '否', item.need, row.owned,
+      row.pack, row.price === null ? '' : row.price / 100, order.needed, row.bought, order.done ? '是' : '否',
+      subtotal(order.planned), subtotal(row.bought), subtotal(order.remaining), item.shops.map(shop => shop[1]).join(' '), item.note]);
+  }
+  records.push(['運費','運費','','','','','','','','',fees.shippingPlan / 100,fees.shippingPaid / 100,'','','']);
+  const quote = value => '"' + String(value).replaceAll('"', '""') + '"';
+  const csv = records.map(record => record.map(quote).join(',')).join('\r\n') + '\r\n';
+  const href = URL.createObjectURL(new Blob(['\uFEFF', csv], {type:'text/csv;charset=utf-8'}));
+  const link = element('a');
+  link.href = href;
+  link.download = 'Open_Duck_Mini_v2_採購紀錄.csv';
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(href), 1000);
+}
+
+const table = document.querySelector('table');
+for (const [key, label] of Object.entries(groups)) {
+  const body = element('tbody');
+  const heading = element('tr', undefined, 'group');
+  const header = element('th', label);
+  header.scope = 'rowgroup';
+  header.colSpan = 11;
+  heading.append(header);
+  body.append(heading);
+  table.append(body);
+  groupBodies.set(key, body);
+  catalog.filter(item => item.group === key).forEach(item => addRow(item, body));
+}
+for (const field of ['shippingPlan', 'shippingPaid']) {
+  const input = byId(field);
+  input.value = fees[field] ? String(fees[field] / 100) : '';
+  input.addEventListener('input', () => { fees[field] = asPrice(input.value) ?? 0; update(); });
+}
+byId('search').addEventListener('input', render);
+byId('filter').addEventListener('change', render);
+byId('export').addEventListener('click', exportCsv);
+render();
+</script>
+</body>
+</html>

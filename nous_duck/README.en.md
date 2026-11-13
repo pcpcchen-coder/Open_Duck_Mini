@@ -10,7 +10,8 @@ This directory holds all of this fork's own development. Upstream files are neve
 
 | Item | Status |
 |---|---|
-| Printing | 36 of 51 parts printed, 15 remaining ([progress](docs/build_log/print_status.md)) |
+| Printing | All 51 original parts printed ([progress](docs/build_log/print_status.md)) |
+| Procurement | Sourcing hardware ([checklist and suppliers](docs/build_log/README.md)) |
 | Assembly | Not started |
 | Software | The assembly viewer's data pipeline is done: it computes the placement of 138 parts from the upstream CAD and maps all 14 servo IDs; unit tests and a MuJoCo cross-check pass ([validation record](docs/validation/viewer-pipeline-2026-11-13.md), Traditional Chinese only). The front end and all other modules are still "Planned" |
 | Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0006 (including switchable privacy settings) are drafts or partly accepted; phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
@@ -33,7 +34,7 @@ See the [architecture](docs/architecture.md) and [ADR-0001](docs/adr/ADR-0001-du
 | [`docs/architecture.md`](docs/architecture.md) | Division of work and data flow between the duck and Nous | Draft |
 | [`docs/roadmap.md`](docs/roadmap.md) | Phases and gates, decisions waiting for the owner | Draft |
 | [`docs/adr/`](docs/adr/README.md) | Architecture decision records | ADR-0001 to 0006 |
-| [`docs/build_log/`](docs/build_log/README.md) | Printing, assembly, and calibration progress | Print progress |
+| [`docs/build_log/`](docs/build_log/README.md) | Printing, procurement, assembly, and calibration progress | Printing complete, procurement underway |
 | [`docs/validation/`](docs/validation/README.md) | Hardware and test records | No records yet |
 | [`assembly_viewer/`](assembly_viewer/README.md) | ① Offline single-HTML 3D assembly viewer (first deliverable) | Pipeline done; BOM, steps, and front end planned |
 | [`protocol/`](protocol/README.en.md) | ② duck-link protocol (JSON Schema) | Planned |
