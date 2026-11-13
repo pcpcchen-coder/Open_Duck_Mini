@@ -4,6 +4,7 @@
 |---|---|---|
 | [`check_upstream_untouched.sh`](check_upstream_untouched.sh) | 檢查與上游 `v2` 的差異只在 `nous_duck/`、`CLAUDE.md`、`.github/`；CI 會執行 | 可用 |
 | [`chatgpt_share_to_md.py`](chatgpt_share_to_md.py) | 把 ChatGPT 分享頁 HTML 轉成 Markdown 對話紀錄（只用標準函式庫） | 可用 |
+| [`extract_chatgpt_viewer_src.py`](extract_chatgpt_viewer_src.py) | 從 ChatGPT 對話紀錄抽出檢視器原始碼；就地修改的腳本只執行 sha256 白名單內的兩段（只用標準函式庫） | 可用 |
 
 ## 用法
 
@@ -15,4 +16,9 @@ bash nous_duck/tools/check_upstream_untouched.sh upstream/v2
 
 # ChatGPT 分享頁轉 Markdown（見 docs/handoff/README.md）
 python3 -I nous_duck/tools/chatgpt_share_to_md.py share.html out.md --url <分享連結>
+
+# 從對話紀錄抽出 ChatGPT 的檢視器原始碼
+python3 -I nous_duck/tools/extract_chatgpt_viewer_src.py \
+  nous_duck/docs/handoff/chatgpt_conversation_2026-11.md \
+  nous_duck/docs/handoff/chatgpt_viewer_src
 ```
