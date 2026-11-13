@@ -2,7 +2,7 @@
 
 - 提出：使用者，2026-11-12
 - 狀態：**需求已記錄；設計為草案**（[ADR-0002](../adr/ADR-0002-indoor-localization-and-navigation.md)～[ADR-0006](../adr/ADR-0006-privacy-settings.md)）；尚無程式、尚無硬體
-- 2026-11-12 使用者決定：雙板（Pi Zero 2 W＋Pi 4）、鏡頭 AR0144 裝在頭上、麥克風 reSpeaker Flex XVF3800 Circular-4 裝在身體上、加實體隱私開關、眼燈顏色提示鏡頭狀態、充電觸點在背後、可以貼 AprilTag、喚醒詞晚點取名、隱私規則可開關並採建議預設值
+- 2026-11-12 使用者決定：雙板（Pi Zero 2 W＋Pi 4）、鏡頭 AR0144 裝在頭上、麥克風 reSpeaker XVF3800 USB 4-Mic Array 標準版裝在身體上（2026-11-13 由 Flex 改為與 FamilyRecorder 同款）、加實體隱私開關、眼燈顏色提示鏡頭狀態、充電觸點在背後、可以貼 AprilTag、喚醒詞晚點取名、隱私規則可開關並採建議預設值
 - 隱私：本 repo 是公開的，文件中的人與房間一律用 ID（例如 `brother`、`brother_room`）。真實姓名與房間對照只存在 Nous 本機設定，不進版控。
 
 ## 1. 使用者原始需求（姓名以 ID 代替）
