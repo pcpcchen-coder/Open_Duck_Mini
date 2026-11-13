@@ -1,0 +1,404 @@
+# 組裝步驟：依上游 docs/assembly_guide.md 的順序（不同的地方在 deviation 欄說明）。
+#
+# 每一步：
+#   id                唯一識別（英文）
+#   title_zh/title_en 標題
+#   upstream          上游文件的段落（檔案#錨點）
+#   adds              這一步裝上的 3D 零件（選擇器）。每個 3D 零件必須剛好在一步裡裝上，pipeline 會檢查。
+#   focus             這一步要特別看、但不是這一步裝上的零件（選擇器，選填）
+#   bom               這一步用到的 BOM 項目 id（bom.yaml；列印件用 print:<檔名>，選填）
+#   tasks_zh/tasks_en 操作，一項一句，中英對應
+#   check_zh/check_en 做完要確認的事
+#   notes_zh/notes_en 補充（選填）
+#   deviation_zh/en   和上游順序或內容不同的地方（選填）
+#   optional          true 表示選配（選填）
+#   images            上游參考圖：GitHub 附件 ID，或 repo 內的路徑（選填）
+#
+# 選擇器（adds、focus、bom.yaml 的 scene 共用）：
+#   {servos: all}                     全部 14 顆 STS3215
+#   {servos: [24, 14]}                指定 ID 的舵機（每顆含 5 個網格）
+#   {mesh: foot_top}                  這種 CAD 網格的所有實例
+#   {mesh: leg_spacer, body: [knee_and_ankle_assembly_2, knee_and_ankle_assembly_4]}
+#                                     只取指定 body 裡的實例（body 可以是字串或清單）
+#   {print_only: all} / {print_only: [left_eye]}
+#                                     CAD 沒有擺放位置、借用頭殼座標的列印件
+# 每個選擇器都必須至少選到一個零件，否則 pipeline 會失敗。
+#
+# 不憑空補規格：上游沒寫的扭力、螺絲長度、數量一律不寫。
+version: 1
+
+steps:
+  - id: configure_motors
+    title_zh: 舵機設定 ID 與零位
+    title_en: Configure servo IDs and zero positions
+    upstream: docs/configure_motors.md
+    adds: []
+    focus: [{servos: all}]
+    bom: [sts3215]
+    tasks_zh:
+      - 組裝前先做：每次只接一顆舵機，在 Open_Duck_Mini_Runtime（v2 分支）執行 `python configure_motor.py --id <ID>`。
+      - 設定過程中舵機會轉到零位；這時裝上舵盤，盡量對齊（之後可以再補償）。
+      - 每顆設好就在外殼標上 ID。右腿 10–14、左腿 20–24、頸頭 30–33；點 3D 中的舵機可以看到它的 ID 和位置。
+    tasks_en:
+      - Do this before assembly. Connect one servo at a time and run `python configure_motor.py --id <ID>` from Open_Duck_Mini_Runtime (v2 branch).
+      - The servo moves to its zero position during setup. Install the horn then, aligned as well as you can (it can be compensated later).
+      - Label each servo with its ID. Right leg 10–14, left leg 20–24, neck and head 30–33; click a servo in 3D to see its ID and location.
+    check_zh: 14 顆都設好不重複的 ID，舵盤是在零位時裝上的。
+    check_en: All 14 servos have unique IDs and their horns were installed at the zero position.
+    notes_zh: 需要一種方式幫舵機供電，例如電池組。設定可以在自己的電腦或 Pi 上做。
+    notes_en: You need a way to power the servos, for example the battery pack. Setup can run on your computer or on the Pi.
+    images: [e3c4aefa-5e0a-4d4e-89f4-82df9bf30e29]
+
+  - id: trunk
+    title_zh: 主軀幹
+    title_en: Trunk
+    upstream: docs/assembly_guide.md#assemble-the-trunk
+    adds:
+      - {mesh: trunk_bottom}
+      - {mesh: trunk_top}
+      - {mesh: roll_bearing, body: trunk_assembly}
+      - {servos: [30]}
+      - {mesh: roll_motor_bottom}
+    bom: [bearing, m3_insert, m3x10_screw, print:trunk_bottom.stl, print:trunk_top.stl, print:roll_motor_bottom.stl]
+    tasks_zh:
+      - 把兩顆軸承放進 trunk_bottom，在指定的孔壓入 M3 熱熔螺母；底部另外 4 個孔也先壓好，之後裝機身外殼用。
+      - 合上 trunk_bottom 與 trunk_top，用 2 支 M3×10 鎖合。
+      - 裝上中間的舵機（ID 30，頸部俯仰），用舵機附的塑膠螺絲鎖。
+      - 把兩個 roll_motor_bottom 插進去。
+    tasks_en:
+      - Place the two bearings in trunk_bottom and press M3 heat-set inserts into the marked holes, plus the 4 holes underneath for mounting the body shells later.
+      - Join trunk_bottom and trunk_top with 2 M3×10 screws.
+      - Mount the middle servo (ID 30, neck pitch) with the plastic screws that come with the servo.
+      - Insert both roll_motor_bottom parts.
+    check_zh: 軸承到位、兩半軀幹密合，ID 30 鎖好。
+    check_en: Bearings are seated, the trunk halves meet flush, and ID 30 is secured.
+    images: [9ed8591a-7c96-4410-8d7e-9b7d88c6bd1f, ae36b396-a34a-4691-8e62-fd916cd1f76c, d4a6ba6c-852f-440e-afb7-3b9ca66ad3dc, 31c031b7-58b8-4c4c-a3fa-1f14a310c2f2]
+
+  - id: feet
+    title_zh: 兩隻腳與腳踝舵機
+    title_en: Feet and ankle servos
+    upstream: docs/assembly_guide.md#assemble-the-feet
+    adds:
+      - {mesh: foot_bottom_tpu}
+      - {mesh: foot_bottom_pla}
+      - {mesh: foot_top}
+      - {mesh: foot_side}
+      - {servos: [24, 14]}
+    bom: [foot_switch, m3_insert, m3x6_screw, print:foot_bottom_tpu.stl, print:foot_bottom_pla.stl, print:foot_top.stl, print:foot_side.stl]
+    tasks_zh:
+      - 兩隻腳做法相同。先把 foot_bottom_tpu 疊在 foot_bottom_pla 上，在指定孔壓入熱熔螺母，用 2 支 M3×6 鎖合。
+      - 在 foot_top 指定的孔壓入熱熔螺母。
+      - 裝上腳踝舵機（左 ID 24、右 ID 14）與 foot_side。舵機的主動側（driver side）要朝 foot_top 那一側。
+      - 把足底開關壓入腳底，讓腳掌著地時會觸發。
+    tasks_en:
+      - Both feet are identical. Stack foot_bottom_tpu on foot_bottom_pla, press inserts into the marked holes, and join them with 2 M3×6 screws.
+      - Press inserts into the marked holes of foot_top.
+      - Mount the ankle servo (left ID 24, right ID 14) and foot_side. The servo's driver side must face foot_top.
+      - Press-fit the foot switch into the sole so it triggers when the foot touches the ground.
+    check_zh: 腳掌能平貼桌面，按壓腳底時開關會動作；舵機主動側朝 foot_top。
+    check_en: The foot sits flat on the table, pressing the sole triggers the switch, and the servo's driver side faces foot_top.
+    notes_zh: 每隻腳裝幾顆足底開關上游沒有寫（BOM 列 4 顆，腳位表每腳一個訊號腳位）。
+    notes_en: Upstream does not say how many foot switches go in each foot (the BOM lists 4; the pin table has one signal pin per foot).
+    images: [6749a5ba-cea9-4b0a-ac32-f32e130fd057, 1a77f2f8-56ea-43d2-91c7-78130456c45b, 197cd9b7-05a6-46ed-9af5-d2def37970c8, f532fbcc-100b-4715-96a8-66697e4fda26, 71b9ad91-864e-423f-97a3-911d65182ab9, 59e15c7c-3515-4408-bfe9-80e30c4cd007]
+
+  - id: shins
+    title_zh: 小腿與膝舵機
+    title_en: Shins and knee servos
+    upstream: docs/assembly_guide.md#assemble-the-shins
+    adds:
+      - {mesh: leg_spacer, body: [knee_and_ankle_assembly_2, knee_and_ankle_assembly_4]}
+      - {mesh: left_knee_to_ankle_left_sheet, body: [knee_and_ankle_assembly_2, knee_and_ankle_assembly_4]}
+      - {mesh: left_knee_to_ankle_right_sheet, body: [knee_and_ankle_assembly_2, knee_and_ankle_assembly_4]}
+      - {servos: [23, 13]}
+    bom: [m3_insert, print:leg_spacer.stl, print:knee_to_ankle_left_sheet.stl, print:knee_to_ankle_right_sheet.stl]
+    tasks_zh:
+      - 在 leg_spacer 兩側壓入熱熔螺母（每個共 4 顆）。
+      - 先把腳踝舵機的線插好，穿過 right_sheet。
+      - 用兩片側板和 leg_spacer 組成小腿，上端裝膝舵機（左 ID 23、右 ID 13）。
+    tasks_en:
+      - Press inserts into both sides of each leg_spacer (4 in total per spacer).
+      - Plug the cable into the ankle servo first and route it through the right_sheet.
+      - Build the shin from the two sheets and the leg_spacer, with the knee servo (left ID 23, right ID 13) at the top.
+    check_zh: 腳踝舵機的線已穿好，小腿側板鎖緊、關節轉動不卡。
+    check_en: The ankle servo cable is routed, the shin sheets are tight, and the joint turns freely.
+    notes_zh: 左右腿用同一套零件，右腿是同一組件轉 180°，不是鏡像。所以膝、踝舵機在左腿裝在外側、在右腿裝在內側（CAD 量測，見驗證紀錄）。
+    notes_en: Both legs use the same parts; the right leg is the same assembly rotated 180°, not mirrored. So the knee and ankle servos sit on the outside of the left leg and the inside of the right leg (measured from the CAD; see the validation record).
+    images: [41eb01a2-d6f9-43b1-a83e-d14785907425, a1432505-6b6c-4765-aea6-0a7a0b8b220b, 54615217-fec9-46dd-8b40-e21a4f527b55]
+
+  - id: thighs
+    title_zh: 大腿與髖俯仰舵機
+    title_en: Thighs and hip pitch servos
+    upstream: docs/assembly_guide.md#assemble-the-thighs
+    adds:
+      - {mesh: leg_spacer, body: [knee_and_ankle_assembly, knee_and_ankle_assembly_3]}
+      - {mesh: left_knee_to_ankle_left_sheet, body: [knee_and_ankle_assembly, knee_and_ankle_assembly_3]}
+      - {mesh: left_knee_to_ankle_right_sheet, body: [knee_and_ankle_assembly, knee_and_ankle_assembly_3]}
+      - {servos: [22, 12]}
+    bom: [m3_insert, print:leg_spacer.stl, print:knee_to_ankle_left_sheet.stl, print:knee_to_ankle_right_sheet.stl]
+    tasks_zh:
+      - 大腿的做法和小腿幾乎一樣，用同樣的兩片側板和 leg_spacer。
+      - 差別在髖俯仰舵機（左 ID 22、右 ID 12）的安裝方向，照上游照片裝；這個方向關係到零位。
+    tasks_en:
+      - The thigh is built almost exactly like the shin, with the same two sheets and leg_spacer.
+      - The difference is the mounting direction of the hip pitch servo (left ID 22, right ID 12); follow the upstream photo, because the direction matters for the zero position.
+    check_zh: 髖俯仰舵機的方向和上游照片一致。
+    check_en: The hip pitch servo is oriented as in the upstream photo.
+    images: [951157a4-26dc-41bb-b97f-18dbbb0c1cd3]
+
+  - id: hips
+    title_zh: 髖部與雙腿上身
+    title_en: Hips and mounting the legs
+    upstream: docs/assembly_guide.md#assemble-the-hips
+    adds:
+      - {mesh: left_roll_to_pitch}
+      - {mesh: right_roll_to_pitch}
+      - {mesh: roll_motor_top}
+      - {servos: [21, 11, 20, 10]}
+    bom: [print:left_roll_to_pitch.stl, print:right_roll_to_pitch.stl, print:roll_motor_top.stl]
+    tasks_zh:
+      - 裝上 left_roll_to_pitch 或 right_roll_to_pitch。這兩件左右對稱，要用對邊的那一件。
+      - 把 roll_motor_top 從下方鎖到髖偏航舵機（左 ID 20、右 ID 10）上；這時先不要把舵機裝到軀幹。
+      - 裝上髖側擺舵機（左 ID 21、右 ID 11），再把這個子組件插進軀幹。
+      - 能鎖的都用舵機附的塑膠螺絲鎖好，接著把腿裝上；另一條腿照做。
+    tasks_en:
+      - Mount left_roll_to_pitch or right_roll_to_pitch. They are mirror images, so use the one for that side.
+      - Screw roll_motor_top onto the hip yaw servo (left ID 20, right ID 10) from below. Do not mount the servo to the trunk yet.
+      - Mount the hip roll servo (left ID 21, right ID 11), then insert this sub-assembly into the trunk.
+      - Tighten everything you can with the servos' plastic screws, then mount the leg. Repeat for the other leg.
+    check_zh: 兩條腿都裝上，髖部三個關節都能轉動；左右轉接座沒有裝反。
+    check_en: Both legs are mounted, all three hip joints turn, and the left/right roll-to-pitch parts are on the correct sides.
+    images: [368a85ad-1c58-4db2-bdd0-812334b6c784, 768f1664-030c-4432-9071-c52d79d3ef6b, e1287f67-320c-42cf-a5dc-84f4c64abb17, dba458ae-e9cb-4e16-a82e-cbe74d2350fa, a7169791-9f0a-4827-aea7-00ab1d0f6212, 4921b29b-b38b-423d-9da1-1c8f84689e84]
+
+  - id: neck
+    title_zh: 頸部
+    title_en: Neck
+    upstream: docs/assembly_guide.md#assemble-the-neck
+    adds:
+      - {mesh: neck_left_sheet}
+      - {mesh: neck_right_sheet}
+      - {servos: [31]}
+    bom: [print:neck_left_sheet.stl, print:neck_right_sheet.stl]
+    tasks_zh:
+      - 和腿段一樣的做法：用 neck_left_sheet、neck_right_sheet 組成頸部，上端裝頭部俯仰舵機（ID 31），下端接到軀幹上的 ID 30。
+    tasks_en:
+      - Same approach as the leg segments. Build the neck from neck_left_sheet and neck_right_sheet with the head pitch servo (ID 31) at the top, and attach the bottom to ID 30 on the trunk.
+    check_zh: 頸部能前後俯仰，側板鎖緊。
+    check_en: The neck pitches back and forth and the sheets are tight.
+    images: [f96fe44f-a7bc-423e-a925-4aef3e7bf568]
+
+  - id: head_mechanism
+    title_zh: 頭部關節
+    title_en: Head mechanism
+    upstream: docs/assembly_guide.md#assemble-the-head-mechanism
+    adds:
+      - {mesh: head_pitch_to_yaw}
+      - {mesh: head_yaw_to_roll}
+      - {mesh: head_roll_mount}
+      - {servos: [32, 33]}
+      - {mesh: head_bot_sheet}
+      - {mesh: body_middle_top}
+    bom: [print:head_pitch_to_yaw.stl, print:head_yaw_to_roll.stl, print:head_roll_mount.stl, print:head_bot_sheet.stl, print:body_middle_top.stl]
+    tasks_zh:
+      - 先裝 head_pitch_to_yaw。
+      - 另外把 head_yaw_to_roll 和 head_roll_mount 裝到頭部側擺舵機（ID 33）上；頭部偏航舵機是 ID 32。
+      - 這時先把 head_bot_sheet 和 body_middle_top 套進去，之後就不用拆頭。
+      - 照上游照片把頭部關節接到頸部。
+    tasks_en:
+      - Mount head_pitch_to_yaw first.
+      - Separately, mount head_yaw_to_roll and head_roll_mount onto the head roll servo (ID 33); the head yaw servo is ID 32.
+      - Slip head_bot_sheet and body_middle_top on now so you will not have to take the head apart later.
+      - Attach the head mechanism to the neck as in the upstream photos.
+    check_zh: 頭部能俯仰、偏航、側擺；head_bot_sheet 和 body_middle_top 已經套上。
+    check_en: The head pitches, yaws, and rolls, and head_bot_sheet and body_middle_top are already in place.
+    images: [a4dba395-eb0d-4150-8980-8e14f1173d02, 4648cd6c-391e-41e4-9617-4ecebfa9215b, 03f3bdae-06c3-4c37-b68f-14587edd6123, 04a219d8-bbaf-4910-b5d3-7ca67bce466c, 71545d40-f0f5-411d-a8d5-1cd676a74e75]
+
+  - id: servo_driver
+    title_zh: 舵機驅動板
+    title_en: Servo driver board
+    upstream: docs/assembly_guide.md#mount-the-servo-driver-board
+    adds: [{mesh: board, body: trunk_assembly}]
+    bom: [servo_driver]
+    tasks_zh:
+      - 把舵機驅動板裝進軀幹。上游這段還沒有照片（原文「TODO take a photo」），位置請對照 3D 模型。
+    tasks_en:
+      - Mount the servo driver board in the trunk. Upstream has no photo for this yet ("TODO take a photo"), so use the 3D model for its location.
+    check_zh: 驅動板固定好，接頭可以接到。
+    check_en: The board is secured and its connectors are reachable.
+    notes_zh: 3D 中是 CAD 的通用電路板外形，位置依接線圖推定。
+    notes_en: The 3D model uses the CAD's generic board shape; placement is inferred from the wiring diagram.
+
+  - id: imu
+    title_zh: IMU
+    title_en: IMU
+    upstream: docs/assembly_guide.md#mount-the-imu
+    adds: [{mesh: bno055}]
+    bom: [imu_bno055]
+    tasks_zh:
+      - 照上游照片裝上 BNO055。上游建議用「自然方向」裝，也就是相對照片沿 X 軸翻面；照片裡是裝反的。
+      - 裝反影響不大，之後可以在設定裡註明安裝方向。
+    tasks_en:
+      - Mount the BNO055 as in the upstream photos. Upstream recommends the natural orientation, flipped along the X axis compared with the photos, which show it upside down.
+      - Upside down works too; you can set the mounting orientation later in the configuration.
+    check_zh: IMU 固定、不會晃動；記下安裝方向。
+    check_en: The IMU is secured and does not wobble, and you noted its orientation.
+    images: [8772996d-5906-48fa-8cbe-6b6823982375, 172f44c7-c7c6-47f8-894a-14024abd24f4]
+
+  - id: battery_pack
+    title_zh: 電池組
+    title_en: Battery pack
+    upstream: docs/assembly_guide.md#battery-pack
+    adds:
+      - {mesh: cell}
+      - {mesh: holder}
+      - {mesh: bms}
+      - {mesh: usb_c_charger}
+      - {mesh: power_switch}
+    bom: [cell_18650, cell_holder, bms_2s, usb_c_charger, power_switch, xt30_pair]
+    tasks_zh:
+      - 兩顆 18650 裝進電池座之前，先充到相同電壓。
+      - 依接線圖接成電池組：兩顆串聯（7.4 V）接 BMS 的 B+、B−，BMS 的 BM 接到兩顆電池之間；USB-C 充電板接在 BMS 輸出端的 P+、P−，電源開關串在 P− 上。
+    tasks_en:
+      - Charge both 18650 cells to the same voltage before putting them in the holder.
+      - Wire the pack per the wiring diagram. Connect the two cells in series (7.4 V) to the BMS B+ and B−, with BM between the cells. The USB-C charger goes on the BMS output P+ and P−, and the power switch sits in the P− line.
+    check_zh: 兩顆電池電壓相同後才裝入；開關切換時輸出端有 7.4 V 左右（充滿約 8.4 V）。
+    check_en: The cells matched in voltage before installation, and the switch toggles roughly 7.4 V at the output (about 8.4 V when full).
+    images: [371db809-7cb3-47e1-b277-7fc2bdf21025, 3acfa4e6-ecf7-41f6-a965-35a3040f52fb, docs/open_duck_mini_v2_wiring_diagram.png]
+
+  - id: head
+    title_zh: 頭部與頭內電子
+    title_en: Head and head electronics
+    upstream: docs/assembly_guide.md#head
+    adds:
+      - {mesh: head}
+      - {mesh: roll_bearing, body: head_assembly}
+      - {mesh: sg90}
+      - {mesh: raspberrypizerow}
+      - {mesh: board, body: head_assembly}
+      - {mesh: left_antenna_holder}
+      - {mesh: right_antenna_holder}
+      - {mesh: antenna}
+    bom: [bearing, antenna_servo, pi_zero_2w, sd_card, ubec_5v, m3_insert, print:head.stl, print:left_antenna_holder.stl, print:right_antenna_holder.stl]
+    tasks_zh:
+      - 在頭殼所有指定的孔壓入熱熔螺母。
+      - 裝上軸承、兩顆天線舵機（9 g）和 Raspberry Pi Zero 2 W。
+      - 裝上天線座與天線。
+    tasks_en:
+      - Press inserts into all the marked holes of the head shell.
+      - Install the bearing, the two antenna servos (9 g), and the Raspberry Pi Zero 2 W.
+      - Mount the antenna holders and antennas.
+    check_zh: 頭內零件都固定，天線舵機能轉動。
+    check_en: Everything inside the head is secured and the antenna servos turn.
+    notes_zh: 上游頭部段落沒有提到 UBEC 與天線；UBEC 依接線圖放在頭部，天線上游沒有說明材質。上游也還沒寫表情配件的步驟（原文 TODO）。
+    notes_en: The upstream head section does not mention the UBEC or the antennas. The wiring diagram puts the UBEC in the head, and upstream does not say what the antennas are made of. Upstream has not written the expression-feature steps yet (marked TODO).
+    images: [ef4cd513-6b8d-41fa-9cc3-149fc8333d3e, 91284081-a563-4c02-bb3d-194b3afbc25c]
+
+  - id: join_head_neck
+    title_zh: 頭部接上頸部
+    title_en: Join the head to the neck
+    upstream: docs/assembly_guide.md#head
+    adds: []
+    focus: [{mesh: head}, {servos: [31, 32, 33]}]
+    tasks_zh:
+      - 照上游照片把頭部和頸部組合起來。
+    tasks_en:
+      - Join the head and neck as in the upstream photo.
+    check_zh: 頭部三個關節轉到極限都不會卡到頭殼。
+    check_en: None of the three head joints hits the head shell at the end of its range.
+    images: [96fd5347-bff7-47e9-a7bd-fde17ab1bcd2]
+
+  - id: wiring
+    title_zh: 配線
+    title_en: Wiring
+    upstream: docs/assembly_guide.md#electronics
+    adds: []
+    focus: [{mesh: board}, {mesh: raspberrypizerow}, {mesh: bno055}, {mesh: sg90}]
+    bom: [hookup_wire, barrel_jack, usb_cable_15cm, usb_cable_50cm, cable_sheath, soldering_iron]
+    tasks_zh:
+      - 照接線圖接線：7.4 V 經 DC 接頭進舵機驅動板，另一路經 UBEC 降成 5 V 給 Pi Zero。
+      - Pi Zero 的 micro USB 以資料線接舵機驅動板的 USB-C；兩條腿與頸部的舵機串接到驅動板。
+      - 依腳位表接足底開關（左 GPIO 22、右 GPIO 27）、IMU（SDA GPIO 2、SCL GPIO 3、VIN 3V3）、天線舵機（GPIO 12、13，5 V）。
+      - 線束用理線套管整理，留意關節轉動時不會拉扯到線。
+    tasks_en:
+      - Wire per the diagram. 7.4 V goes through a DC jack into the servo driver, and a second branch goes through the UBEC to supply 5 V to the Pi Zero.
+      - Connect the Pi Zero's micro USB to the servo driver's USB-C with a data cable, and daisy-chain the leg and neck servos to the driver.
+      - Follow the pin table for the foot switches (left GPIO 22, right GPIO 27), the IMU (SDA GPIO 2, SCL GPIO 3, VIN 3V3), and the antenna servos (GPIO 12, 13, 5 V).
+      - Tidy the harness with the cable sheath and make sure no joint pulls on a wire when it moves.
+    check_zh: 對照腳位表逐條確認；每個關節轉到兩端，線都不會被拉扯或夾到。
+    check_en: Every connection matches the pin table, and no wire is pulled or pinched at either end of any joint's range.
+    deviation_zh: 上游把接線圖放在 IMU 之後、電池組與頭部之前。實際接線需要 Pi Zero 已經裝上，所以這裡移到頭頸接合之後。
+    deviation_en: Upstream places the wiring diagram after the IMU, before the battery pack and head. Actual wiring needs the Pi Zero installed, so this step comes after the head is joined to the neck.
+    images: [docs/open_duck_mini_v2_wiring_diagram.png, docs/wiring.png, d3376494-4690-4484-8352-132e6284731a]
+
+  - id: body
+    title_zh: 機身外殼
+    title_en: Body shells
+    upstream: docs/assembly_guide.md#body
+    adds:
+      - {mesh: body_middle_bottom}
+      - {mesh: body_front}
+      - {mesh: body_back}
+      - {mesh: battery_pack_lid}
+      - {mesh: left_cache}
+      - {mesh: right_cache}
+    focus: [{mesh: body_middle_top}, {mesh: holder}]
+    bom: [m3_insert, print:body_middle_bottom.stl, print:body_front.stl, print:body_back.stl, print:battery_pack_lid.stl, print:left_cache.stl, print:right_cache.stl]
+    tasks_zh:
+      - 先鎖上 body_middle_bottom。
+      - 在 body_middle_bottom 與 body_middle_top 上，要裝電池組和 body_front 的孔都壓入熱熔螺母。
+      - 裝上 body_middle_top、body_front 和電池組（電池艙 body_back 與艙蓋）。
+      - 裝上兩側的腿部側蓋。
+    tasks_en:
+      - Screw on body_middle_bottom first.
+      - Press inserts into every hole of body_middle_bottom and body_middle_top that will hold the battery pack and body_front.
+      - Mount body_middle_top, body_front, and the battery pack (battery bay body_back and its lid).
+      - Mount the leg covers on both sides.
+    check_zh: 外殼都鎖好，電池艙蓋可以開關，腿部側蓋不影響關節轉動。
+    check_en: The shells are secured, the battery lid opens and closes, and the leg covers do not block the joints.
+    deviation_zh: 上游組裝說明沒有提到腿部側蓋（left_cache、right_cache）何時裝；依 CAD 它們固定在大腿上，這裡放在最後裝外殼時。
+    deviation_en: The upstream guide does not say when to mount the leg covers (left_cache, right_cache). In the CAD they attach to the thighs; they are placed here with the other shells.
+    images: [081d8840-8e88-4938-9d9a-4d97614e6261, 679a9cd2-89ca-41e8-9d03-f93fc040068b, ca292c48-1c72-4649-b7d1-4d3c9eac62ac, 312ec747-8eb4-4145-92eb-c1c3ddba80da, 864d9dd7-3daf-4e63-913c-2e99157e4aaf]
+
+  - id: expression
+    title_zh: 表情配件（選配）
+    title_en: Expression features (optional)
+    upstream: docs/assembly_guide.md#head
+    optional: true
+    adds: [{print_only: all}]
+    bom:
+      - speaker
+      - amplifier
+      - led
+      - eye_diffuser
+      - projector_reflector
+      - print:left_eye.stl
+      - print:right_eye.stl
+      - print:bulb.stl
+      - print:flash_light_module.stl
+      - print:flash_reflector_interface.stl
+      - print:speaker_interface.stl
+      - print:speaker_stand.stl
+    tasks_zh:
+      - 上游還沒有這部分的組裝說明（原文「TODO add instructions for expression features」）。
+      - 3D 中的眼蓋、燈件、投射燈與喇叭座是借用頭殼座標擺放的推定位置，請以實物為準。
+      - 接線依腳位表：左眼 GPIO 23、右眼 GPIO 24、投射燈 GPIO 25（共陰極接 GND）；擴大板 MAX98357A 接 I2S（LRC GPIO 19、BCLK GPIO 18、DIN GPIO 21）。
+    tasks_en:
+      - Upstream has no assembly instructions for this yet ("TODO add instructions for expression features").
+      - The eye covers, light parts, projector, and speaker stand in 3D are placed using the head shell's coordinates; trust the physical parts over this placement.
+      - Wire per the pin table — left eye GPIO 23, right eye GPIO 24, projector GPIO 25 (common cathode to GND); the MAX98357A amplifier uses I2S (LRC GPIO 19, BCLK GPIO 18, DIN GPIO 21).
+    check_zh: 每顆 LED 和喇叭都能個別測試。
+    check_en: Each LED and the speaker can be tested individually.
+    notes_zh: 上游 BOM 的麥克風與鏡頭註明尚未整合，這一步不包含。
+    notes_en: Upstream marks the microphone and camera as not integrated yet, so they are not part of this step.
+
+  - id: power_on
+    title_zh: 上電與軟體設定
+    title_en: Power on and software setup
+    upstream: docs/assembly_guide.md#body
+    adds: []
+    focus: [{servos: all}]
+    tasks_zh:
+      - 組裝完成後，照 Open_Duck_Mini_Runtime（https://github.com/apirrone/Open_Duck_Mini_Runtime）設定 Raspberry Pi 與執行軟體。
+    tasks_en:
+      - Once assembly is done, set up the Raspberry Pi and the runtime software following Open_Duck_Mini_Runtime (https://github.com/apirrone/Open_Duck_Mini_Runtime).
+    check_zh: 依 Runtime 的說明確認 14 顆舵機都能通訊。
+    check_en: Following the runtime instructions, confirm that all 14 servos respond.
