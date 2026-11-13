@@ -1,0 +1,10 @@
+# nous_duck 專用；上游的 .gitignore 不修改
+assembly_viewer/dist/
+node_modules/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# 上游 .gitignore 忽略所有 *.txt；nous_duck 底下的文字檔（例如 requirements.txt）要進版控
+!*.txt

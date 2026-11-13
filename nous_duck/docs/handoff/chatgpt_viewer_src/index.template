@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Open Duck Mini v2｜3D 組裝檢視器</title>
+<style>{{STYLE}}</style>
+</head>
+<body>
+<header class="mast">
+  <div class="identity"><div class="logo" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+  <div><h1>Open Duck Mini <em>v2</em></h1><p>3D 組裝檢視器</p></div></div>
+  <div class="top-actions"><button id="wire-guide" class="soft">接線圖與腳位</button><button id="sources" class="quiet">來源與模型精度</button></div>
+</header>
+<main class="workspace">
+  <aside class="panel stages" aria-labelledby="stage-heading">
+    <div class="panel-head"><div><h2 id="stage-heading">組裝順序</h2><p id="progress-text">0／14 步完成</p></div></div>
+    <progress id="progress" max="14" value="0" aria-label="組裝進度"></progress>
+    <nav id="steps" aria-label="組裝步驟"></nav>
+  </aside>
+  <section class="panel viewer" aria-label="3D 工作區">
+    <div class="scene-bar">
+      <div class="segments" role="group" aria-label="模型模式">
+        <button data-mode="assembly" aria-pressed="true">組裝</button>
+        <button data-mode="exploded" aria-pressed="false">爆炸</button>
+        <button data-mode="cut" aria-pressed="false">透視</button>
+      </div>
+      <div class="scene-actions"><button id="only-focus" aria-pressed="false" title="只顯示選取項目或目前步驟">單獨查看</button><button id="fit">置中</button></div>
+    </div>
+    <div id="viewport">
+      <img id="static-overview" alt="Open Duck Mini v2 原版 CAD 組裝外觀" hidden>
+      <div id="scene-status" role="status">正在載入原版模型…</div>
+      <div class="view-buttons" role="group" aria-label="鏡頭角度"><button data-view="iso" aria-pressed="true">斜視</button><button data-view="front" aria-pressed="false">正面</button><button data-view="back" aria-pressed="false">背面</button><button data-view="side" aria-pressed="false">側面</button></div>
+      <div id="selection" aria-live="polite" hidden></div>
+      <div class="gestures">拖曳旋轉 · 滾輪縮放 · 右鍵平移</div>
+    </div>
+    <div class="control-bar">
+      <label class="slider" for="spread"><span>爆炸距離</span><input type="range" id="spread" min="0" max="100" value="0"><output id="spread-value" for="spread">0%</output></label>
+      <div class="layer-options"><label><input type="checkbox" id="wires"> 線束</label><label><input type="checkbox" id="options" checked> 選配</label></div>
+    </div>
+    <article id="details" class="details" aria-live="polite"></article>
+  </section>
+  <aside class="panel bom" aria-labelledby="bom-heading">
+    <div class="panel-head"><div><h2 id="bom-heading">零件清單 <small>BOM</small></h2><p id="bom-count"></p></div></div>
+    <div class="bom-controls">
+      <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="名稱、STL、型號或舵機 ID" aria-label="搜尋零件"></label>
+      <div class="filter-line"><label for="category" class="sr-only">零件類別</label><select id="category"><option value="all">所有類別</option><option value="print">列印件</option><option value="motor">馬達</option><option value="electronic">電子</option><option value="power">電源</option><option value="wire">線材</option><option value="hardware">五金</option></select><label><input type="checkbox" id="step-only"> 目前步驟</label></div>
+    </div>
+    <div id="bom-list"></div>
+    <div class="bom-foot"><span class="dot cad"></span> 原版模型 <span class="dot proxy"></span> 位置或外形示意</div>
+  </aside>
+</main>
+<dialog id="dialog"><div class="dialog-head"><h2 id="dialog-title"></h2><button id="close-dialog" aria-label="關閉">關閉</button></div><div id="dialog-content"></div></dialog>
+<script>{{THREE}}</script>
+<script>{{FFLATE}}</script>
+<script>const DATA={{DATA}}; const LICENSES={{LICENSES}};</script>
+<script>{{GUIDE}}</script>
+<script>{{VIEWER}}</script>
+</body>
+</html>
