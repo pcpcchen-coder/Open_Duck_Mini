@@ -1,0 +1,177 @@
+{
+  "generated_by": "nous_duck/hardware/dock/cad (python -m dock_cad)",
+  "frame": "dock frame: X 朝前、Y 朝鴨子左邊、Z 朝上，Z=0 地板，X=0 停好時的觸點凸台表面",
+  "duck_pose": "上游 Open_Duck_Playground home keyframe（未含實機站姿誤差）",
+  "contact_center_z_mm": 202.72,
+  "duck_strips_dock_frame": [
+    {
+      "pole": "+",
+      "y": [
+        5.0,
+        15.0
+      ],
+      "z": [
+        181.72,
+        223.72
+      ]
+    },
+    {
+      "pole": "-",
+      "y": [
+        -15.0,
+        -5.0
+      ],
+      "z": [
+        181.72,
+        223.72
+      ]
+    }
+  ],
+  "dock_pins_dock_frame": [
+    {
+      "pole": "+",
+      "y": 10.0,
+      "z": 192.22
+    },
+    {
+      "pole": "+",
+      "y": 10.0,
+      "z": 213.22
+    },
+    {
+      "pole": "-",
+      "y": -10.0,
+      "z": 192.22
+    },
+    {
+      "pole": "-",
+      "y": -10.0,
+      "z": 213.22
+    }
+  ],
+  "cradle_adjust_mm": 15.0,
+  "body_back_added_volume_cm3": 67.1,
+  "parts": [
+    {
+      "file": "dock_cradle.stl",
+      "title": "V 形導引座（含頂針孔）",
+      "print_size_mm": [
+        100.0,
+        156.0,
+        54.0
+      ],
+      "solid_volume_cm3": 404.2,
+      "estimated_pla_g": 144.0,
+      "orientation": "背面（貼椅背那面）朝下，免支撐"
+    },
+    {
+      "file": "dock_plinth.stl",
+      "title": "底座／電子艙",
+      "print_size_mm": [
+        60.0,
+        200.0,
+        50.0
+      ],
+      "solid_volume_cm3": 98.2,
+      "estimated_pla_g": 119.0,
+      "orientation": "正面朝下、開口朝上，免支撐"
+    },
+    {
+      "file": "dock_backrest_mid.stl",
+      "title": "中椅背（V 形座安裝面）",
+      "print_size_mm": [
+        200.0,
+        200.0,
+        50.0
+      ],
+      "solid_volume_cm3": 187.6,
+      "estimated_pla_g": 229.0,
+      "orientation": "正面朝下、開口朝上，免支撐"
+    },
+    {
+      "file": "dock_backrest_upper.stl",
+      "title": "上椅背（AprilTag 凹槽）",
+      "print_size_mm": [
+        160.0,
+        200.0,
+        30.0
+      ],
+      "solid_volume_cm3": 135.0,
+      "estimated_pla_g": 161.0,
+      "orientation": "正面朝下、開口朝上，免支撐"
+    },
+    {
+      "file": "dock_roof.stl",
+      "title": "屋頂山牆（窗戶＝狀態燈、煙囪）",
+      "print_size_mm": [
+        90.0,
+        200.0,
+        30.0
+      ],
+      "solid_volume_cm3": 70.8,
+      "estimated_pla_g": 81.0,
+      "orientation": "正面朝下（正面裝飾都是凹槽），免支撐"
+    },
+    {
+      "file": "dock_arm_left.stl",
+      "title": "左扶手",
+      "print_size_mm": [
+        198.0,
+        84.0,
+        136.0
+      ],
+      "solid_volume_cm3": 283.6,
+      "estimated_pla_g": 249.0,
+      "orientation": "底面朝下直立列印，免支撐"
+    },
+    {
+      "file": "dock_arm_right.stl",
+      "title": "右扶手",
+      "print_size_mm": [
+        198.0,
+        84.0,
+        136.0
+      ],
+      "solid_volume_cm3": 283.6,
+      "estimated_pla_g": 249.0,
+      "orientation": "底面朝下直立列印，免支撐"
+    },
+    {
+      "file": "dock_rear_cover.stl",
+      "title": "電子艙後蓋",
+      "print_size_mm": [
+        59.0,
+        199.0,
+        2.0
+      ],
+      "solid_volume_cm3": 20.7,
+      "estimated_pla_g": 26.0,
+      "orientation": "平放"
+    },
+    {
+      "file": "body_back_contact_plate.stl",
+      "title": "外掛觸點板（貼在已印好的原版 body_back 上）— 建議",
+      "print_size_mm": [
+        68.0,
+        76.0,
+        31.0
+      ],
+      "solid_volume_cm3": 67.1,
+      "estimated_pla_g": 35.0,
+      "orientation": "觸點面朝下（觸片槽、走線槽在底面），免支撐"
+    },
+    {
+      "file": "body_back_dock.stl",
+      "title": "一體式改裝背殼（要重印 body_back 時才用）",
+      "print_size_mm": [
+        48.0,
+        110.0,
+        125.0
+      ],
+      "solid_volume_cm3": 172.7,
+      "estimated_pla_g": 99.0,
+      "orientation": "與上游 body_back 相同（沿用上游座標，切片軟體會自動落到平台）"
+    }
+  ],
+  "estimate_note": "線材為估算：PLA 1.24 g/cm³、外殼等效 1.2 mm、填充 15%；以切片軟體為準"
+}

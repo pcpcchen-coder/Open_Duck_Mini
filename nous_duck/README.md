@@ -41,7 +41,7 @@
 | [`robot/`](robot/README.md) | ③ 機上程式（Pi Zero 2 W，Python） | 規劃中 |
 | [`nous_adapter/`](nous_adapter/README.md) | ④ 要搬進 AIOS 的 `app.duck.*` adapter 與終端（TypeScript） | 規劃中 |
 | [`sim/`](sim/README.md) | ⑤ MuJoCo 模擬 | 規劃中 |
-| [`hardware/`](hardware/README.md) | ⑥ 改裝：MG995 頭部原型、表情模組、接線、感測頭、感知板、充電座 | 規劃中 |
+| [`hardware/`](hardware/README.md) | ⑥ 改裝：MG995 頭部原型、表情模組、接線、感測頭、感知板、充電座 | 規劃中；[充電座](hardware/dock/README.md)為設計 v0（STL 已產生，未列印、未實機） |
 | [`tools/`](tools/README.md) | 開發工具（上游未修改檢查、ChatGPT 分享頁轉檔） | 可用 |
 
 ## 主要硬體
