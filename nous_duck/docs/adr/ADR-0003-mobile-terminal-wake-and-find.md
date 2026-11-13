@@ -73,7 +73,7 @@
 細節與限制：
 
 - **單一麥克風無法判斷方向**；DOA 需要麥克風陣列（ADR-0005 §2.2）。DOA 在房間內會受回音影響，只當方向參考，不當精確位置。
-- **DOA 的讀法沿用使用者的 FamilyRecorder 專案**（Apache-2.0，`src/family_recorder/direction.py`，main `ff76063`）：XVF3800 經 USB vendor control 讀原始角度與語音旗標（resource 20／command 18）、四束 Speech Energy（resource 33／command 80）；角度以**環狀分群**（358° 與 2° 視為同方向）；出廠 0° 是麥克風的機構方向，要校準正前方。FamilyRecorder 只在 Mac（Apple Silicon）上驗證過標準版 XVF3800（USB VID `0x2886`、PID `0x001A`）；鴨子用的是 Flex 版、接在 Pi 4（Linux，需 libusb 權限），**USB ID、韌體版本與指令相容性都要到貨後驗證**。
+- **DOA 的讀法沿用使用者的 FamilyRecorder 專案**（Apache-2.0，`src/family_recorder/direction.py`，main `ff76063`）：XVF3800 經 USB vendor control 讀原始角度與語音旗標（resource 20／command 18）、四束 Speech Energy（resource 33／command 80）；角度以**環狀分群**（358° 與 2° 視為同方向）；出廠 0° 是麥克風的機構方向，要校準正前方。鴨子用的是**同一款**標準版 XVF3800（USB VID `0x2886`、PID `0x001A`，2026-11-13 決定），所以 USB ID 與控制指令和 FamilyRecorder 相同；剩下要驗證的是**主機不同**：FamilyRecorder 在 Mac（Apple Silicon、CoreAudio）上使用，鴨子接在 Pi 4（Linux、ALSA，libusb 需要 udev 權限），以及走路時的舵機噪音。
 - 麥克風陣列**裝在身體上**（ADR-0005 §2.3.1，2026-11-12 使用者決定），正前方校準一次就固定：聲源角度直接就是**相對身體正前方**要轉多少，再用身體位姿換算到地圖座標，不必經過頸頭關節。只在鴨子停下時取樣，並只取 `speech_detected` 為真的樣本，避免把舵機噪音當成聲源。
 - 鴨子的鏡頭高度約 30～40 cm，大人的臉在 1.2～1.7 m；靠近時要抬頭，上游 `head_pitch`、`neck_pitch` 的角度範圍與鏡頭視角是否足夠，要在 P2 確認。
 - 人坐著、躺著、背對鴨子時可能看不到臉；這時改以聲音互動確認，不硬找臉。
@@ -119,4 +119,4 @@
 2. 終端路線 A 或 B（spike 後決定）。
 3. 「Hey Nous」被鴨子聽到時要不要也回應。
 4. ~~臥室的隱私規則~~：改為可開關設定，見 ADR-0006；帶看影像的保留期限仍待決。
-5. 麥克風陣列型號：建議 reSpeaker Flex XVF3800 Circular-4，待確認（ADR-0005）。
+5. ~~麥克風陣列型號~~：reSpeaker XVF3800 USB 4-Mic Array 標準版（與 FamilyRecorder 同款，ADR-0005）。

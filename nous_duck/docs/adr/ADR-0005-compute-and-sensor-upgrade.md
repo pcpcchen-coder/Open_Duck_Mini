@@ -1,6 +1,6 @@
 # ADR-0005：運算與感測硬體升級
 
-- 狀態：**部分採用**（2026-11-12 使用者決定：雙板＝Pi Zero 2 W＋**Pi 4**、鏡頭沿用 **AR0144** 並**裝在頭上**、麥克風陣列買 **reSpeaker Flex XVF3800 Circular-4** 並**裝在身體上**、加裝實體隱私開關、眼燈改 RGB 用顏色提示鏡頭狀態）；其餘仍為草案
+- 狀態：**部分採用**（2026-11-12 使用者決定：雙板＝Pi Zero 2 W＋**Pi 4**、鏡頭沿用 **AR0144** 並**裝在頭上**、麥克風陣列用 **reSpeaker XVF3800 USB 4-Mic Array 標準版**（與 FamilyRecorder 同款，2026-11-13 由 Flex 改過來）並**裝在身體上**、加裝實體隱私開關、眼燈改 RGB 用顏色提示鏡頭狀態）；其餘仍為草案
 - 日期：2026-11-12
 - 相關：[R-001](../requirements/R-001-mobile-companion.md)、[ADR-0002](ADR-0002-indoor-localization-and-navigation.md)、[ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md)、[ADR-0004](ADR-0004-docking-and-charging.md)
 
@@ -52,7 +52,7 @@ Pi Zero 2 W 的 512 MB 記憶體與 A53 核心，不可能同時做到上表全�
 | 感測器 | 用途 | 建議 | 待決 |
 |---|---|---|---|
 | 雙目鏡頭 | 定位（視覺里程計、AprilTag）、避障深度、找人 | **已決定：Waveshare AR0144 Stereo USB Camera (A)**（沿用 AIOS 的經驗）：雙全域快門、單眼 1280×720、基線 52 mm、水平視角 65°、UVC 免驅動、輸出 2560×720 MJPG 併排（規格引自 AIOS `docs/11`） | 裝頭上還是身上（§2.3）；模組尺寸與重量要量；基線 52 mm 的深度有效距離要實測 |
-| 麥克風陣列 | 喚醒詞、對話、**聲源方向（DOA）** | **已決定：reSpeaker Flex XVF3800 Circular-4（USB、不含 XIAO），裝在身體上**（§2.3.1）；與使用者的 FamilyRecorder 專案用的標準版 XVF3800 同晶片，方向讀取可沿用其作法；選型見 [`hardware/sensors/mic_array_selection.md`](../../hardware/sensors/mic_array_selection.md) | Flex 的 USB ID 與控制指令是否與標準版相同，到貨後驗證 |
+| 麥克風陣列 | 喚醒詞、對話、**聲源方向（DOA）** | **已決定（2026-11-13）：reSpeaker XVF3800 USB 4-Mic Array 標準版（USB VID `0x2886`、PID `0x001A`），裝在身體上**（§2.3.1）。原本選 Flex Circular-4，使用者改用與 FamilyRecorder 同款，因為台灣好買；與使用者的 FamilyRecorder 專案用的標準版 XVF3800 同晶片，方向讀取可沿用其作法；選型見 [`hardware/sensors/mic_array_selection.md`](../../hardware/sensors/mic_array_selection.md) | Flex 的 USB ID 與控制指令是否與標準版相同，到貨後驗證 |
 | 喇叭＋功放 | 說話、叫人起床 | 上游 BOM 已有小喇叭與功放（表情套件）；叫人起床可能需要更大音量，要實測 | 音量是否足夠 |
 | IMU | 姿態、跌倒、視覺里程計融合 | 沿用上游 BNO055 | — |
 | 電流感測（選配） | 電量估算、回充判斷（ADR-0004） | INA219／INA226 一類 | 是否加裝 |
@@ -85,7 +85,7 @@ Pi Zero 2 W 的 512 MB 記憶體與 A53 核心，不可能同時做到上表全�
 安裝要點：
 
 - 圓形陣列要**水平**安裝才能判斷水平方向（裝在胸前直立的 `body_front` 上不行）。候選位置是機身頂面靠頸部後方；`body_middle_top` 已經印好，**用外掛支架固定，不重印**，確切位置依 CAD 決定。
-- Flex 的處理板放在機身內，以排線接麥克風板。
+- 標準版是**一整片板子**（麥克風與處理晶片在同一片，板子直徑約 99 mm；含外殼版約 102×102×10 mm，依查詢資料，實物要量），不像 Flex 可以把麥克風板和處理板分開。整片水平裝在機身頂面，用 USB 線接 Pi 4。`body_middle_top` 外框寬約 110 mm，放得下但很貼邊，**要在 CAD 確認不會擋到頸部（neck_pitch）的活動範圍**；建議用不含外殼的裸板以減輕重量。
 - 麥克風孔要露在外面，不能被外殼包住。
 - 喇叭盡量遠離麥克風，讓回音消除比較好做。
 - 走路時身體會晃與轉，聲源方向只在鴨子**停下時**取樣（ADR-0003 §4）。
@@ -109,7 +109,7 @@ Pi Zero 2 W 的 512 MB 記憶體與 A53 核心，不可能同時做到上表全�
 
 1. ~~採用 A 或 B~~：已決定 A，感知板 Pi 4。
 2. ~~雙目鏡頭型號與位置~~：已決定 AR0144，裝在頭上。
-3. ~~麥克風陣列~~：已決定 reSpeaker Flex XVF3800 Circular-4，裝在身體上。
+3. ~~麥克風陣列~~：已決定 reSpeaker XVF3800 USB 4-Mic Array 標準版（與 FamilyRecorder 同款），裝在身體上（2026-11-13 由 Flex Circular-4 改）。
 4. 是否願意為了感測器與充電觸點修改尚未列印的外殼件。
 5. 是否接受重新訓練步態策略的工作量（需要 GPU 環境）。
 6. ~~是否加裝實體隱私開關~~：要（[ADR-0006](ADR-0006-privacy-settings.md) §4.1）。
