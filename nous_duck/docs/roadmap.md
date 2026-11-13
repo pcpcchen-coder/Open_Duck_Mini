@@ -23,7 +23,7 @@
 | ~~麥克風陣列型號與位置~~ | 已決定：reSpeaker Flex XVF3800 Circular-4，裝在身體上（方向讀取參考 FamilyRecorder） | [選型](../hardware/sensors/mic_array_selection.md) |
 | ~~充電觸點方案~~ | 已決定：背後（`body_back` 要改、暫緩列印） | ADR-0004 |
 | ~~是否接受在家裡貼 AprilTag~~ | 已同意 | ADR-0002 |
-| 充電座外型 | 2026-11-13 提出設計 v0「屋形靠背扶手椅」（外掛觸點板，不用重印 `body_back`），待確認 | [ADR-0004 §7](adr/ADR-0004-docking-and-charging.md#7-設計-v02026-11-13)、[`hardware/dock/`](../hardware/dock/README.md) |
+| ~~充電座外型~~ | 已決定（2026-11-13）：設計 v0「屋形靠背扶手椅」（外掛觸點板，不用重印 `body_back`） | [ADR-0004 §7](adr/ADR-0004-docking-and-charging.md#7-設計-v02026-11-13)、[`hardware/dock/`](../hardware/dock/README.md) |
 | 鴨子的喚醒詞 | 使用者表示晚一點再取 | ADR-0003 §8 |
 | ~~隱私設定的預設值~~ | 已同意建議預設值 | [ADR-0006](adr/ADR-0006-privacy-settings.md) §5 |
 | ~~是否加實體隱私開關、鏡頭提示方式~~ | 已決定：加實體開關；眼燈顏色（眼燈改 RGB）。待確認：是否另加硬體直連的鏡頭電源指示燈 | ADR-0006 §4 |
