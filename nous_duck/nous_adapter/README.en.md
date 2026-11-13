@@ -9,7 +9,7 @@ Status: **Planned** (no code yet).
 This directory holds code that **will move back into AIOS**: it lets Nous use the duck through duck-link. According to [ADR-0001](../docs/adr/ADR-0001-duck-role-in-nous.md) (Traditional Chinese only), the duck has two roles in Nous:
 
 1. **DuckAdapter** (body adapter): an AIOS `IntegrationAdapter` with `service = "duck"` that offers `app.duck.*` tools to the Nous agent.
-2. **DuckTerminal** (terminal): sends the duck's events into Nous and sends Nous's expression output to the duck.
+2. **DuckTerminal** (terminal): a Nous terminal that walks (microphones, speaker, stereo camera, no screen). It sends the duck's events into Nous and sends Nous's voice and expression output to the duck.
 
 ## Subdirectories
 
@@ -17,7 +17,7 @@ This directory holds code that **will move back into AIOS**: it lets Nous use th
 |---|---|---|
 | `adapters/` | `duck.ts`: DuckAdapter (tool definitions, `health()`, `execute()`, mapping acks and state to `ToolResult`) | Planned |
 | `shared/` | duck-link message types (generated from or checked against `protocol/schemas`), plus types minimally redeclared from the AIOS contract (with the source commit noted) | Planned |
-| `terminal/` | DuckTerminal: event intake and expression output | Planned |
+| `terminal/` | DuckTerminal: voice session, event intake (including mission progress and wake), expression output | Planned |
 | `tests/` | Tests of tool definitions, result mapping, timeouts, and disconnects against a **mock duck** (must be labelled mock) | Planned |
 
 ## AIOS conventions to follow
@@ -40,8 +40,19 @@ This directory holds code that **will move back into AIOS**: it lets Nous use th
 | `app.duck.gesture` | reversible_write |
 | `app.duck.antennas` | reversible_write |
 | `app.duck.express` | reversible_write (`unsupported` when the expression hardware is absent) |
+| `app.duck.where` | read (added by R-001) |
+| `app.duck.places` | read (added by R-001) |
+| `app.duck.mission_status` | read (added by R-001) |
+| `app.duck.go_to` | reversible_write (added by R-001, asynchronous mission) |
+| `app.duck.find_person` | reversible_write (added by R-001, asynchronous mission) |
+| `app.duck.return_home` | reversible_write (added by R-001, asynchronous mission) |
+| `app.duck.cancel_mission` | reversible_write (added by R-001) |
+| `app.duck.announce` | reversible_write (added by R-001; whether it is needed is open) |
+| `app.duck.privacy_tighten` | reversible_write (can only tighten privacy settings; see ADR-0006) |
 
-Parameters, confirmation rules, and the operations deliberately not offered are in [ADR-0001 §4](../docs/adr/ADR-0001-duck-role-in-nous.md#4-appduck-工具清單草案) (Traditional Chinese only).
+Parameters, confirmation rules, and the operations deliberately not offered are in [ADR-0001 §4](../docs/adr/ADR-0001-duck-role-in-nous.md#4-appduck-工具清單草案) and [§7.3](../docs/adr/ADR-0001-duck-role-in-nous.md#73-工具清單修訂後草案) (Traditional Chinese only). Navigation tools run as **asynchronous missions**: `confirmed` means "the duck has set off", and completion or failure comes back to Nous as events ([§7.2](../docs/adr/ADR-0001-duck-role-in-nous.md#72-長時間任務mission)).
+
+After R-001 (2026-11-12), DuckTerminal becomes a full mobile terminal (microphones, speaker, stereo camera). See [ADR-0003](../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md) (Traditional Chinese only).
 
 ## Inputs and outputs
 

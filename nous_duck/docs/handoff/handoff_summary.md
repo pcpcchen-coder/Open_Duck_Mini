@@ -87,6 +87,6 @@ ChatGPT 做過一版（`Open_Duck_Mini_v2_Assembly_Viewer.html`），但**檔案
 
 ## 8. 還沒決定的事
 
-- 喇叭、眼燈、麥克風、鏡頭（上游 BOM 的「Expression package」）要不要做、怎麼接；上游 BOM 標註麥克風與鏡頭「not integrated yet」。
+- ~~喇叭、眼燈、麥克風、鏡頭要不要做~~：2026-11-12 使用者決定鴨子要有麥克風、喇叭與雙目視覺，並要導航、喚醒找人、自動回充，見 [R-001](../requirements/R-001-mobile-companion.md) 與 ADR-0002～0005。型號、運算板、充電觸點方案仍待決定（[路線圖](../roadmap.md#需要使用者先決定的事)）。
 - 鴨子與 Mac mini 之間的傳輸方式（WebSocket 或其他），見 [ADR-0001](../adr/ADR-0001-duck-role-in-nous.md) 的待決事項。
 - 鎖定的 Open_Duck_Mini_Runtime commit。

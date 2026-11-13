@@ -12,13 +12,14 @@ This directory holds all of this fork's own development. Upstream files are neve
 |---|---|
 | Printing | 36 of 51 parts printed, 15 remaining ([progress](docs/build_log/print_status.md)) |
 | Assembly | Not started |
-| Software | **Folder structure and documents only**. Every module is "Planned" and has no code yet |
+| Software | **Folder structure and design documents only**. Every module is "Planned" and has no code yet |
+| Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0006 (including switchable privacy settings) are drafts or partly accepted; phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
 | Hardware validation | None |
 
 ## Division of work
 
 - **Nous (Mac mini)**: voice, vision, memory, decisions.
-- **Duck (Pi Zero 2 W)**: gait, motion, safety (safety decisions happen only on the duck).
+- **Duck (Pi Zero 2 W body board plus a Pi 4 perception board)**: gait, motion, safety (safety decisions happen only on the duck). After R-001 it also adds indoor localization and navigation, audio capture and playback, a wake word, finding people, and automatic docking.
 - The two sides communicate only through the versioned JSON Schemas in [`protocol/`](protocol/README.en.md).
 
 See the [architecture](docs/architecture.md) and [ADR-0001](docs/adr/ADR-0001-duck-role-in-nous.md) (both Traditional Chinese only).
@@ -28,8 +29,10 @@ See the [architecture](docs/architecture.md) and [ADR-0001](docs/adr/ADR-0001-du
 | Path | Contents | Status |
 |---|---|---|
 | [`docs/handoff/`](docs/handoff/README.md) | Handoff summary, environment survey, ChatGPT conversation log, upstream BOM | Done |
+| [`docs/requirements/`](docs/requirements/README.md) | Requirement records | R-001 |
 | [`docs/architecture.md`](docs/architecture.md) | Division of work and data flow between the duck and Nous | Draft |
-| [`docs/adr/`](docs/adr/README.md) | Architecture decision records | ADR-0001 draft |
+| [`docs/roadmap.md`](docs/roadmap.md) | Phases and gates, decisions waiting for the owner | Draft |
+| [`docs/adr/`](docs/adr/README.md) | Architecture decision records | ADR-0001 to 0006 |
 | [`docs/build_log/`](docs/build_log/README.md) | Printing, assembly, and calibration progress | Print progress |
 | [`docs/validation/`](docs/validation/README.md) | Hardware and test records | No records yet |
 | [`assembly_viewer/`](assembly_viewer/README.md) | ① Offline single-HTML 3D assembly viewer (first deliverable) | Planned |
@@ -37,7 +40,7 @@ See the [architecture](docs/architecture.md) and [ADR-0001](docs/adr/ADR-0001-du
 | [`robot/`](robot/README.md) | ③ On-board software (Pi Zero 2 W, Python) | Planned |
 | [`nous_adapter/`](nous_adapter/README.en.md) | ④ `app.duck.*` adapter and terminal to move into AIOS (TypeScript) | Planned |
 | [`sim/`](sim/README.md) | ⑤ MuJoCo simulation | Planned |
-| [`hardware/`](hardware/README.md) | ⑥ Modifications: MG995 head prototype, expression modules, wiring | Planned |
+| [`hardware/`](hardware/README.md) | ⑥ Modifications: MG995 head prototype, expression modules, wiring, sensor head, perception board, charging dock | Planned |
 | [`tools/`](tools/README.md) | Development tools (upstream-untouched check, ChatGPT share-page converter) | Usable |
 
 Documents other than this README and the `protocol/` and `nous_adapter/` READMEs are in Traditional Chinese only.
@@ -47,6 +50,7 @@ Documents other than this README and the `protocol/` and `nous_adapter/` READMEs
 - Feetech STS3215-C001 (7.4 V, 1:345) × 14. IDs: right leg 10–14, left leg 20–24, neck and head 30–33.
 - Raspberry Pi Zero 2 W, Waveshare Bus Servo Adapter, BNO055 IMU, 2S 18650 battery (per the [upstream BOM](docs/handoff/upstream_bom.csv)).
 - The five MG995 servos on hand are used only for a head prototype.
+- R-001 additions (planned): a Raspberry Pi 4 perception board, a Waveshare AR0144 stereo camera, a reSpeaker Flex XVF3800 Circular-4 microphone array (camera on the head, microphone array on the body), a physical privacy switch, RGB eye lights, rear charging contacts, and a charging dock.
 
 ## Dependencies
 

@@ -1,7 +1,7 @@
 # ADR-0001：鴨子在 Nous 中的角色＝身體 adapter 加終端
 
 - 狀態：**草案（Proposed）**
-- 日期：2026-11-12
+- 日期：2026-11-12；同日依 R-001（行動夥伴需求）修訂，見 [§7](#7-2026-11-12-修訂行動夥伴)
 - 相關：[`../architecture.md`](../architecture.md)、AIOS `prototype/ambient-shell/server/integrations/contracts.ts`（AIL-1）、AIOS `terminals/rpi4/`
 
 ## 1. 背景
@@ -20,7 +20,7 @@ Pi Zero 2 W 的算力只夠跑步態策略與基本 I/O，不適合跑語音或�
 鴨子在 Nous 中有**兩個角色**，都放在 `nous_duck/nous_adapter/`，之後搬進 AIOS：
 
 1. **身體 adapter（DuckAdapter）**：一個 AIOS `IntegrationAdapter`，`service = "duck"`，把鴨子的動作能力以 `app.duck.*` 工具提供給 Nous 的 Agent。這是 Nous **呼叫**鴨子的方向。
-2. **終端（DuckTerminal）**：把鴨子的事件（跌倒、被抱起、電量低、斷線）送進 Nous，並把 Nous 決定的表情輸出（天線、眼燈、音效，視硬體而定）送給鴨子。這是鴨子**通知** Nous、以及 Nous 用鴨子**表達**的方向。和 rpi4 終端不同，DuckTerminal 初期**沒有**麥克風、鏡頭或螢幕。
+2. **終端（DuckTerminal）**：把鴨子的事件（跌倒、被抱起、電量低、斷線）送進 Nous，並把 Nous 決定的表情輸出（天線、眼燈、音效，視硬體而定）送給鴨子。這是鴨子**通知** Nous、以及 Nous 用鴨子**表達**的方向。和 rpi4 終端不同，DuckTerminal 初期**沒有**麥克風、鏡頭或螢幕。（**已由 §7 修訂**：鴨子將有麥克風、喇叭與雙目鏡頭，成為會走路的終端。）
 
 此外：
 
@@ -77,3 +77,49 @@ Pi Zero 2 W 的算力只夠跑步態策略與基本 I/O，不適合跑語音或�
 2. 各工具的參數上限、TTL、心跳門檻。
 3. DuckTerminal 在 AIOS 中對應哪個現有概念（例如終端頁面識別 `ExecutionContext.page`、或新的裝置事件來源）。
 4. 是否需要「使用情境限制」（例如只有使用者在場時才能 `walk`）；依 AIOS 2026-10-31「功能便利性優先」的優先順序，初版不做，留待使用者決定。
+
+## 7. 2026-11-12 修訂：行動夥伴
+
+使用者在同日提出 [R-001](../requirements/R-001-mobile-companion.md)：室內導航、鴨子帶麥克風／喇叭／雙目鏡頭到處對話、自己的喚醒詞與找人、自動回充。修訂如下，§1～§6 其餘內容仍然有效。
+
+### 7.1 角色
+
+- **DuckTerminal 改為完整的行動終端**（麥克風、喇叭、雙目鏡頭；沒有螢幕），比照 AIOS rpi4 終端，詳見 [ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md)。
+- 「Nous 只下意圖」維持不變，意圖的層級提高到**地點與任務**（「去 `brother_room`」），導航與避障在鴨子本機完成（[ADR-0002](ADR-0002-indoor-localization-and-navigation.md)）。
+- 安全仍以鴨子本機為唯一權威；新增樓梯與禁區保護（ADR-0002 §5.3）、充電觸點電氣安全（[ADR-0004](ADR-0004-docking-and-charging.md) §2.3）。
+
+### 7.2 長時間任務（mission）
+
+走到另一個房間要幾十秒到幾分鐘，超過 AIOS 工具單次執行時限（`timeoutMs` 上限 60 s）。因此導航類工具採**非同步任務**：
+
+1. 工具呼叫只負責**下達任務**：鴨子接受並開始執行就回 `confirmed`，`data` 帶 `mission_id`。工具說明要寫清楚：`confirmed` 代表「已出發」，不是「已到達」。
+2. 進度與結果以 duck-link 事件（`mission_progress`、`mission_done`、`mission_failed`，附原因代碼）回報，經 DuckTerminal 送進 Nous。
+3. 任何時候可以用 `app.duck.cancel_mission` 或 `app.duck.stop` 中止。
+4. 同一時間只有一個進行中的任務；新任務要先取消舊的，或由鴨子回 `refused`（原因代碼待定）。
+
+Nous Agent 收到完成事件後接續下一步，需要 AIOS 支援（見 [路線圖](../roadmap.md#aios-端需要的批次在-aios-repo-進行)）。
+
+### 7.3 工具清單（修訂後草案）
+
+§4 的 7 個工具保留，新增：
+
+| 工具 ID | effect | 說明（草案） | 參數草案 | 回讀確認方式 |
+|---|---|---|---|---|
+| `app.duck.where` | `read` | 目前所在房間／地點、定位不確定度、是否在充電座 | 無 | 最新 state（附時間戳） |
+| `app.duck.places` | `read` | 地圖上已命名的地點清單（ID 與本機顯示名稱） | 無 | 鴨子回報的地圖版本 |
+| `app.duck.mission_status` | `read` | 目前任務的狀態與進度 | `mission_id`（可省略） | 最新 state |
+| `app.duck.go_to` | `reversible_write` | 導航到某個地點 | `place`（地點 ID，來自 `places`） | 接受並開始 → `confirmed`＋`mission_id` |
+| `app.duck.find_person` | `reversible_write` | 在附近找人（可指定是誰），找到後面向對方 | `person`（家人 ID，可省略） | 同上 |
+| `app.duck.return_home` | `reversible_write` | 回充電座並確認開始充電 | 無 | 同上；「已充電」以電氣訊號為準 |
+| `app.duck.cancel_mission` | `reversible_write` | 取消目前任務並停下 | `mission_id`（可省略） | state 無進行中任務 → `confirmed` |
+| `app.duck.announce` | `reversible_write` | 用鴨子的喇叭播一段話（不開啟對話） | `text` | 待定；若 AIOS 能把語音工作階段指定到鴨子終端，可能不需要這個工具 |
+| `app.duck.privacy_tighten` | `reversible_write` | **只能收緊**隱私設定（切到更嚴格的模式或關掉某項）；沒有給模型放寬的工具（[ADR-0006](ADR-0006-privacy-settings.md)） | `mode` 或 `switch` | 鴨子回讀目前隱私設定版本 |
+
+刻意不提供給模型的操作，新增：
+
+| 操作 | 原因 |
+|---|---|
+| 建圖、編輯地圖、畫禁區、刪除地圖 | 會影響安全（樓梯禁區）；由使用者在 Mac 上的工具操作 |
+| 開關 safety 的樓梯／禁區保護 | 安全是鴨子本機的權威 |
+| 讀取或傳送原始影像、錄音 | 違反隱私規則（ADR-0003 §6） |
+| 放寬隱私設定 | 只能在 Mac 的 Nous 設定頁操作（ADR-0006 §3） |

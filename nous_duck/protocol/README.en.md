@@ -15,7 +15,13 @@ duck-link is the **only** interface between the duck (Pi Zero 2 W) and Nous (Mac
 | `schemas/command.schema.json` | Nous → duck: intent commands (walk, stop, look, gesture, antennas, express), with `request_id` and `ttl_ms` | Planned |
 | `schemas/state.schema.json` | Duck → Nous: state snapshot (mode, battery voltage, posture, temperature summary, available capabilities, timestamp) | Planned |
 | `schemas/event.schema.json` | Duck → Nous: events (fell, picked_up, battery_low, overheat, motor_error, link_lost / link_restored, estop) and command acks | Planned |
+| `schemas/mission.schema.json` | Long-running missions: start (go_to, find_person, return_home), cancel, progress, done, failed (reason codes) ([ADR-0001 §7.2](../docs/adr/ADR-0001-duck-role-in-nous.md#72-長時間任務mission), Traditional Chinese only) | Planned |
+| `schemas/privacy_policy.schema.json` | Privacy settings document (global, rooms, family members, modes, time windows; IDs only, versioned), synced from Nous to the duck ([ADR-0006](../docs/adr/ADR-0006-privacy-settings.md), Traditional Chinese only) | Planned |
 | `examples/` | Valid and invalid examples for each schema, shared by the tests on both sides | Planned |
+
+After R-001 (2026-11-12), `state` must also carry: current room / place, pose and localization uncertainty, map version, charging status and battery estimate. `event` adds `mission_*`, `lost`, `door_closed`, `docked` / `undocked`, and `wake_detected` (with sound direction).
+
+**Audio and video do not travel as duck-link JSON messages.** The audio stream uses a separate media channel (the AIOS terminal's realtime voice path, or a method decided later; see [ADR-0003 §2.1](../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md#21-終端軟體兩條路線先做可行性-spike), Traditional Chinese only). Raw images never leave the duck; only face features are sent ([ADR-0003 §6](../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md#6-隱私), Traditional Chinese only).
 
 ## Design principles
 

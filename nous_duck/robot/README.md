@@ -1,6 +1,6 @@
 # ③ 機上程式（robot）
 
-狀態：**規劃中**（尚無程式）。目標平台：Raspberry Pi Zero 2 W，Python。
+狀態：**規劃中**（尚無程式）。目標平台：身體板 Raspberry Pi Zero 2 W；R-001 後另加感知板 **Raspberry Pi 4**（2026-11-12 決定，見 [ADR-0005](../docs/adr/ADR-0005-compute-and-sensor-upgrade.md)）。語言：Python。
 
 ## 職責
 
@@ -15,7 +15,12 @@
 | `safety/` | **最後一道關卡**：速度與角度上限、指令 TTL（deadman）、跌倒、過熱、低電壓、斷線處理、緊急停止 | 規劃中 |
 | `config/` | 鴨子設定（對應上游 `example_config.json` 的 `expression_features`、`joints_offsets`）、safety 上限 | 規劃中 |
 | `deploy/` | 安裝與部署：pip 從 git 安裝上游 runtime 並鎖 commit、systemd 服務 | 規劃中 |
+| `navigation/` | （感知板）定位融合（VIO＋AprilTag，**不用步數**）、拓撲與柵格路徑規劃、避障、回充對位（[ADR-0002](../docs/adr/ADR-0002-indoor-localization-and-navigation.md)、[ADR-0004](../docs/adr/ADR-0004-docking-and-charging.md)） | 規劃中 |
+| `perception/` | （感知板）雙目擷取、深度、AprilTag 偵測、人臉偵測與特徵（[ADR-0003](../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md)） | 規劃中 |
+| `audio/` | （感知板）喚醒詞（sherpa-onnx KWS）、聲源方向、語音串流、喇叭（ADR-0003） | 規劃中 |
 | `tests/` | 單元測試（safety 規則、意圖轉換、schema 驗證）；不需要硬體的部分可在雲端跑 | 規劃中 |
+
+`nous_link/`、`behaviors/`、`safety/` 在身體板執行；`navigation/`、`perception/`、`audio/` 在感知板執行。若 ADR-0005 改採單板，全部在同一片，但 safety 仍要與感知工作隔離。
 
 ## 輸入輸出
 

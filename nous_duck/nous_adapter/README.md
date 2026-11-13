@@ -9,7 +9,7 @@
 這個目錄放**之後要搬回 AIOS** 的程式：讓 Nous 透過 duck-link 使用鴨子。依 [ADR-0001](../docs/adr/ADR-0001-duck-role-in-nous.md)，鴨子在 Nous 中有兩個角色：
 
 1. **DuckAdapter**（身體 adapter）：AIOS `IntegrationAdapter`，`service = "duck"`，提供 `app.duck.*` 工具給 Nous 的 Agent。
-2. **DuckTerminal**（終端）：把鴨子的事件送進 Nous，並把 Nous 的表情輸出送給鴨子。
+2. **DuckTerminal**（終端）：會走路的 Nous 終端（麥克風、喇叭、雙目鏡頭，沒有螢幕）；把鴨子的事件送進 Nous，並把 Nous 的語音與表情輸出送給鴨子。
 
 ## 子目錄
 
@@ -17,7 +17,7 @@
 |---|---|---|
 | `adapters/` | `duck.ts`：DuckAdapter（工具定義、`health()`、`execute()`，ack／state 對應 `ToolResult`） | 規劃中 |
 | `shared/` | duck-link 訊息型別（由 `protocol/schemas` 產生或對照），以及從 AIOS 契約最小化重新宣告的型別（註明來源 commit） | 規劃中 |
-| `terminal/` | DuckTerminal：事件入口與表情輸出 | 規劃中 |
+| `terminal/` | DuckTerminal：語音工作階段、事件入口（含任務進度與喚醒）、表情輸出 | 規劃中 |
 | `tests/` | 用 **mock 鴨子**（必須標示 mock）測 adapter 的工具定義、結果對應、逾時與斷線 | 規劃中 |
 
 ## 必須沿用的 AIOS 慣例
@@ -40,8 +40,19 @@
 | `app.duck.gesture` | reversible_write |
 | `app.duck.antennas` | reversible_write |
 | `app.duck.express` | reversible_write（沒有表情硬體時為 `unsupported`） |
+| `app.duck.where` | read（R-001 新增） |
+| `app.duck.places` | read（R-001 新增） |
+| `app.duck.mission_status` | read（R-001 新增） |
+| `app.duck.go_to` | reversible_write（R-001 新增，非同步任務） |
+| `app.duck.find_person` | reversible_write（R-001 新增，非同步任務） |
+| `app.duck.return_home` | reversible_write（R-001 新增，非同步任務） |
+| `app.duck.cancel_mission` | reversible_write（R-001 新增） |
+| `app.duck.announce` | reversible_write（R-001 新增，是否需要待定） |
+| `app.duck.privacy_tighten` | reversible_write（只能收緊隱私設定，見 ADR-0006） |
 
-參數、確認方式、刻意不提供的操作見 [ADR-0001 §4](../docs/adr/ADR-0001-duck-role-in-nous.md#4-appduck-工具清單草案)。
+參數、確認方式、刻意不提供的操作見 [ADR-0001 §4](../docs/adr/ADR-0001-duck-role-in-nous.md#4-appduck-工具清單草案) 與 [§7.3](../docs/adr/ADR-0001-duck-role-in-nous.md#73-工具清單修訂後草案)。導航類工具走**非同步任務**：工具回 `confirmed` 代表「鴨子已出發」，完成與失敗以事件回到 Nous（[§7.2](../docs/adr/ADR-0001-duck-role-in-nous.md#72-長時間任務mission)）。
+
+R-001（2026-11-12）後，DuckTerminal 改為完整的行動終端（麥克風、喇叭、雙目鏡頭），見 [ADR-0003](../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md)。
 
 ## 輸入輸出
 

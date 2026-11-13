@@ -6,7 +6,7 @@
 
 ## 開工前
 
-1. 讀 [`nous_duck/README.md`](nous_duck/README.md)、[`nous_duck/docs/handoff/handoff_summary.md`](nous_duck/docs/handoff/handoff_summary.md)、[`nous_duck/docs/architecture.md`](nous_duck/docs/architecture.md) 與 [`nous_duck/docs/adr/`](nous_duck/docs/adr/README.md)。
+1. 讀 [`nous_duck/README.md`](nous_duck/README.md)、[`nous_duck/docs/roadmap.md`](nous_duck/docs/roadmap.md)、[`nous_duck/docs/handoff/handoff_summary.md`](nous_duck/docs/handoff/handoff_summary.md)、[`nous_duck/docs/architecture.md`](nous_duck/docs/architecture.md) 與 [`nous_duck/docs/adr/`](nous_duck/docs/adr/README.md)。
 2. 讀要動的模組的 README，確認它的職責、輸入輸出與「目前狀態」。
 3. 一次只做一個可驗收的批次。
 
@@ -25,17 +25,17 @@
 |---|---|---|
 | `nous_duck/assembly_viewer/` | ① 離線單一 HTML 3D 組裝檢視器（第一個交付） | Python pipeline＋TypeScript/three.js |
 | `nous_duck/protocol/` | ② duck-link：鴨子與 Nous 之間唯一的介面（版本化 JSON Schema） | JSON Schema |
-| `nous_duck/robot/` | ③ 機上程式（Pi Zero 2 W）：連線、行為、安全 | Python |
+| `nous_duck/robot/` | ③ 機上程式（身體板 Pi Zero 2 W：連線、行為、安全；感知板 Pi 4：定位導航、感知、音訊） | Python |
 | `nous_duck/nous_adapter/` | ④ 之後要搬回 AIOS 的 `app.duck.*` adapter 與終端 | TypeScript |
 | `nous_duck/sim/` | ⑤ MuJoCo 模擬 | Python |
-| `nous_duck/hardware/` | ⑥ 硬體改裝（MG995 頭部原型、表情模組、接線） | 文件、CAD、STL |
+| `nous_duck/hardware/` | ⑥ 硬體改裝（MG995 頭部原型、表情模組、接線、感測頭、感知板、充電座） | 文件、CAD、STL |
 | `nous_duck/tools/` | 開發輔助腳本 | Python／shell |
-| `nous_duck/docs/` | 交接、架構、ADR、進度、驗證紀錄 | Markdown |
+| `nous_duck/docs/` | 交接、需求、架構、ADR、路線圖、進度、驗證紀錄 | Markdown |
 
 系統分工（詳見 [ADR-0001](nous_duck/docs/adr/ADR-0001-duck-role-in-nous.md)）：
 
 - **Nous（Mac mini）** 負責語音、視覺、記憶與決策。
-- **鴨子（Pi Zero 2 W）** 負責步態、動作與安全。安全判斷（跌倒、過熱、低電壓、通訊中斷）一律在鴨子本機完成，不依賴 Nous 或網路。
+- **鴨子** 負責步態、動作與安全（身體板 Pi Zero 2 W），以及定位導航、收音播放、喚醒詞、人臉偵測（感知板 Pi 4，見 ADR-0005）。安全判斷（跌倒、過熱、低電壓、通訊中斷、禁區）一律在鴨子本機完成，不依賴 Nous 或網路。
 - 兩邊**只**透過 `nous_duck/protocol/` 的版本化 JSON Schema 溝通。不共用程式碼、不直接呼叫對方內部函式。改協定先改 schema 並升版，再改兩端。
 
 ## 3. AIOS 整合規則
@@ -59,6 +59,13 @@
 - 尚未實作的模組在 README 標「規劃中」，**不寫假程式、不放空殼函式充數**。空資料夾用 `.gitkeep`。
 - 工具失敗、逾時、缺資料，回報真實狀態，不顯示假成功。
 - 數字先計算再陳述；計算方式寫進測試或 `nous_duck/docs/validation/`。
+
+## 隱私（本 repo 是公開的）
+
+- **不把家人的真實姓名、房間照片、平面圖、地圖資料、錄音或影像放進 repo**（包括 commit 訊息、PR 與 issue）。文件與程式只用 ID（例如 `brother`、`brother_room`），ID 與真實名稱的對照只存在 Nous 本機設定。
+- 測試用的地圖、影像、音訊一律用合成或公開資料，並標示為 fixture。
+- 鴨子的鏡頭與麥克風沿用 AIOS 紅線：原始影像與未喚醒音訊不寫檔、不進 trace、不外傳（見 `nous_duck/docs/adr/ADR-0003-mobile-terminal-wake-and-find.md` §6）。
+- 可開關的隱私設定依 `nous_duck/docs/adr/ADR-0006-privacy-settings.md`：模型只能收緊、不能放寬；規則在資料產生處執行。
 
 ## 6. Commit 與 PR
 
