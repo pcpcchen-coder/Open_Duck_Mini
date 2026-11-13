@@ -32,6 +32,10 @@ def main() -> None:
     print(f"列印件 {s['printed_pieces']} 件（{s['print_stl_types']} 種）；STS3215 {s['servos']} 顆")
     print(f"高度 {s['height_mm']} mm（不含天線 {s['height_without_antennas_mm']} mm）")
     print(f"網格 {s['unique_meshes']} 種、{s['triangles_unique']:,} 個三角形；量化誤差上限 {s['max_quant_error_mm']} mm")
+    print(f"BOM {s['bom_rows']} 項：{s['bom_rows_by_category']}")
+    print(f"組裝步驟 {s['steps']} 步：")
+    for step in result.scene["steps"]:
+        print(f"  {step['index'] + 1:>2}. {step['title_zh']}：裝上 {len(step['adds'])} 個零件")
     for servo in result.scene["servos"]:
         print(
             f"  ID {servo['id']:>2}  {servo['joint']:<16} {servo['side']:<6} "

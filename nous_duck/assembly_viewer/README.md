@@ -1,6 +1,6 @@
 # ① 3D 組裝檢視器（assembly_viewer）
 
-狀態：**pipeline 已完成**（2026-11-13）；BOM、組裝步驟、前端規劃中。
+狀態：**pipeline、BOM、組裝步驟已完成**（2026-11-13）；前端規劃中。
 
 ## 職責
 
@@ -23,7 +23,7 @@ data/（bom.yaml、steps.yaml、名稱）  ─►  驗證 BOM 與步驟引用   
 | 子目錄 | 內容 | 狀態 |
 |---|---|---|
 | [`pipeline/`](pipeline/README.md) | Python：讀 `robot.xml` 與 STL，產生場景 JSON 與壓縮網格 | 已完成（[驗證紀錄](../docs/validation/viewer-pipeline-2026-11-13.md)） |
-| [`data/`](data/README.md) | `cad_parts.yaml`（已完成）；`bom.yaml`、`steps.yaml`（規劃中） | 部分完成 |
+| [`data/`](data/README.md) | `cad_parts.yaml`、`bom.yaml`、`steps.yaml` | 已完成（[驗證紀錄](../docs/validation/viewer-bom-steps-2026-11-13.md)） |
 | [`web/`](web/README.md) | TypeScript＋three.js 前端，打包成單一 HTML | 規劃中 |
 | [`tests/`](tests/README.md) | pipeline 單元測試（已完成）、Playwright 截圖驗證（規劃中） | 部分完成 |
 | `dist/` | 建置輸出（gitignore，不進版控） | — |
@@ -54,6 +54,6 @@ data/（bom.yaml、steps.yaml、名稱）  ─►  驗證 BOM 與步驟引用   
 ## 建議的實作批次
 
 1. ✅ **pipeline**（2026-11-13）：運動樹解析、世界座標、14 組舵機對應、網格量化、爆炸向量；45 項測試，含 MuJoCo 交叉驗證。
-2. **data**：BOM 與 14 步組裝步驟（以上游 BOM 與組裝說明為準）。
+2. ✅ **data**（2026-11-13）：BOM 71 項與 17 步組裝步驟，以上游 BOM 與組裝說明為準；每個 3D 零件都屬於一個 BOM 項目、在一步裡裝上。
 3. **web**：three.js 三種模式、BOM 連動、步驟面板、單一 HTML 打包。
 4. **tests**：Playwright 截圖驗證與檔案大小檢查。

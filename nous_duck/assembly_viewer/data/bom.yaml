@@ -1,0 +1,448 @@
+# BOM：Open Duck Mini v2 原版的採購件、耗材與工具。
+#
+# 列印件不寫在這裡：36 種列印件由 pipeline 依 cad_parts.yaml 與上游 docs/print_guide.md 自動產生，
+# 避免兩份清單不同步。
+#
+# 每一項的欄位：
+#   id              唯一識別（英文）
+#   category        servo / electronics / power / connector / wire / hardware / material / tool
+#   name_zh/name_en 名稱
+#   qty             數量；上游沒寫的填 null，並在 qty_note 說明
+#   source          數量與品項的來源：upstream_bom（上游 BOM）／assembly_guide（上游組裝說明）
+#   upstream        對應上游 BOM（nous_duck/docs/handoff/upstream_bom.csv）的列：
+#                   csv_row 是 CSV 的第幾筆記錄（從 1 起算，空白列也算），其餘照抄原文。測試會逐項比對。
+#   scene           這一項在 3D 模型中是哪些零件（選擇器，見 steps.yaml 開頭說明）；
+#                   CAD 沒有的零件不寫 scene，改寫 scene_note 說明為什麼不顯示。
+#   package         basic（上游基本 BOM）或 expression（上游的「Expression package」選配）
+#
+# 不憑空補規格：上游沒寫的型號、長度、數量一律不填，寫在 note 裡。
+# 價格是上游原作者以歐元、法國通路估的，不代表台灣價格。
+version: 1
+
+items:
+  # ---------------- 舵機 ----------------
+  - id: sts3215
+    category: servo
+    package: basic
+    name_zh: Feetech STS3215 串列舵機（7.4 V）
+    name_en: Feetech STS3215 serial bus servo (7.4 V)
+    qty: 14
+    source: upstream_bom
+    upstream: {csv_row: 18, name: "Feetech 7.4v STS 3215", qty: 14, unit_price_eur: 14}
+    scene: [{servos: all}]
+    note_zh: 一定要買 7.4 V 版本（上游註明「also called 19kg.cm」）。每顆附的塑膠螺絲用來鎖塑膠件。
+    note_en: Buy the 7.4 V version (upstream calls it "19kg.cm"). The plastic screws that come with each servo are used for printed parts.
+
+  - id: antenna_servo
+    category: servo
+    package: basic
+    name_zh: 9 g 小舵機（天線）
+    name_en: 9 g micro servo (antennas)
+    qty: 2
+    source: upstream_bom
+    upstream: {csv_row: 20, name: "9g servos", qty: 2, unit_price_eur: 3.33}
+    scene: [{mesh: sg90}]
+    note_zh: PWM 控制，接 Pi Zero 的 GPIO 12、13（上游腳位表）。
+    note_en: PWM controlled, wired to Pi Zero GPIO 12 and 13 (upstream pin table).
+
+  # ---------------- 控制與感測 ----------------
+  - id: pi_zero_2w
+    category: electronics
+    package: basic
+    name_zh: Raspberry Pi Zero 2 W
+    name_en: Raspberry Pi Zero 2 W
+    qty: 1
+    source: upstream_bom
+    upstream: {csv_row: 15, name: "Raspberry pi zero 2w", qty: 1, unit_price_eur: 26.08}
+    scene: [{mesh: raspberrypizerow}]
+
+  - id: sd_card
+    category: electronics
+    package: basic
+    name_zh: microSD 卡
+    name_en: microSD card
+    qty: 1
+    source: upstream_bom
+    upstream: {csv_row: 16, name: "SD card", qty: 1, unit_price_eur: 10}
+    scene_note_zh: 插在 Pi Zero 上，CAD 沒有建模。
+    scene_note_en: Goes into the Pi Zero; not modeled in the CAD.
+
+  - id: servo_driver
+    category: electronics
+    package: basic
+    name_zh: 舵機驅動板（Waveshare Bus Servo Adapter (A)）
+    name_en: Servo driver board (Waveshare Bus Servo Adapter (A))
+    qty: 1
+    source: upstream_bom
+    upstream: {csv_row: 17, name: "Servo control board", qty: 1, unit_price_eur: 5}
+    scene: [{mesh: board, body: trunk_assembly}]
+    note_zh: 型號來自上游 BOM 的連結（waveshare.com/bus-servo-adapter-a）。3D 中是 CAD 的通用電路板外形，位置依接線圖推定。
+    note_en: Model taken from the upstream BOM link (waveshare.com/bus-servo-adapter-a). Shown with the CAD's generic board shape; placement inferred from the wiring diagram.
+
+  - id: imu_bno055
+    category: electronics
+    package: basic
+    name_zh: BNO055 IMU
+    name_en: BNO055 IMU
+    qty: 1
+    source: upstream_bom
+    upstream: {csv_row: 14, name: "IMU (BNO055)", qty: 1, unit_price_eur: 40}
+    scene: [{mesh: bno055}]
+    note_zh: 接 Pi Zero 的 I2C（SDA GPIO 2、SCL GPIO 3）。上游說裝反也可以，之後在設定裡補償。
+    note_en: Uses the Pi Zero I2C bus (SDA GPIO 2, SCL GPIO 3). Upstream says mounting it upside down is fine and can be configured later.
+
+  - id: foot_switch
+    category: electronics
+    package: basic
+    name_zh: 足底開關（SS-10）
+    name_en: Foot contact switch (SS-10)
+    qty: 4
+    source: upstream_bom
+    upstream: {csv_row: 19, name: "Feet contact switches (SS-10)", qty: 4, unit_price_eur: 1}
+    scene_note_zh: CAD 沒有建模。壓入腳底，腳掌著地時觸發。
+    scene_note_en: Not modeled in the CAD. Press-fit into the foot so it triggers when the foot touches the ground.
+    note_zh: 上游 BOM 寫 4 顆，但腳位表每隻腳只有一個訊號腳位（左腳 GPIO 22、右腳 GPIO 27）；每隻腳要裝幾顆，上游沒有寫。
+    note_en: The upstream BOM lists 4, but the pin table has one signal pin per foot (left GPIO 22, right GPIO 27). Upstream does not say how many go in each foot.
+
+  # ---------------- 電源 ----------------
+  - id: cell_18650
+    category: power
+    package: basic
+    name_zh: 18650 動力電池
+    name_en: 18650 cell
+    qty: 2
+    source: upstream_bom
+    upstream: {csv_row: 6, name: "18650 cell", qty: 2, unit_price_eur: 5}
+    scene: [{mesh: cell}]
+    note_zh: 兩顆串聯成 2S（標稱 7.4 V、充滿 8.4 V）。上游建議買放電能力最強的，原作者用 3000 mAh、30 A。裝進電池座前，兩顆要先充到相同電壓。
+    note_en: Two cells in series (2S, 7.4 V nominal, 8.4 V full). Upstream recommends the highest-discharge cells you can find; the author uses 3000 mAh, 30 A. Charge both to the same voltage before putting them in the holder.
+
+  - id: cell_holder
+    category: power
+    package: basic
+    name_zh: 2 節 18650 電池座
+    name_en: 2× 18650 cell holder
+    qty: 1
+    source: upstream_bom
+    upstream: {csv_row: 7, name: "18650 cell holder", qty: 1, unit_price_eur: 4.99}
+    scene: [{mesh: holder}]
+
+  - id: bms_2s
+    category: power
+    package: basic
+    name_zh: 2S BMS 保護板
+    name_en: 2S BMS
+    qty: 1
+    source: upstream_bom
+    upstream: {csv_row: 8, name: "2S BMS", qty: 1, unit_price_eur: 8.4}
+    scene: [{mesh: bms}]
+
+  - id: ubec_5v
+    category: power
+    package: basic
+    name_zh: 5V 降壓模組（UBEC）
+    name_en: 5V regulator (UBEC)
+    qty: 1
+    source: upstream_bom
+    upstream: {csv_row: 9, name: "5V regulator", qty: 1, unit_price_eur: 4}
+    scene: [{mesh: board, body: head_assembly}]
+    note_zh: 把 7.4 V 降成 5 V 給 Pi Zero。3D 中是 CAD 的通用電路板外形，位置依接線圖推定（接線圖把 UBEC 畫在頭部）。
+    note_en: Steps 7.4 V down to 5 V for the Pi Zero. Shown with the CAD's generic board shape; placement inferred from the wiring diagram, which puts the UBEC in the head.
+
+  - id: power_switch
+    category: power
+    package: basic
+    name_zh: 電源開關
+    name_en: Power switch
+    qty: 1
+    source: upstream_bom
+    upstream: {csv_row: 10, name: "Small power switch", qty: 1, unit_price_eur: 4.49}
+    scene: [{mesh: power_switch}]
+
+  - id: usb_c_charger
+    category: power
+    package: basic
+    name_zh: USB-C 充電板（2S）
+    name_en: USB-C charger board (2S)
+    qty: 1
+    source: upstream_bom
+    upstream: {csv_row: 11, name: "usb-c charger", qty: 1, unit_price_eur: 9.99}
+    scene: [{mesh: usb_c_charger}]
+
+  # ---------------- 接頭與線材 ----------------
+  - id: barrel_jack
+    category: connector
+    package: basic
+    name_zh: 2.1 mm DC 接頭
+    name_en: 2.1 mm barrel jack
+    qty: 2
+    source: upstream_bom
+    upstream: {csv_row: 12, name: "2.1mm barrel jack", qty: 2, unit_price_eur: 1}
+    scene_note_zh: CAD 沒有建模。
+    scene_note_en: Not modeled in the CAD.
+    note_zh: 接線圖中，7.4 V 經 DC 接頭進舵機驅動板（「7.4V DC in」）。
+    note_en: In the wiring diagram, 7.4 V enters the servo driver through a DC jack ("7.4V DC in").
+
+  - id: xt30_pair
+    category: connector
+    package: basic
+    name_zh: XT30 接頭（公母一對）
+    name_en: XT30 connector (male/female pair)
+    qty: 1
+    source: upstream_bom
+    upstream: {csv_row: 13, name: "XT15? XT30 ?", qty: 1, unit_price_eur: 8}
+    scene_note_zh: CAD 沒有建模。
+    scene_note_en: Not modeled in the CAD.
+    note_zh: 上游原文寫「XT15? XT30 ?」，型號未定；只需要一對，但通常整包賣。
+    note_en: Upstream literally writes "XT15? XT30 ?", so the type is not settled. Only one pair is needed, but they usually come in packs.
+
+  - id: usb_cable_15cm
+    category: wire
+    package: basic
+    name_zh: Micro USB 轉 USB-C 線（15 cm）
+    name_en: Micro USB to USB-C cable (15 cm)
+    qty: 1
+    source: upstream_bom
+    upstream: {csv_row: 25, name: "15cm micro usb to usb-c cable", qty: 1, unit_price_eur: 7}
+    scene_note_zh: 線材不建模。
+    scene_note_en: Cables are not modeled.
+
+  - id: usb_cable_50cm
+    category: wire
+    package: basic
+    name_zh: Micro USB 轉 USB-C 線（50 cm）
+    name_en: Micro USB to USB-C cable (50 cm)
+    qty: 1
+    source: upstream_bom
+    upstream: {csv_row: 26, name: "50cm micro usb to usb c cable", qty: 1, unit_price_eur: 6}
+    scene_note_zh: 線材不建模。
+    scene_note_en: Cables are not modeled.
+    note_zh: 接線圖中，Pi Zero 的 micro USB 以資料線接到機身內舵機驅動板的 USB-C。兩條線各接哪裡，上游沒有寫。
+    note_en: In the wiring diagram, the Pi Zero's micro USB connects to the servo driver's USB-C in the body. Upstream does not say which of the two cables goes where.
+
+  - id: cable_sheath
+    category: wire
+    package: basic
+    name_zh: 理線套管
+    name_en: Cable sheath
+    qty: 1
+    source: upstream_bom
+    upstream: {csv_row: 24, name: "Cable sheath", qty: 1, unit_price_eur: 9}
+    scene_note_zh: 線材不建模。
+    scene_note_en: Cables are not modeled.
+
+  - id: hookup_wire
+    category: wire
+    package: basic
+    name_zh: 電線
+    name_en: Hookup wire
+    qty: null
+    qty_note_zh: 上游組裝說明只寫「Some wire」。
+    qty_note_en: The upstream assembly guide only says "Some wire".
+    source: assembly_guide
+    scene_note_zh: 線材不建模。
+    scene_note_en: Cables are not modeled.
+
+  # ---------------- 五金 ----------------
+  - id: bearing
+    category: hardware
+    package: basic
+    name_zh: 軸承
+    name_en: Bearing
+    qty: 3
+    source: upstream_bom
+    upstream: {csv_row: 27, name: "Bearing", qty: 3, unit_price_eur: 3.5}
+    scene: [{mesh: roll_bearing}]
+    note_zh: 上游 BOM 沒寫型號。CAD 網格量起來外徑 32 mm、厚 7 mm。兩顆在主軀幹，一顆在頭部。
+    note_en: The upstream BOM gives no part number. The CAD mesh measures 32 mm outer diameter and 7 mm thick. Two go in the trunk, one in the head.
+
+  - id: m3_insert
+    category: hardware
+    package: basic
+    name_zh: M3 熱熔螺母（3D 列印用）
+    name_en: M3 heat-set inserts (for 3D prints)
+    qty: null
+    qty_note_zh: 上游 BOM 是「一包」，總數上游沒寫。
+    qty_note_en: The upstream BOM lists one pack; the total count is not given.
+    source: upstream_bom
+    upstream: {csv_row: 21, name: "3D printing M3 inserts", qty: 1, unit_price_eur: 5.99}
+    scene_note_zh: CAD 沒有建模。
+    scene_note_en: Not modeled in the CAD.
+
+  - id: m3x10_screw
+    category: hardware
+    package: basic
+    name_zh: M3×10 螺絲
+    name_en: M3×10 screw
+    qty: 2
+    source: assembly_guide
+    scene_note_zh: CAD 沒有建模。
+    scene_note_en: Not modeled in the CAD.
+    note_zh: 組裝說明中，鎖合主軀幹上下座用 2 支。
+    note_en: The assembly guide uses 2 to join the trunk halves.
+
+  - id: m3x6_screw
+    category: hardware
+    package: basic
+    name_zh: M3×6 螺絲
+    name_en: M3×6 screw
+    qty: 4
+    source: assembly_guide
+    scene_note_zh: CAD 沒有建模。
+    scene_note_en: Not modeled in the CAD.
+    note_zh: 組裝說明中，每隻腳用 2 支鎖合腳底與腳墊，兩隻腳共 4 支。
+    note_en: The assembly guide uses 2 per foot to join the foot bottom and pad, 4 for both feet.
+
+  - id: m3_screws_other
+    category: hardware
+    package: basic
+    name_zh: 其他 M3 螺絲
+    name_en: Other M3 screws
+    qty: null
+    qty_note_zh: '上游組裝說明寫「X m3 screws (TODO : add the exact number)」，數量與長度都沒寫。'
+    qty_note_en: 'The upstream assembly guide says "X m3 screws (TODO : add the exact number)"; neither count nor length is given.'
+    source: assembly_guide
+    scene_note_zh: CAD 沒有建模。
+    scene_note_en: Not modeled in the CAD.
+
+  # ---------------- 材料與耗材 ----------------
+  - id: pla
+    category: material
+    package: basic
+    name_zh: PLA 線材
+    name_en: PLA filament
+    qty: null
+    qty_note_zh: 上游估約 500 g。
+    qty_note_en: Upstream estimates about 500 g.
+    source: upstream_bom
+    upstream: {csv_row: 22, name: "Standard PLA", qty: 1, unit_price_eur: 20}
+    note_zh: 列印件除了 TPU 腳墊都用 PLA、15% 填充（上游列印說明）。
+    note_en: Every printed part except the TPU foot pads is PLA at 15% infill (upstream print guide).
+
+  - id: tpu
+    category: material
+    package: basic
+    name_zh: TPU 線材
+    name_en: TPU filament
+    qty: null
+    qty_note_zh: 只印兩片腳墊，用量很少。
+    qty_note_en: Only the two foot pads use it, so very little is needed.
+    source: upstream_bom
+    upstream: {csv_row: 23, name: "TPU", qty: 1, unit_price_eur: 0}
+    note_zh: foot_bottom_tpu 用 TPU、40% 填充（上游列印說明）。
+    note_en: foot_bottom_tpu is printed in TPU at 40% infill (upstream print guide).
+
+  - id: threadlocker
+    category: material
+    package: basic
+    name_zh: 螺絲膠（Loctite 243 藍）
+    name_en: Threadlocker (Loctite 243 blue)
+    qty: null
+    qty_note_zh: 耗材。
+    qty_note_en: Consumable.
+    source: assembly_guide
+    note_zh: 上游說明：舵機上金屬對金屬的螺絲都要點一點螺絲膠，避免震動鬆脫；塑膠螺絲不要用。
+    note_en: Upstream advice is to use a little threadlocker on every metal-to-metal screw in the servos so vibration does not loosen them, but never on plastic screws.
+
+  # ---------------- 工具 ----------------
+  - id: soldering_iron
+    category: tool
+    package: basic
+    name_zh: 電烙鐵與基本電子工具
+    name_en: Soldering iron and basic electronics tools
+    qty: null
+    qty_note_zh: 工具。
+    qty_note_en: Tool.
+    source: assembly_guide
+
+  # ---------------- 選配：Expression package ----------------
+  - id: speaker
+    category: electronics
+    package: expression
+    name_zh: 喇叭
+    name_en: Speaker
+    qty: 1
+    source: upstream_bom
+    upstream: {csv_row: 33, name: "Speaker", qty: 1, unit_price_eur: 6}
+    scene_note_zh: CAD 沒有建模；3D 中只有喇叭座與轉接件（列印件）。
+    scene_note_en: Not modeled in the CAD; only the printed speaker stand and interface are shown.
+
+  - id: amplifier
+    category: electronics
+    package: expression
+    name_zh: 音訊擴大板
+    name_en: Audio amplifier
+    qty: 1
+    source: upstream_bom
+    upstream: {csv_row: 38, name: "Amplifier", qty: 1, unit_price_eur: 5}
+    scene_note_zh: CAD 沒有建模。
+    scene_note_en: Not modeled in the CAD.
+    note_zh: 上游腳位表列的是 MAX98357A（I2S：LRC GPIO 19、BCLK GPIO 18、DIN GPIO 21）。
+    note_en: "The upstream pin table lists a MAX98357A (I2S: LRC GPIO 19, BCLK GPIO 18, DIN GPIO 21)."
+
+  - id: led
+    category: electronics
+    package: expression
+    name_zh: LED（眼睛與投射燈）
+    name_en: LEDs (eyes and projector)
+    qty: 3
+    source: upstream_bom
+    upstream: {csv_row: 35, name: "Leds (for eyes and projector)", qty: 3, unit_price_eur: 0.2}
+    scene_note_zh: CAD 沒有建模；3D 中只有眼蓋與燈件（列印件）。
+    scene_note_en: Not modeled in the CAD; only the printed eye covers and light parts are shown.
+    note_zh: 腳位表：左眼 GPIO 23、右眼 GPIO 24、投射燈 GPIO 25，共陰極接 GND。
+    note_en: Pin table — left eye GPIO 23, right eye GPIO 24, projector GPIO 25, common cathode to GND.
+
+  - id: eye_diffuser
+    category: hardware
+    package: expression
+    name_zh: 眼睛擴散片
+    name_en: Eye diffusers
+    qty: 4
+    source: upstream_bom
+    upstream: {csv_row: 37, name: "Eye diffusers", qty: 4, unit_price_eur: 0.16}
+    scene_note_zh: CAD 沒有建模。
+    scene_note_en: Not modeled in the CAD.
+
+  - id: projector_reflector
+    category: hardware
+    package: expression
+    name_zh: 投射燈反光杯
+    name_en: Projector reflector
+    qty: 1
+    source: upstream_bom
+    upstream: {csv_row: 32, name: "Projector reflector", qty: 1, unit_price_eur: 2}
+    scene_note_zh: CAD 沒有建模；3D 中只有反光杯座（列印件）。
+    scene_note_en: Not modeled in the CAD; only the printed reflector interface is shown.
+
+  - id: microphone
+    category: electronics
+    package: expression
+    name_zh: 麥克風
+    name_en: Microphone
+    qty: 1
+    source: upstream_bom
+    upstream: {csv_row: 36, name: "Microphone", qty: 1, unit_price_eur: 15}
+    upstream_status_zh: 上游註明「not integrated yet」（尚未整合）。
+    upstream_status_en: Upstream marks it "not integrated yet".
+    scene_note_zh: CAD 沒有建模。
+    scene_note_en: Not modeled in the CAD.
+
+  - id: pi_camera
+    category: electronics
+    package: expression
+    name_zh: Raspberry Pi 鏡頭
+    name_en: Raspberry Pi camera
+    qty: 1
+    source: upstream_bom
+    upstream: {csv_row: 39, name: "Raspberry pi camera", qty: 1, unit_price_eur: 5}
+    upstream_status_zh: 上游註明「Not integrated yet」（尚未整合）。
+    upstream_status_en: Upstream marks it "Not integrated yet".
+    scene_note_zh: CAD 沒有建模。
+    scene_note_en: Not modeled in the CAD.
+
+# CAD 有、但上游 BOM 和列印清單都沒有的零件。必須在這裡列出原因，否則 pipeline 會失敗。
+cad_without_bom:
+  - mesh: antenna
+    reason_zh: 上游列印清單與 BOM 都沒有這個零件，材質與取得方式未說明。
+    reason_en: Neither the upstream print list nor the BOM includes this part; its material and source are not stated.

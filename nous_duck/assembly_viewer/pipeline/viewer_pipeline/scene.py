@@ -13,12 +13,15 @@ from pathlib import Path
 import numpy as np
 
 from . import SCENE_SCHEMA
+from .bom import build_bom
 from .catalog import load_catalog
 from .explode import explode_vectors
 from .geometry import MUJOCO_TO_VIEWER, is_rotation, matrix_to_quat_xyzw, read_binary_stl, transform_points
 from .kinematics import load_robot
 from .meshes import MeshPack, encode_mesh
+from .selectors import PartRef, Resolver
 from .servos import assign_servos
+from .steps import build_steps
 from .upstream import motor_ids, print_list, sha256
 
 ROBOT_DIR = Path("mini_bdx/robots/open_duck_mini_v2")
@@ -26,6 +29,8 @@ PRINT_DIR = Path("print")
 CONFIGURE_MOTORS = Path("docs/configure_motors.md")
 PRINT_GUIDE = Path("docs/print_guide.md")
 CATALOG = Path("nous_duck/assembly_viewer/data/cad_parts.yaml")
+BOM = Path("nous_duck/assembly_viewer/data/bom.yaml")
+STEPS = Path("nous_duck/assembly_viewer/data/steps.yaml")
 ANTENNA_MESH = "antenna"
 
 
@@ -69,8 +74,11 @@ def _round(values, digits: int) -> list[float]:
     return [round(float(v), digits) + 0.0 for v in values]  # + 0.0 把 -0.0 變成 0.0
 
 
-def build(repo_root: Path | None = None) -> BuildResult:
+def build(repo_root: Path | None = None, *, bom_path: Path | None = None, steps_path: Path | None = None) -> BuildResult:
+    """bom_path、steps_path 只給測試用：換成另一份資料檔，檢查錯誤能被擋下。"""
     root = Path(repo_root) if repo_root else default_repo_root()
+    bom_file = Path(bom_path) if bom_path else root / BOM
+    steps_file = Path(steps_path) if steps_path else root / STEPS
     robot_xml = root / ROBOT_DIR / "robot.xml"
     robot = load_robot(robot_xml)
     ids = motor_ids(root / CONFIGURE_MOTORS)
@@ -206,6 +214,33 @@ def build(repo_root: Path | None = None) -> BuildResult:
         body_info,
     )
 
+    # ---- BOM 與組裝步驟 ----
+    refs = [
+        PartRef(id=inst["id"], mesh=inst["mesh"], body=inst["body"], servo_id=inst["servo"].servo_id if inst["servo"] else None)
+        for inst in instances
+    ]
+    resolver = Resolver(
+        refs,
+        cad_meshes=set(catalog.cad),
+        bodies=set(robot.bodies),
+        print_only_keys={extra.key for extra in catalog.print_only},
+    )
+    bom_rows, cad_without_bom, bom_of_part = build_bom(
+        bom_file,
+        catalog,
+        print_counts,
+        refs,
+        {inst["id"]: inst["info"].print_stl for inst in instances},
+        resolver,
+    )
+    steps, step_of_part = build_steps(
+        steps_file,
+        root,
+        resolver,
+        [inst["id"] for inst in instances],
+        {row["id"] for row in bom_rows},
+    )
+
     # ---- 輸出 ----
     servo_by_joint = {s.joint: s for s in servos}
     parts_out = []
@@ -229,6 +264,8 @@ def build(repo_root: Path | None = None) -> BuildResult:
                 "quaternion_xyzw": _round(matrix_to_quat_xyzw(inst["rotation"]), 8),
                 "center_mm": _round(inst["center"], 3),
                 "explode_mm": explode[inst["id"]],
+                "bom_id": bom_of_part.get(inst["id"]),
+                "step": step_of_part[inst["id"]],
             }
         )
 
@@ -277,7 +314,7 @@ def build(repo_root: Path | None = None) -> BuildResult:
         "pose": "所有關節 0 度（上游 CAD 零位）",
         "sources": {
             str(p): sha256(root / p)
-            for p in (ROBOT_DIR / "robot.xml", CONFIGURE_MOTORS, PRINT_GUIDE, CATALOG)
+            for p in (ROBOT_DIR / "robot.xml", CONFIGURE_MOTORS, PRINT_GUIDE, CATALOG, BOM, STEPS)
         },
         "summary": {
             "height_mm": round(float(bbox_max[1] - bbox_min[1]), 1),
@@ -292,12 +329,18 @@ def build(repo_root: Path | None = None) -> BuildResult:
             "unique_meshes": len(pack.records),
             "triangles_unique": sum(r["triangle_count"] for r in pack.records.values()),
             "max_quant_error_mm": max(r["max_quant_error_mm"] for r in pack.records.values()),
+            "bom_rows": len(bom_rows),
+            "bom_rows_by_category": dict(sorted(Counter(r["category"] for r in bom_rows).items())),
+            "steps": len(steps),
         },
         "meshes": pack.records,
         "bodies": [{"name": n, "parent": b.parent, "joint": b.joint} for n, b in robot.bodies.items()],
         "joints": joints_out,
         "servos": servos_out,
         "parts": parts_out,
+        "bom": bom_rows,
+        "cad_without_bom": cad_without_bom,
+        "steps": steps,
     }
     mesh_bin = pack.tobytes()
     scene["summary"]["meshes_bin_bytes"] = len(mesh_bin)
