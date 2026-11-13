@@ -6,13 +6,13 @@ Build a full-size (100%) [Open Duck Mini v2](../README.md) and connect it to [No
 
 This directory holds all of this fork's own development. Upstream files are never modified (see the root [`CLAUDE.md`](../CLAUDE.md), Traditional Chinese only).
 
-## Current status (2026-11-12)
+## Current status (2026-11-13)
 
 | Item | Status |
 |---|---|
 | Printing | 36 of 51 parts printed, 15 remaining ([progress](docs/build_log/print_status.md)) |
 | Assembly | Not started |
-| Software | **Folder structure and design documents only**. Every module is "Planned" and has no code yet |
+| Software | The assembly viewer's data pipeline is done: it computes the placement of 138 parts from the upstream CAD and maps all 14 servo IDs; unit tests and a MuJoCo cross-check pass ([validation record](docs/validation/viewer-pipeline-2026-11-13.md), Traditional Chinese only). The front end and all other modules are still "Planned" |
 | Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0006 (including switchable privacy settings) are drafts or partly accepted; phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
 | Hardware validation | None |
 
@@ -35,7 +35,7 @@ See the [architecture](docs/architecture.md) and [ADR-0001](docs/adr/ADR-0001-du
 | [`docs/adr/`](docs/adr/README.md) | Architecture decision records | ADR-0001 to 0006 |
 | [`docs/build_log/`](docs/build_log/README.md) | Printing, assembly, and calibration progress | Print progress |
 | [`docs/validation/`](docs/validation/README.md) | Hardware and test records | No records yet |
-| [`assembly_viewer/`](assembly_viewer/README.md) | ① Offline single-HTML 3D assembly viewer (first deliverable) | Planned |
+| [`assembly_viewer/`](assembly_viewer/README.md) | ① Offline single-HTML 3D assembly viewer (first deliverable) | Pipeline done; BOM, steps, and front end planned |
 | [`protocol/`](protocol/README.en.md) | ② duck-link protocol (JSON Schema) | Planned |
 | [`robot/`](robot/README.md) | ③ On-board software (Pi Zero 2 W, Python) | Planned |
 | [`nous_adapter/`](nous_adapter/README.en.md) | ④ `app.duck.*` adapter and terminal to move into AIOS (TypeScript) | Planned |

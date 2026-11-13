@@ -10,4 +10,8 @@
 
 檔名格式：`<主題>-YYYY-MM-DD.md`，例如 `assembly-viewer-pipeline-2026-11-13.md`。
 
-目前沒有任何紀錄。
+## 紀錄
+
+| 日期 | 紀錄 | 層級 |
+|---|---|---|
+| 2026-11-13 | [組裝檢視器 pipeline](viewer-pipeline-2026-11-13.md) | 單元測試、MuJoCo 交叉驗證、無頭瀏覽器目視檢查 |

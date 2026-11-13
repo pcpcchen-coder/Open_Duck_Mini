@@ -1,6 +1,6 @@
 # ① 3D 組裝檢視器（assembly_viewer）
 
-狀態：**規劃中**（第一個交付；尚無程式）。
+狀態：**pipeline 已完成**（2026-11-13）；BOM、組裝步驟、前端規劃中。
 
 ## 職責
 
@@ -22,10 +22,10 @@ data/（bom.yaml、steps.yaml、名稱）  ─►  驗證 BOM 與步驟引用   
 
 | 子目錄 | 內容 | 狀態 |
 |---|---|---|
-| [`pipeline/`](pipeline/README.md) | Python：讀 `robot.xml` 與 STL，產生場景 JSON 與壓縮網格 | 規劃中 |
-| [`data/`](data/README.md) | `bom.yaml`、`steps.yaml`、零件中英名稱 | 規劃中 |
+| [`pipeline/`](pipeline/README.md) | Python：讀 `robot.xml` 與 STL，產生場景 JSON 與壓縮網格 | 已完成（[驗證紀錄](../docs/validation/viewer-pipeline-2026-11-13.md)） |
+| [`data/`](data/README.md) | `cad_parts.yaml`（已完成）；`bom.yaml`、`steps.yaml`（規劃中） | 部分完成 |
 | [`web/`](web/README.md) | TypeScript＋three.js 前端，打包成單一 HTML | 規劃中 |
-| [`tests/`](tests/README.md) | pipeline 單元測試、Playwright 截圖驗證 | 規劃中 |
+| [`tests/`](tests/README.md) | pipeline 單元測試（已完成）、Playwright 截圖驗證（規劃中） | 部分完成 |
 | `dist/` | 建置輸出（gitignore，不進版控） | — |
 
 ## 輸入
@@ -39,10 +39,10 @@ data/（bom.yaml、steps.yaml、名稱）  ─►  驗證 BOM 與步驟引用   
 
 - `dist/duck_viewer.html`：單一檔、所有資源（JS、網格、圖片）內嵌、不連網。
 
-## 依賴（預計）
+## 依賴
 
-- Python 3.10+：numpy、scipy（匈牙利演算法 `linear_sum_assignment`）、PyYAML；版本會在 `pipeline/` 鎖定。
-- Node.js：TypeScript、three.js（鎖版本）、打包工具（待選，需能輸出單一 HTML）。
+- Python 3.10+：numpy、PyYAML，鎖定在 [`pipeline/requirements.txt`](pipeline/requirements.txt)。舵機對應改用幾何條件（舵盤在轉軸上），不需要 scipy 的匈牙利演算法；測試另外用 MuJoCo 交叉驗證，見 [`pipeline/requirements-dev.txt`](pipeline/requirements-dev.txt)。
+- Node.js（預計）：TypeScript、three.js（鎖版本）、打包工具（待選，需能輸出單一 HTML）。
 - 測試：pytest、Playwright（雲端容器內建 Chromium，WebGL 2.0 經 SwiftShader）。
 
 ## 設計參考與誠實標示
@@ -53,7 +53,7 @@ data/（bom.yaml、steps.yaml、名稱）  ─►  驗證 BOM 與步驟引用   
 
 ## 建議的實作批次
 
-1. **pipeline**：運動樹解析、世界座標、14 組舵機對應、網格量化；單元測試（舵機 ID 對應、網格數量、座標範圍）。
+1. ✅ **pipeline**（2026-11-13）：運動樹解析、世界座標、14 組舵機對應、網格量化、爆炸向量；45 項測試，含 MuJoCo 交叉驗證。
 2. **data**：BOM 與 14 步組裝步驟（以上游 BOM 與組裝說明為準）。
 3. **web**：three.js 三種模式、BOM 連動、步驟面板、單一 HTML 打包。
 4. **tests**：Playwright 截圖驗證與檔案大小檢查。

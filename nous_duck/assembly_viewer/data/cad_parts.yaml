@@ -1,0 +1,107 @@
+# CAD 網格目錄：上游 robot.xml 的每個網格是什麼零件。
+# pipeline 用它分類零件、對到列印檔，並給介面中英文名稱。
+#
+# kind：
+#   printed      列印件（print_stl 指向上游 print/ 的檔名；數量由 pipeline 對照 docs/print_guide.md 檢查）
+#   servo_part   STS3215 的組成網格（5 個網格組成一顆，見 pipeline/viewer_pipeline/servos.py）
+#   electronics  電子零件
+#   power        電池與電池座
+#   bearing      軸承
+#   other        上游沒有說明用途或來源的零件
+#
+# identification（選填）：名稱不是直接來自上游網格名稱時，說明推定依據。
+# 不憑空補規格：上游沒寫的型號、尺寸不寫進來。
+version: 1
+
+cad_meshes:
+  # ---- 列印件：軀幹與機身 ----
+  trunk_bottom:          {kind: printed, print_stl: trunk_bottom.stl, name_zh: 主軀幹下座, name_en: Trunk bottom}
+  trunk_top:             {kind: printed, print_stl: trunk_top.stl, name_zh: 主軀幹上座, name_en: Trunk top}
+  body_front:            {kind: printed, print_stl: body_front.stl, name_zh: 機身前殼, name_en: Body front}
+  body_back:             {kind: printed, print_stl: body_back.stl, name_zh: 機身後殼（電池艙）, name_en: Body back (battery bay)}
+  body_middle_bottom:    {kind: printed, print_stl: body_middle_bottom.stl, name_zh: 機身中段下殼, name_en: Body middle bottom}
+  body_middle_top:       {kind: printed, print_stl: body_middle_top.stl, name_zh: 機身中段上殼, name_en: Body middle top}
+  battery_pack_lid:      {kind: printed, print_stl: battery_pack_lid.stl, name_zh: 電池艙蓋, name_en: Battery pack lid}
+
+  # ---- 列印件：腿 ----
+  roll_motor_bottom:     {kind: printed, print_stl: roll_motor_bottom.stl, name_zh: 髖側擺舵機下座, name_en: Hip roll motor bottom}
+  roll_motor_top:        {kind: printed, print_stl: roll_motor_top.stl, name_zh: 髖側擺舵機上座, name_en: Hip roll motor top}
+  left_roll_to_pitch:    {kind: printed, print_stl: left_roll_to_pitch.stl, name_zh: 左髖轉接座, name_en: Left roll-to-pitch}
+  right_roll_to_pitch:   {kind: printed, print_stl: right_roll_to_pitch.stl, name_zh: 右髖轉接座, name_en: Right roll-to-pitch}
+  left_cache:            {kind: printed, print_stl: left_cache.stl, name_zh: 左腿側蓋, name_en: Left leg cover}
+  right_cache:           {kind: printed, print_stl: right_cache.stl, name_zh: 右腿側蓋, name_en: Right leg cover}
+  # CAD 網格名稱多了 left_ 前綴；左右腿共用同一個列印檔（上游 print/ 沒有 left_ 前綴）
+  left_knee_to_ankle_left_sheet:  {kind: printed, print_stl: knee_to_ankle_left_sheet.stl, name_zh: 腿段左側板, name_en: Leg sheet (left side)}
+  left_knee_to_ankle_right_sheet: {kind: printed, print_stl: knee_to_ankle_right_sheet.stl, name_zh: 腿段右側板, name_en: Leg sheet (right side)}
+  leg_spacer:            {kind: printed, print_stl: leg_spacer.stl, name_zh: 腿段間隔件, name_en: Leg spacer}
+  foot_top:              {kind: printed, print_stl: foot_top.stl, name_zh: 腳部上座, name_en: Foot top}
+  foot_side:             {kind: printed, print_stl: foot_side.stl, name_zh: 腳部側板, name_en: Foot side}
+  foot_bottom_pla:       {kind: printed, print_stl: foot_bottom_pla.stl, name_zh: 硬質腳底, name_en: Foot bottom (PLA)}
+  foot_bottom_tpu:       {kind: printed, print_stl: foot_bottom_tpu.stl, name_zh: 柔軟腳墊（TPU）, name_en: Foot pad (TPU)}
+
+  # ---- 列印件：頸部與頭部 ----
+  neck_left_sheet:       {kind: printed, print_stl: neck_left_sheet.stl, name_zh: 頸部左側板, name_en: Neck left sheet}
+  neck_right_sheet:      {kind: printed, print_stl: neck_right_sheet.stl, name_zh: 頸部右側板, name_en: Neck right sheet}
+  head_pitch_to_yaw:     {kind: printed, print_stl: head_pitch_to_yaw.stl, name_zh: 頭俯仰轉偏航轉接件, name_en: Head pitch-to-yaw}
+  head_yaw_to_roll:      {kind: printed, print_stl: head_yaw_to_roll.stl, name_zh: 頭偏航轉側擺轉接件, name_en: Head yaw-to-roll}
+  head_roll_mount:       {kind: printed, print_stl: head_roll_mount.stl, name_zh: 頭側擺支座, name_en: Head roll mount}
+  head:                  {kind: printed, print_stl: head.stl, name_zh: 頭殼, name_en: Head shell}
+  head_bot_sheet:        {kind: printed, print_stl: head_bot_sheet.stl, name_zh: 頭部底板, name_en: Head bottom sheet}
+  left_antenna_holder:   {kind: printed, print_stl: left_antenna_holder.stl, name_zh: 左天線座, name_en: Left antenna holder}
+  right_antenna_holder:  {kind: printed, print_stl: right_antenna_holder.stl, name_zh: 右天線座, name_en: Right antenna holder}
+
+  # ---- STS3215 組成網格 ----
+  wj-wk00-0123middlecase_56:     {kind: servo_part, name_zh: STS3215 中殼, name_en: STS3215 middle case}
+  wj-wk00-0124bottomcase_45:     {kind: servo_part, name_zh: STS3215 下殼, name_en: STS3215 bottom case}
+  wj-wk00-0122topcabinetcase_95: {kind: servo_part, name_zh: STS3215 上殼, name_en: STS3215 top case}
+  drive_palonier:                {kind: servo_part, name_zh: STS3215 主動舵盤, name_en: STS3215 drive horn}
+  passive_palonier:              {kind: servo_part, name_zh: STS3215 被動舵盤, name_en: STS3215 passive horn}
+
+  # ---- 電子零件 ----
+  raspberrypizerow:      {kind: electronics, name_zh: Raspberry Pi Zero 2 W, name_en: Raspberry Pi Zero 2 W}
+  bno055:                {kind: electronics, name_zh: BNO055 IMU, name_en: BNO055 IMU}
+  bms:                   {kind: electronics, name_zh: 2S BMS 保護板, name_en: 2S BMS}
+  usb_c_charger:         {kind: electronics, name_zh: USB-C 充電板, name_en: USB-C charger}
+  power_switch:          {kind: electronics, name_zh: 電源開關, name_en: Power switch}
+  sg90:                  {kind: electronics, name_zh: 天線舵機（9 g）, name_en: Antenna servo (9 g)}
+  # CAD 用同一個通用電路板外形放了兩片。依上游接線圖 docs/open_duck_mini_v2_wiring_diagram.png：
+  # 機身（Body）是舵機驅動板，頭部（Head）是 UBEC 5V 降壓模組；兩片在 CAD 中的位置與此一致。
+  board:
+    kind: electronics
+    name_zh: 電路板
+    name_en: Circuit board
+    by_body:
+      trunk_assembly:
+        name_zh: 舵機驅動板
+        name_en: Servo driver board
+        identification: 依上游接線圖推定（機身內的 Motor control board）；外形是 CAD 通用電路板
+      head_assembly:
+        name_zh: 5V 降壓模組（UBEC）
+        name_en: 5V regulator (UBEC)
+        identification: 依上游接線圖推定（頭部內的 UBEC）；外形是 CAD 通用電路板
+
+  # ---- 電源 ----
+  cell:                  {kind: power, name_zh: 18650 電池, name_en: 18650 cell}
+  holder:                {kind: power, name_zh: 2 節 18650 電池座, name_en: 2× 18650 cell holder}
+
+  # ---- 軸承 ----
+  roll_bearing:          {kind: bearing, name_zh: 軸承, name_en: Bearing}
+
+  # ---- 上游未說明 ----
+  antenna:
+    kind: other
+    name_zh: 天線
+    name_en: Antenna
+    identification: 上游列印清單與 BOM 都沒有這個零件，材質與取得方式未說明
+
+# CAD 裡沒有擺放位置的列印件。上游 print/ 的 STL 與 CAD 網格匯出在同一個座標系
+# （例如 print/head.stl 與 CAD head.stl 的外框完全相同，只差單位 mm／m），
+# 所以這些件套用 frame_of 指定的 CAD 網格的變換來擺放。這是推得的位置，介面要標示。
+print_only:
+  left_eye:                  {frame_of: head, name_zh: 左眼蓋, name_en: Left eye}
+  right_eye:                 {frame_of: head, name_zh: 右眼蓋, name_en: Right eye}
+  bulb:                      {frame_of: head, name_zh: 燈件（bulb）, name_en: Bulb}
+  flash_light_module:        {frame_of: head, name_zh: 投射燈模組, name_en: Flash light module}
+  flash_reflector_interface: {frame_of: head, name_zh: 投射燈反光杯座, name_en: Flash reflector interface}
+  speaker_interface:         {frame_of: head, name_zh: 喇叭轉接件, name_en: Speaker interface}
+  speaker_stand:             {frame_of: head, name_zh: 喇叭座, name_en: Speaker stand}
