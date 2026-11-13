@@ -1,0 +1,8 @@
+# 充電座 CAD 產生程式執行依賴（鎖定版本）
+numpy==2.5.4
+trimesh==5.2.1
+manifold3d==3.5.5
+# 讀上游 MJCF 算鴨子站姿（home 姿態）
+mujoco==4.0.1
+# 產生 AprilTag（tag36h11）字典
+opencv-python-headless==5.0.0.93

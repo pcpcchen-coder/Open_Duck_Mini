@@ -9,9 +9,9 @@
 | `wiring/` | 本機身實際的接線圖與 GPIO 對照、電源路徑、線材規格；以上游 `docs/open_duck_mini_v2_wiring_diagram.png` 為基礎；**實體隱私開關**（切斷鏡頭與麥克風電源、狀態接 Pi 4 GPIO，[ADR-0006 §4.1](../docs/adr/ADR-0006-privacy-settings.md#41-實體隱私開關2026-11-12-決定加裝)） | 規劃中 |
 | `sensors/` | 重新設計的頭殼（AR0144 雙目鏡頭裝頭上）；機身頂面的麥克風支架（reSpeaker Flex XVF3800 裝身體上）；喇叭位置（[ADR-0005](../docs/adr/ADR-0005-compute-and-sensor-upgrade.md)）；[麥克風陣列選型](sensors/mic_array_selection.md) | 規劃中（型號已決定） |
 | `compute/` | 感知板（已決定 Raspberry Pi 4）的安裝位置、散熱、身體板與感知板的連線與供電（ADR-0005） | 規劃中 |
-| `dock/` | 充電座：對位標籤、機械導引、觸點、供電與保護電路；改裝的 `body_back`（背後觸點）（[ADR-0004](../docs/adr/ADR-0004-docking-and-charging.md)） | 規劃中（已決定背後觸點） |
+| [`dock/`](dock/README.md) | 充電座「屋形靠背扶手椅」：V 形導引座＋彈簧頂針、AprilTag、狀態燈、電子艙；鴨子背後的外掛觸點板（[ADR-0004](../docs/adr/ADR-0004-docking-and-charging.md)） | **設計 v0**：STL 已產生、幾何測試通過；未列印、未實機 |
 
-**列印提醒（2026-11-12 更新）**：`body_back` 確定要改（背後充電觸點），**不要印原版**；`head`（**確定要重新設計**：AR0144 裝頭上）、`body_middle_bottom`、`battery_pack_lid`（Pi 4 安裝與散熱）可能要改，**先暫緩**，等量完內部空間再決定。`left_cache`、`right_cache`、`body_front`、`head_bot_sheet`、`left_eye`、`right_eye`、`bulb`、`flash_light_module`、`flash_reflector_interface`、`speaker_interface`、`speaker_stand` 可以先印。
+**列印提醒（2026-11-13 更新）**：使用者回報原版 51 件已全部印完（[列印進度](../docs/build_log/print_status.md)）。背後充電觸點改用**外掛觸點板**貼在已印好的 `body_back` 上，不用重印（[`dock/`](dock/README.md#21-背後觸點板建議外掛在已印好的原版-body_back-上)）。以下是 2026-11-12 的原始提醒，保留作紀錄：`body_back` 確定要改（背後充電觸點），**不要印原版**；`head`（**確定要重新設計**：AR0144 裝頭上）、`body_middle_bottom`、`battery_pack_lid`（Pi 4 安裝與散熱）可能要改，**先暫緩**，等量完內部空間再決定。`left_cache`、`right_cache`、`body_front`、`head_bot_sheet`、`left_eye`、`right_eye`、`bulb`、`flash_light_module`、`flash_reflector_interface`、`speaker_interface`、`speaker_stand` 可以先印。
 
 ## MG995 頭部原型注意事項
 

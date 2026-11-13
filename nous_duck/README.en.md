@@ -41,7 +41,7 @@ See the [architecture](docs/architecture.md) and [ADR-0001](docs/adr/ADR-0001-du
 | [`robot/`](robot/README.md) | ③ On-board software (Pi Zero 2 W, Python) | Planned |
 | [`nous_adapter/`](nous_adapter/README.en.md) | ④ `app.duck.*` adapter and terminal to move into AIOS (TypeScript) | Planned |
 | [`sim/`](sim/README.md) | ⑤ MuJoCo simulation | Planned |
-| [`hardware/`](hardware/README.md) | ⑥ Modifications: MG995 head prototype, expression modules, wiring, sensor head, perception board, charging dock | Planned |
+| [`hardware/`](hardware/README.md) | ⑥ Modifications: MG995 head prototype, expression modules, wiring, sensor head, perception board, charging dock | Planned; the [charging dock](hardware/dock/README.md) is design v0 (STL files generated; not printed, not tested on hardware; docs in Traditional Chinese) |
 | [`tools/`](tools/README.md) | Development tools (upstream-untouched check, ChatGPT share-page converter) | Usable |
 
 Documents other than this README and the `protocol/` and `nous_adapter/` READMEs are in Traditional Chinese only.

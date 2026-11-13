@@ -36,7 +36,7 @@
 | `body_front.stl` | 1 | PLA 15% | 已印完 |  |
 | `body_middle_bottom.stl` | 1 | PLA 15% | 已印完 | 已印原版，改裝構想見 ADR-0005 |
 | `body_middle_top.stl` | 1 | PLA 15% | 已印完 |  |
-| `body_back.stl` | 1 | PLA 15% | 已印完 | 已印原版，改裝構想見 ADR-0004 |
+| `body_back.stl` | 1 | PLA 15% | 已印完 | 已印原版；背後充電觸點改用外掛觸點板，不用重印（[`hardware/dock/`](../../hardware/dock/README.md)） |
 | `battery_pack_lid.stl` | 1 | PLA 15% | 已印完 | 已印原版，改裝構想見 ADR-0005 |
 | `bulb.stl` | 1 | PLA 15% | 已印完 | CAD 無擺放位置（表情套件） |
 | `flash_light_module.stl` | 1 | PLA 15% | 已印完 | CAD 無擺放位置（表情套件） |
