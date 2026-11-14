@@ -1,6 +1,6 @@
 # ChatGPT 版 3D 組裝檢視器原始碼（參考用）
 
-ChatGPT 在 2026-11-12 做出 `Open_Duck_Mini_v2_Assembly_Viewer.html`，但成品只存在 ChatGPT 的沙箱（`/mnt/data`），**已經拿不到**。這個資料夾放的是它在對話中寫出的產生程式。內容用 [`../../../tools/extract_chatgpt_viewer_src.py`](../../../tools/extract_chatgpt_viewer_src.py) 從 [`../chatgpt_conversation_2026-11.md`](../chatgpt_conversation_2026-11.md) 抽出，**沒有人工改寫**。
+ChatGPT 在 2026-11-12 做出 `Open_Duck_Mini_v2_Assembly_Viewer.html`，當時以為成品只存在 ChatGPT 的沙箱（`/mnt/data`）、拿不到；2026-11-14 使用者上傳了成品，存在 [`../chatgpt_viewer_html/`](../chatgpt_viewer_html/README.md)。這個資料夾放的是它在對話中寫出的產生程式。內容用 [`../../../tools/extract_chatgpt_viewer_src.py`](../../../tools/extract_chatgpt_viewer_src.py) 從 [`../chatgpt_conversation_2026-11.md`](../chatgpt_conversation_2026-11.md) 抽出，**沒有人工改寫**。
 
 > ⚠️ **這是參考資料，不是本 repo 的實作。** 它沒有在本 repo 執行或驗證過，路徑也寫死在 ChatGPT 的沙箱。真正的實作在 [`../../../assembly_viewer/`](../../../assembly_viewer/README.md)，要重新寫並驗證。
 

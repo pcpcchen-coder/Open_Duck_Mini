@@ -62,7 +62,7 @@
 - **BOM 爆炸檢視**：每個元件都能看，包含所有電子元件與馬達。
 - **逐步組裝指引**。
 
-ChatGPT 做過一版（`Open_Duck_Mini_v2_Assembly_Viewer.html`），但**檔案拿不到**（只存在 ChatGPT 的沙箱 `/mnt/data`）。對話紀錄裡保留了它的產生程式碼，已抽成 10 個檔案放在 [`chatgpt_viewer_src/`](chatgpt_viewer_src/README.md)。這些程式可以當設計參考，但不能直接當成已驗證的實作：
+ChatGPT 做過一版（`Open_Duck_Mini_v2_Assembly_Viewer.html`）。當初以為檔案拿不到（只存在 ChatGPT 的沙箱 `/mnt/data`）；**2026-11-14 使用者上傳了成品，已原封不動存放在 [`chatgpt_viewer_html/`](chatgpt_viewer_html/README.md) 備用**（只確認可離線開啟，內容未驗證）。對話紀錄裡也保留了它的產生程式碼，已抽成 10 個檔案放在 [`chatgpt_viewer_src/`](chatgpt_viewer_src/README.md)。這些程式可以當設計參考，但不能直接當成已驗證的實作：
 
 | 面向 | ChatGPT 版的作法（參考） |
 |---|---|
