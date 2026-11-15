@@ -5,3 +5,4 @@
 """
 
 SCENE_SCHEMA = "nous-duck/viewer-scene@1"
+STEPS_SCHEMA = "nous-duck/viewer-steps@1"

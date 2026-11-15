@@ -13,7 +13,7 @@ cd nous_duck/assembly_viewer/pipeline
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements-dev.txt     # 只建置不測試的話用 requirements.txt
 python -m viewer_pipeline               # 輸出到 ../dist/build/（不進版控）
-python -m pytest ../tests/pipeline      # 45 項測試
+python -m pytest ../tests/pipeline      # 63 項測試
 ```
 
 建置約 2 秒，會印出零件數量、高度和 14 顆舵機的對應結果。任何檢查沒通過時會直接失敗，不會產生半套的輸出。
@@ -27,8 +27,9 @@ python -m pytest ../tests/pipeline      # 45 項測試
 | 上游 `docs/configure_motors.md` | 舵機 ID 表（直接讀原文，不另抄一份） |
 | 上游 `docs/print_guide.md` | 列印件種類與數量，用來核對 |
 | [`../data/cad_parts.yaml`](../data/cad_parts.yaml) | 每個 CAD 網格的類別、列印檔、中英文名稱 |
+| [`../data/steps.yaml`](../data/steps.yaml) | 組裝步驟與每步裝上的零件（選擇器） |
 
-## 輸出：`dist/build/scene.json`＋`dist/build/meshes.bin`
+## 輸出：`dist/build/scene.json`＋`dist/build/meshes.bin`＋`dist/build/steps.json`
 
 座標系：**+X 左、+Y 上、+Z 前**（three.js 慣用的 Y 朝上），單位毫米。Y = 0 是腳底最低點，X、Z 以整機外框中心為 0。姿態是所有關節 0 度，也就是上游 CAD 的零位。
 
@@ -50,6 +51,8 @@ python -m pytest ../tests/pipeline      # 45 項測試
 - **索引區**：頂點數不超過 65535 時用 uint16，否則用 uint32。
 - **法向量**：不存，前端用平面著色（flat shading）。
 
+`steps.json`（schema `nous-duck/viewer-steps@1`）：`steps.yaml` 的每一步，把零件選擇器展開成 `scene.json` 的零件 id（`adds`、`focus`）。建置時檢查每個零件剛好在一步裝上、`focus` 不指向還沒裝的零件、選擇器都對得到零件；不通過就不產生任何輸出（`steps.py`）。
+
 ## 作法
 
 1. **運動樹**（`kinematics.py`）：遞迴累加 body 的 `pos` 和 `quat`，算出每個 geom 的世界座標。只支援上游實際用到的寫法，遇到 `euler`、網格 `scale` 等其他寫法會直接報錯，不會默默算錯。
@@ -62,7 +65,7 @@ python -m pytest ../tests/pipeline      # 45 項測試
 
 ## 已知限制
 
-- **零件不完整**：CAD 沒有足底開關、喇叭、LED、線材、螺絲與熱熔螺帽，這一批也還沒補示意形狀。要等 BOM（下一批）定義後再加，並標成示意。
-- **爆炸距離待調**：目前是固定值，沿腿累加後，腳底板會移得比較遠。前端可以依比例調整，實際效果在前端批次再調。
+- **零件不完整**：CAD 沒有足底開關、喇叭、LED、線材、螺絲與熱熔螺帽，還沒補示意形狀。要等 BOM 定義後再加，並標成示意。
+- **爆炸距離**：固定值，沿腿累加後，腳底板會移得比較遠。前端用滑桿 0～200% 等比例縮放。
 - **只有零位姿態**：檢視器目前只顯示零位。
-- **網格大小**：`meshes.bin` 約 3.7 MB。最大的是 STS3215 下殼，約 10 萬個三角形、占 25%；其次是 STS3215 上殼，占 10%。要不要簡化網格，在前端批次依單一 HTML 的檔案大小再決定。
+- **網格大小**：`meshes.bin` 約 3.7 MB。最大的是 STS3215 下殼，約 10 萬個三角形、占 25%；其次是 STS3215 上殼，占 10%。前端 gzip 後整份 HTML 約 4.3 MB，目前不簡化。

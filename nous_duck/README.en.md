@@ -6,14 +6,14 @@ Build a full-size (100%) [Open Duck Mini v2](../README.md) and connect it to [No
 
 This directory holds all of this fork's own development. Upstream files are never modified (see the root [`CLAUDE.md`](../CLAUDE.md), Traditional Chinese only).
 
-## Current status (2026-11-13)
+## Current status (2026-11-15)
 
 | Item | Status |
 |---|---|
 | Printing | All 51 original parts printed ([progress](docs/build_log/print_status.md)) |
 | Procurement | Sourcing hardware ([checklist and suppliers](docs/build_log/README.md)) |
 | Assembly | Not started |
-| Software | The assembly viewer's data pipeline is done: it computes the placement of 138 parts from the upstream CAD and maps all 14 servo IDs; unit tests and a MuJoCo cross-check pass ([validation record](docs/validation/viewer-pipeline-2026-11-13.md), Traditional Chinese only). The front end and all other modules are still "Planned" |
+| Software | The first version of the assembly viewer is usable: a single HTML file that opens offline and shows 138 parts, the 14 servo IDs, and the 15 assembly steps from the upstream CAD, with exploded and X-ray views ([pipeline record](docs/validation/viewer-pipeline-2026-11-13.md), [front-end record](docs/validation/viewer-web-2026-11-15.md), Traditional Chinese only; validated by unit tests and a headless browser). The BOM and all other modules are still "Planned" |
 | Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0006 (including switchable privacy settings) are drafts or partly accepted; phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
 | Hardware validation | None |
 
@@ -35,14 +35,14 @@ See the [architecture](docs/architecture.md) and [ADR-0001](docs/adr/ADR-0001-du
 | [`docs/roadmap.md`](docs/roadmap.md) | Phases and gates, decisions waiting for the owner | Draft |
 | [`docs/adr/`](docs/adr/README.md) | Architecture decision records | ADR-0001 to 0006 |
 | [`docs/build_log/`](docs/build_log/README.md) | Printing, procurement, assembly, and calibration progress | Printing complete, procurement underway |
-| [`docs/validation/`](docs/validation/README.md) | Hardware and test records | No records yet |
-| [`assembly_viewer/`](assembly_viewer/README.md) | ① Offline single-HTML 3D assembly viewer (first deliverable) | Pipeline done; BOM, steps, and front end planned |
+| [`docs/validation/`](docs/validation/README.md) | Hardware and test records | 3 records (none on hardware) |
+| [`assembly_viewer/`](assembly_viewer/README.md) | ① Offline single-HTML 3D assembly viewer (first deliverable) | First version usable (pipeline, steps, front end); BOM planned |
 | [`protocol/`](protocol/README.en.md) | ② duck-link protocol (JSON Schema) | Planned |
 | [`robot/`](robot/README.md) | ③ On-board software (Pi Zero 2 W, Python) | Planned |
 | [`nous_adapter/`](nous_adapter/README.en.md) | ④ `app.duck.*` adapter and terminal to move into AIOS (TypeScript) | Planned |
 | [`sim/`](sim/README.md) | ⑤ MuJoCo simulation | Planned |
 | [`hardware/`](hardware/README.md) | ⑥ Modifications: MG995 head prototype, expression modules, wiring, sensor head, perception board, charging dock | Planned; the [charging dock](hardware/dock/README.md) is design v0 (STL files generated; not printed, not tested on hardware; docs in Traditional Chinese) |
-| [`tools/`](tools/README.md) | Development tools (upstream-untouched check, ChatGPT share-page converter) | Usable |
+| [`tools/`](tools/README.md) | Development tools (upstream-untouched check, ChatGPT share-page converter, ChatGPT viewer comparison) | Usable |
 
 Documents other than this README and the `protocol/` and `nous_adapter/` READMEs are in Traditional Chinese only.
 

@@ -1,0 +1,21 @@
+{
+  "name": "nous-duck-assembly-viewer",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Open Duck Mini v2 離線 3D 組裝檢視器（單一 HTML）",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "node build.mjs",
+    "check": "node check_output.mjs"
+  },
+  "dependencies": {
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@types/three": "0.186.0",
+    "esbuild": "0.28.2",
+    "typescript": "6.0.3"
+  }
+}

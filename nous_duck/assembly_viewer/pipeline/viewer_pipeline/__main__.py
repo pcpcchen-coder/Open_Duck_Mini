@@ -1,4 +1,4 @@
-"""命令列：產生 scene.json 與 meshes.bin。
+"""命令列：產生 scene.json、meshes.bin 與 steps.json。
 
     cd nous_duck/assembly_viewer/pipeline
     python -m viewer_pipeline                       # 輸出到 ../dist/build/
@@ -9,7 +9,10 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+import json
+
 from .scene import build, default_repo_root
+from .steps import load_steps
 
 
 def main() -> None:
@@ -24,10 +27,14 @@ def main() -> None:
     args = parser.parse_args()
 
     result = build(args.repo_root)
+    steps = load_steps(args.repo_root, result.scene)  # 先檢查步驟，沒過就不寫任何輸出
     scene_path, bin_path = result.write(args.out)
+    steps_path = args.out / "steps.json"
+    steps_path.write_text(json.dumps(steps, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     s = result.scene["summary"]
     print(f"scene.json  {scene_path}  {scene_path.stat().st_size:,} bytes")
     print(f"meshes.bin  {bin_path}  {bin_path.stat().st_size:,} bytes")
+    print(f"steps.json  {steps_path}  {len(steps['steps'])} 步")
     print(f"零件實例 {s['part_instances']}：{s['parts_by_kind']}")
     print(f"列印件 {s['printed_pieces']} 件（{s['print_stl_types']} 種）；STS3215 {s['servos']} 顆")
     print(f"高度 {s['height_mm']} mm（不含天線 {s['height_without_antennas_mm']} mm）")

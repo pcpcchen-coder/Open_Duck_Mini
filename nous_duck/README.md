@@ -6,14 +6,14 @@
 
 本目錄是這個 fork 自己的全部開發；上游檔案一律不改（規則見根目錄 [`CLAUDE.md`](../CLAUDE.md)）。
 
-## 目前狀態（2026-11-13）
+## 目前狀態（2026-11-15）
 
 | 項目 | 狀態 |
 |---|---|
 | 列印 | 原版 51／51 件已印完（[進度](docs/build_log/print_status.md)） |
 | 採購 | 周邊零件採購中（[清單與賣場](docs/build_log/README.md)） |
 | 組裝 | 尚未開始 |
-| 軟體 | 組裝檢視器的資料處理程式（pipeline）已完成：從上游 CAD 算出 138 個零件的位置、對上 14 顆舵機 ID，單元測試與 MuJoCo 交叉驗證通過（[驗證紀錄](docs/validation/viewer-pipeline-2026-11-13.md)）。前端與其他模組仍是「規劃中」 |
+| 軟體 | 組裝檢視器第一版可用：單一 HTML、離線開啟，依上游 CAD 顯示 138 個零件、14 顆舵機 ID 與 15 步組裝順序，可爆炸、透視（[pipeline 驗證](docs/validation/viewer-pipeline-2026-11-13.md)、[前端驗證](docs/validation/viewer-web-2026-11-15.md)，層級為單元測試與無頭瀏覽器）。BOM 與其他模組仍是「規劃中」 |
 | 設計 | 行動夥伴需求 [R-001](docs/requirements/R-001-mobile-companion.md)（導航、行動對話、喚醒找人、自動回充）與 ADR-0002～0006（含可開關的隱私設定）為草案或部分採用；階段見 [路線圖](docs/roadmap.md) |
 | 實機驗證 | 無 |
 
@@ -35,14 +35,14 @@
 | [`docs/roadmap.md`](docs/roadmap.md) | 階段與 gate、待使用者決定的事 | 草案 |
 | [`docs/adr/`](docs/adr/README.md) | 架構決策紀錄 | ADR-0001～0006 |
 | [`docs/build_log/`](docs/build_log/README.md) | 列印、採購、組裝、校正進度 | 列印完成，周邊採購中 |
-| [`docs/validation/`](docs/validation/README.md) | 實機與測試紀錄 | 尚無紀錄 |
-| [`assembly_viewer/`](assembly_viewer/README.md) | ① 離線單一 HTML 3D 組裝檢視器（第一個交付） | pipeline 已完成；BOM、步驟、前端規劃中 |
+| [`docs/validation/`](docs/validation/README.md) | 實機與測試紀錄 | 3 份（皆非實機） |
+| [`assembly_viewer/`](assembly_viewer/README.md) | ① 離線單一 HTML 3D 組裝檢視器（第一個交付） | 第一版可用（pipeline、步驟、前端）；BOM 規劃中 |
 | [`protocol/`](protocol/README.md) | ② duck-link 協定（JSON Schema） | 規劃中 |
 | [`robot/`](robot/README.md) | ③ 機上程式（Pi Zero 2 W，Python） | 規劃中 |
 | [`nous_adapter/`](nous_adapter/README.md) | ④ 要搬進 AIOS 的 `app.duck.*` adapter 與終端（TypeScript） | 規劃中 |
 | [`sim/`](sim/README.md) | ⑤ MuJoCo 模擬 | 規劃中 |
 | [`hardware/`](hardware/README.md) | ⑥ 改裝：MG995 頭部原型、表情模組、接線、感測頭、感知板、充電座 | 規劃中；[充電座](hardware/dock/README.md)為設計 v0（STL 已產生，未列印、未實機） |
-| [`tools/`](tools/README.md) | 開發工具（上游未修改檢查、ChatGPT 分享頁轉檔） | 可用 |
+| [`tools/`](tools/README.md) | 開發工具（上游未修改檢查、ChatGPT 分享頁轉檔、ChatGPT 版檢視器比對） | 可用 |
 
 ## 主要硬體
 
