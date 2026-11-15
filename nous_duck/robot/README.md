@@ -17,7 +17,7 @@
 | `deploy/` | 安裝與部署：pip 從 git 安裝上游 runtime 並鎖 commit、systemd 服務 | 規劃中 |
 | `navigation/` | （感知板）定位融合（VIO＋AprilTag，**不用步數**）、拓撲與柵格路徑規劃、避障、回充對位（[ADR-0002](../docs/adr/ADR-0002-indoor-localization-and-navigation.md)、[ADR-0004](../docs/adr/ADR-0004-docking-and-charging.md)） | 規劃中 |
 | `perception/` | （感知板）雙目擷取、深度、AprilTag 偵測、人臉偵測與特徵（[ADR-0003](../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md)） | 規劃中 |
-| `audio/` | （感知板）喚醒詞（sherpa-onnx KWS）、聲源方向、語音串流、喇叭（ADR-0003） | 規劃中 |
+| `audio/` | （感知板）喚醒詞（sherpa-onnx KWS）、聲源方向、語音串流、喇叭（ADR-0003）；變聲輸出 `duck_voice`、本機音效 `duck_raw`、播放閘門與音量上限（[ADR-0007](../docs/adr/ADR-0007-duck-voice.md)） | 規劃中 |
 | `tests/` | 單元測試（safety 規則、意圖轉換、schema 驗證）；不需要硬體的部分可在雲端跑 | 規劃中 |
 
 `nous_link/`、`behaviors/`、`safety/` 在身體板執行；`navigation/`、`perception/`、`audio/` 在感知板執行。若 ADR-0005 改採單板，全部在同一片，但 safety 仍要與感知工作隔離。
