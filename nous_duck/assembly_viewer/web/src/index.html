@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Duck Mini v2 組裝檢視器</title>
+<meta name="description" content="Open Duck Mini v2（原版 100% 尺寸）離線 3D 組裝檢視器：依上游 CAD 的零件位置、爆炸圖與 15 步組裝順序。">
+<style>/*__STYLE__*/</style>
+</head>
+<body class="is-loading">
+<header class="topbar">
+  <div class="brand">
+    <h1>Open Duck Mini v2 組裝檢視器</h1>
+    <p>Nous Duck · 原版 100% 尺寸 · 零件位置來自上游 CAD</p>
+  </div>
+  <dl class="stats">
+    <div><dt>高度</dt><dd id="stat-height">—</dd></div>
+    <div><dt>零件實例</dt><dd id="stat-parts">—</dd></div>
+    <div><dt>列印件</dt><dd id="stat-printed">—</dd></div>
+    <div><dt>舵機</dt><dd id="stat-servos">—</dd></div>
+  </dl>
+</header>
+
+<p class="notice" role="note">
+  <strong>畫面只有上游 CAD 裡的零件。</strong>足底開關、喇叭、LED、線材、螺絲、熱熔螺母不在 3D 畫面裡。
+  驗證層級：零件位置與上游 CAD、MuJoCo 比對過，頁面在無頭瀏覽器測過；組裝步驟還沒經過實機驗證，以上游照片為準。
+</p>
+
+<main class="layout">
+  <aside class="panel steps-panel" aria-label="組裝步驟">
+    <div class="panel-head">
+      <h2>組裝步驟</h2>
+      <span id="progress" class="muted"></span>
+    </div>
+    <ol id="step-list" class="step-list"></ol>
+    <div id="step-detail" class="step-detail" aria-live="polite"></div>
+    <p id="store-note" class="note note-warn" hidden>這個瀏覽器不能儲存進度（可能是私密瀏覽），重新整理後勾選會消失。</p>
+  </aside>
+
+  <section class="stage" aria-label="3D 檢視">
+    <div class="toolbar" role="toolbar" aria-label="檢視控制">
+      <div class="seg" role="group" aria-label="模式">
+        <button type="button" id="mode-steps" aria-pressed="true">依步驟</button>
+        <button type="button" id="mode-all" aria-pressed="false">整機</button>
+      </div>
+      <label class="slider">爆炸 <input id="explode" type="range" min="0" max="200" value="0" step="5"> <output id="explode-value">0%</output></label>
+      <label class="toggle"><input id="xray" type="checkbox"> 透視外殼</label>
+      <label class="toggle"><input id="labels" type="checkbox" checked> 舵機 ID</label>
+      <label class="toggle"><input id="ghost" type="checkbox"> 顯示後面步驟（淡）</label>
+      <div class="seg" role="group" aria-label="視角">
+        <button type="button" data-view="iso">斜前</button>
+        <button type="button" data-view="front">正面</button>
+        <button type="button" data-view="left">左側</button>
+        <button type="button" data-view="right">右側</button>
+        <button type="button" data-view="back">背面</button>
+        <button type="button" data-view="top">俯視</button>
+      </div>
+    </div>
+    <div id="stage-canvas" class="stage-canvas">
+      <div class="loading" aria-live="polite">載入 3D 模型中…</div>
+      <div id="fatal" class="fatal" role="alert" hidden></div>
+    </div>
+    <div id="step-nav" class="step-nav">
+      <button type="button" id="prev-step">← 上一步</button>
+      <span class="hint">拖曳旋轉 · 滾輪縮放 · 右鍵平移 · 點零件看說明</span>
+      <button type="button" id="next-step" class="primary">下一步 →</button>
+    </div>
+    <div class="tabs" role="tablist" aria-label="面板">
+      <button type="button" role="tab" data-tab="steps" aria-selected="true">步驟</button>
+      <button type="button" role="tab" data-tab="parts" aria-selected="false">零件</button>
+    </div>
+  </section>
+
+  <aside class="panel parts-panel" aria-label="零件">
+    <div class="panel-head">
+      <h2>零件</h2>
+      <div class="seg small">
+        <button type="button" id="isolate-btn" aria-pressed="false" disabled>單獨顯示</button>
+        <button type="button" id="clear-btn">清除</button>
+      </div>
+    </div>
+    <div id="part-info" class="part-info"></div>
+    <input id="part-search" class="search" type="search" placeholder="搜尋：ID 24、膝、foot_top…" aria-label="搜尋零件">
+    <ul id="part-list" class="part-list"></ul>
+  </aside>
+</main>
+
+<footer class="footer">
+  <p id="build-info"></p>
+  <p>Open Duck Mini 由 Antoine Pirrone 與貢獻者製作（Apache-2.0），本頁的網格取自其 CAD。3D 引擎 three.js（MIT）。本頁由 <a href="https://github.com/pcpcchen-coder/Open_Duck_Mini/tree/v2/nous_duck/assembly_viewer" target="_blank" rel="noopener noreferrer">nous_duck/assembly_viewer</a> 產生，可離線開啟。</p>
+</footer>
+
+<script type="application/json" id="viewer-data">/*__DATA__*/</script>
+<script type="application/octet-stream" id="mesh-data">/*__MESHES__*/</script>
+<script>/*__SCRIPT__*/</script>
+</body>
+</html>

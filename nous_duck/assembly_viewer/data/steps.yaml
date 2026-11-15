@@ -1,0 +1,245 @@
+# 組裝步驟：檢視器的步驟面板依這份資料顯示，pipeline（viewer_pipeline/steps.py）負責檢查與展開。
+#
+# 內容依據：
+#   - 上游 docs/assembly_guide.md（順序與每步做什麼）
+#   - nous_duck/docs/build_log/Open_Duck_Mini_v2_Assembly_Guide_zh-TW.md（中文整理，已對照上游）
+#   - nous_duck/docs/validation/viewer-pipeline-2026-11-13.md（左右腿 180° 等 CAD 驗證結果）
+# 上游沒寫的（例如螺絲總數）不補；照片以上游文件為準。
+#
+# 欄位：
+#   adds    這一步「裝上」的零件。每個 CAD 零件必須剛好出現在一個步驟的 adds（pipeline 會檢查）。
+#   focus   這一步要特別看、但在之前步驟已經裝上的零件（只高亮，不重複計入）。
+#   optional: true  選配步驟。
+#   show_all: true  3D 畫面顯示整機（例如裝機前的舵機設定），focus 可以指向還沒裝上的零件。
+#
+# 零件選擇器：
+#   servo:<ID>           一顆 STS3215（5 個網格）
+#   body:<body>          該 body 裡所有非舵機零件
+#   mesh:<mesh>          所有實例（不含舵機網格）
+#   mesh:<mesh>@<body>   指定 body 裡的實例
+#   part:<零件 id>       單一零件（scene.json 的 id）
+#
+# sources 的 path 是相對 repo 根目錄的路徑，前端轉成 GitHub 連結；url 則原樣使用。
+version: 1
+
+steps:
+  - id: servo_setup
+    title: 設定 14 顆舵機的 ID 與零位
+    summary: 裝進機體前，每次只接一顆 STS3215，寫入 ID 並轉到零位。
+    show_all: true
+    tasks:
+      - 用已裝 Open Duck Mini Runtime（v2）的電腦或 Pi，透過舵機驅動板連線；舵機空載、限流供電，每次只接一顆，換插頭前先斷電。
+      - 執行 `python3 scripts/configure_motor.py --port <序列埠> --id <ID>`，看到設定完成再換下一顆。
+      - 右腿 10–14、左腿 20–24（髖偏航、髖側擺、髖俯仰、膝、踝），頸俯仰 30、頭俯仰 31、頭偏航 32、頭側擺 33。左右以鴨子面向前方時自身的左右為準。
+      - 每顆貼上 ID 與部位，依上游照片對齊舵盤後再固定。
+    check: 14 顆都能單獨讀回，ID 不重複，舵盤已依零位對齊。
+    warnings:
+      - 在 3D 畫面點任一顆舵機可以看到它的 ID 與裝在哪裡。
+    focus: [servo:10, servo:11, servo:12, servo:13, servo:14, servo:20, servo:21, servo:22, servo:23, servo:24, servo:30, servo:31, servo:32, servo:33]
+    sources:
+      - {label: 上游：設定舵機, path: docs/configure_motors.md}
+      - {label: Runtime 安裝與設定程式, url: "https://github.com/apirrone/Open_Duck_Mini_Runtime/blob/v2/README.md"}
+
+  - id: trunk
+    title: 主軀幹
+    summary: 軸承、熱熔螺母、上下座合起來，裝頸俯仰舵機與兩個髖座下件。
+    tasks:
+      - 兩顆軸承放進 trunk_bottom，依上游照片熱熔 M3 螺母；底面給外殼用的 4 個 M3 螺母也在這時候做。
+      - trunk_bottom 與 trunk_top 合起來，用 2 支 M3×10 鎖合。
+      - 中央裝頸俯仰舵機 ID 30，用舵機隨附的塑膠螺絲固定。
+      - 依照片放入兩個 roll_motor_bottom。
+    check: 軸承就位，上下座平貼，底面外殼鎖點仍可使用。
+    warnings:
+      - 舵機和金屬件之間的金屬螺絲上一點 Loctite 243；塑膠螺絲不要上。
+    adds: [part:trunk_assembly/trunk_bottom, part:trunk_assembly/trunk_top, part:trunk_assembly/roll_bearing#1, part:trunk_assembly/roll_bearing#2, servo:30, mesh:roll_motor_bottom]
+    sources:
+      - {label: 上游：Assemble the trunk, path: "docs/assembly_guide.md#assemble-the-trunk"}
+
+  - id: feet
+    title: 雙腳與踝舵機
+    summary: 兩隻腳的零件相同。腳底兩層鎖合，再把踝舵機裝上 foot_top。
+    tasks:
+      - foot_bottom_tpu 疊上 foot_bottom_pla，熱熔螺母後用 2 支 M3×6 鎖合（每腳）。
+      - foot_top 熱熔螺母，組合整隻腳。踝舵機（右 14、左 24）的主動舵盤側朝 foot_top。
+      - 足底開關壓入腳底，讓腳著地時開關被壓下。
+    check: 腳掌能平放；開關壓下和放開都有反應。
+    warnings:
+      - 足底開關不在上游 CAD 裡，3D 畫面沒有它。
+    adds: [body:foot_assembly, body:foot_assembly_2, servo:14, servo:24]
+    sources:
+      - {label: 上游：Assemble the feet, path: "docs/assembly_guide.md#assemble-the-feet"}
+
+  - id: shins
+    title: 小腿與膝舵機
+    summary: 小腿側板夾住踝舵機，接上膝舵機。右腿這一組是左腿那組轉 180°，不是鏡像。
+    tasks:
+      - 每個 leg_spacer 兩側各熱熔 2 個 M3 螺母（每個共 4 個）。
+      - 先把線插上腳的踝舵機，依照片穿過 right_sheet，再合上兩片側板。
+      - 接上膝舵機（右 13、左 23）。
+    check: 線束有餘量、沒有被側板夾到；側板與舵機 ID 對得上。
+    warnings:
+      - 左右腿用同一套零件。右腿的小腿和腳是左腿那組轉 180°，所以膝、踝舵機在左腿裝外側、在右腿裝內側（依 CAD 驗證）。先對照 3D 畫面再鎖。
+      - 本步驟把膝舵機算在小腿，依中文組裝指引的分法；以上游照片為準。
+    adds: [body:knee_and_ankle_assembly_2, body:knee_and_ankle_assembly_4, servo:13, servo:23]
+    sources:
+      - {label: 上游：Assemble the shins, path: "docs/assembly_guide.md#assemble-the-shins"}
+      - {label: 左右腿 CAD 驗證, path: "nous_duck/docs/validation/viewer-pipeline-2026-11-13.md"}
+
+  - id: thighs
+    title: 大腿與髖俯仰舵機
+    summary: 大腿和小腿是同樣的側板加間隔件，差別在髖俯仰舵機的安裝方向。
+    tasks:
+      - 側板、leg_spacer 與髖俯仰舵機（右 12、左 22）組成大腿。
+      - 依上游照片核對髖俯仰舵機的方向（影響零位），再接到小腿上。
+    check: 在可自由活動的範圍內輕輕試轉，線束有餘量，側板沒有夾線。
+    warnings:
+      - 右腿大腿的側板組件也是左腿那組轉 180°：right_sheet 在左腿朝內、在右腿朝外。髖俯仰舵機本身左右都在外側。
+    adds: [mesh:leg_spacer@knee_and_ankle_assembly, mesh:left_knee_to_ankle_right_sheet@knee_and_ankle_assembly, mesh:left_knee_to_ankle_left_sheet@knee_and_ankle_assembly, mesh:leg_spacer@knee_and_ankle_assembly_3, mesh:left_knee_to_ankle_right_sheet@knee_and_ankle_assembly_3, mesh:left_knee_to_ankle_left_sheet@knee_and_ankle_assembly_3, servo:12, servo:22]
+    sources:
+      - {label: 上游：Assemble the thighs, path: "docs/assembly_guide.md#assemble-the-thighs"}
+
+  - id: hips
+    title: 髖部，雙腿裝上軀幹
+    summary: 左右轉接座不能互換。先組好側擺機構，再把整條腿裝上軀幹。
+    tasks:
+      - left_roll_to_pitch／right_roll_to_pitch 裝到髖側擺舵機（右 11、左 21）。這兩件是鏡像件，要用對邊。
+      - roll_motor_top 從下方鎖到髖偏航舵機（右 10、左 20）。這時候還不要把舵機裝上軀幹。
+      - 裝上髖側擺子總成，再把整條腿裝上主軀幹；能鎖的用舵機隨附的塑膠螺絲鎖上。
+    check: 左右髖座、舵機 ID、舵盤方向逐一對上；雙腿裝入主軀幹後能在預期範圍內活動。
+    adds: [mesh:roll_motor_top, part:left_roll_to_pitch_assembly/left_roll_to_pitch, part:right_roll_to_pitch_assembly/right_roll_to_pitch, servo:10, servo:11, servo:20, servo:21]
+    focus: [mesh:roll_motor_bottom]
+    sources:
+      - {label: 上游：Assemble the hips, path: "docs/assembly_guide.md#assemble-the-hips"}
+
+  - id: neck
+    title: 頸部與頭俯仰舵機
+    summary: 兩片頸板接到頸俯仰舵機，裝上頭俯仰舵機。
+    tasks:
+      - neck_left_sheet、neck_right_sheet 接到頸俯仰舵機 ID 30。
+      - 依照片裝頭俯仰舵機 ID 31。
+    check: 頸部能在範圍內活動，線不跨過夾點。
+    warnings:
+      - 頸部兩顆舵機（30、31）的舵盤偏在一側，離中線 16.6 mm，不在中線上（依 CAD 驗證）。
+    adds: [mesh:neck_left_sheet, mesh:neck_right_sheet, servo:31]
+    focus: [servo:30]
+    sources:
+      - {label: 上游：Assemble the neck, path: "docs/assembly_guide.md#assemble-the-neck"}
+
+  - id: head_mechanism
+    title: 頭部三軸機構
+    summary: 組 head_pitch_to_yaw、頭偏航與頭側擺。鎖死前先把頭部底板和機身中段上殼套進去。
+    tasks:
+      - 依照片裝上 head_pitch_to_yaw。
+      - head_yaw_to_roll、head_roll_mount 分別裝上頭偏航舵機 ID 32 與頭側擺舵機 ID 33。
+      - 先套進 head_bot_sheet 和 body_middle_top，再完成頭部機構。
+    check: 頭部三軸都能在範圍內活動。
+    warnings:
+      - head_bot_sheet 和 body_middle_top 要在這一步先套進去，不然之後得把頭部拆開。
+    adds: [mesh:head_pitch_to_yaw, mesh:head_yaw_to_roll, mesh:head_roll_mount, servo:32, servo:33, mesh:head_bot_sheet, mesh:body_middle_top]
+    sources:
+      - {label: 上游：Assemble the head mechanism, path: "docs/assembly_guide.md#assemble-the-head-mechanism"}
+
+  - id: body_electronics
+    title: 機身內的舵機驅動板與 IMU
+    summary: 機身內固定舵機驅動板與 BNO055，記下 IMU 的實際朝向。
+    tasks:
+      - 固定舵機驅動板，給接頭和絕緣留空間。上游還沒有這一步的照片。
+      - 固定 BNO055。上游說正確朝向是照片裡的版本沿 X 軸翻過來；裝反也可以，之後在設定檔填 imu_upside_down。
+    check: 接頭可以插拔，IMU 朝向已記錄。
+    warnings:
+      - CAD 用同一個通用電路板外形代表舵機驅動板；「機身內這片是驅動板」是依上游接線圖推定。
+    adds: [mesh:board@trunk_assembly, mesh:bno055]
+    sources:
+      - {label: 上游：Mount the IMU, path: "docs/assembly_guide.md#mount-the-imu"}
+
+  - id: head_shell
+    title: 頭殼、Pi Zero 2 W 與天線
+    summary: 頭殼熱熔螺母，裝第三顆軸承、天線舵機、Pi Zero 2 W，再和頸部結合。
+    tasks:
+      - 頭殼的孔熱熔 M3 螺母。
+      - 裝軸承、兩顆天線舵機（9 g，PWM）與 Raspberry Pi Zero 2 W，留出 USB、GPIO 與排線空間。
+      - 裝上左右天線座與天線，頭殼和頸部結合。
+    check: 頭部活動時線束不被拉扯，USB 仍可插拔。
+    warnings:
+      - 頭部內的電路板依上游接線圖推定為 5V 降壓模組（UBEC）。
+      - 天線不在上游列印清單和 BOM 裡，材質與取得方式上游沒有說明。
+    adds: [mesh:head, part:head_assembly/roll_bearing, mesh:raspberrypizerow, mesh:sg90, mesh:board@head_assembly, body:left_antenna_holder, body:right_antenna_holder]
+    sources:
+      - {label: 上游：Head, path: "docs/assembly_guide.md#head"}
+
+  - id: battery
+    title: 電池艙與電源
+    summary: 2 節 18650、電池座、BMS、USB-C 充電板與電源開關。
+    tasks:
+      - 兩顆電芯放進電池座前先量電壓，兩顆要一致。
+      - 依上游接線圖接 BMS、充電板與電源開關。
+    check: 不帶電檢查極性與短路後才接電池。
+    warnings:
+      - 接線與上電的完整檢查在「接線與分段上電」那一步。
+    adds: [mesh:cell, mesh:holder, mesh:bms, mesh:usb_c_charger, mesh:power_switch]
+    sources:
+      - {label: 上游：Battery pack, path: "docs/assembly_guide.md#battery-pack"}
+      - {label: 上游接線圖, path: docs/open_duck_mini_v2_wiring_diagram.png}
+
+  - id: body_shell
+    title: 機身外殼
+    summary: 依序裝中段下殼、前殼、電池艙與腿側蓋。
+    tasks:
+      - 先鎖上 body_middle_bottom。
+      - body_middle_bottom、body_middle_top 上給電池艙和前殼用的孔熱熔 M3 螺母。
+      - 裝上 body_front 與電池艙（body_back、battery_pack_lid）。
+      - 裝上左右腿側蓋。
+    check: 外殼對位，電池艙可以打開，電源開關與充電口操作得到。
+    warnings:
+      - 接線還沒確認前，外殼先試合、不鎖死，方便量測。
+    adds: [mesh:body_middle_bottom, mesh:body_front, mesh:body_back, mesh:battery_pack_lid, mesh:left_cache, mesh:right_cache]
+    sources:
+      - {label: 上游：Body, path: "docs/assembly_guide.md#body"}
+
+  - id: expression_kit
+    title: 表情套件（選配）
+    summary: 眼蓋、燈件、投射燈與喇叭相關列印件。上游還沒寫安裝步驟。
+    optional: true
+    tasks:
+      - 上游 assembly_guide.md 對這些零件只寫了 TODO。
+    check: 第一次測試時不裝，設定檔裡關閉未安裝的 expression_features。
+    warnings:
+      - 這 7 件在 CAD 裡沒有擺放位置，3D 畫面的位置是借頭殼座標推得的，只供參考。
+      - LED、喇叭、相機、擴大機不在 CAD 裡，3D 畫面沒有它們。
+    adds: [mesh:print:left_eye, mesh:print:right_eye, mesh:print:bulb, mesh:print:flash_light_module, mesh:print:flash_reflector_interface, mesh:print:speaker_interface, mesh:print:speaker_stand]
+    sources:
+      - {label: 上游：Head（TODO）, path: "docs/assembly_guide.md#head"}
+
+  - id: wiring_power
+    title: 接線與分段上電
+    summary: 先不帶電檢查，再量電源，最後逐段接上負載。
+    tasks:
+      - 電池經 BMS 和電源開關分兩路：一路進舵機驅動板供 14 顆舵機，一路經 UBEC 降成 5 V 給 Pi。
+      - BNO055：VIN、GND 接 Pi 腳位 1、9；SDA、SCL 接腳位 3、5（GPIO 2、3）。
+      - 足底開關：左接腳位 15（GPIO 22）、右接腳位 13（GPIO 27），地接腳位 9。天線 PWM：左腳位 32（GPIO 12）、右腳位 33（GPIO 13）。
+      - 先量電池與 UBEC 的 5 V 輸出，確認電壓、極性後才接 Pi；再依序驗證 Pi＋IMU、單顆舵機、分組通訊。
+    check: 各段電壓與通訊正常，沒有掉壓、重啟或接頭發熱。
+    warnings:
+      - 舵機驅動板整片額定上限 5 A，輸出電壓跟隨輸入。滿電 2S 是 8.4 V，要確認這批舵機支援再直接供電。
+      - 線材、接頭、螺絲與熱熔螺母不在 CAD 裡，3D 畫面沒有它們。
+    focus: [mesh:board, mesh:bms, mesh:power_switch, mesh:bno055, mesh:raspberrypizerow]
+    sources:
+      - {label: 上游：Electronics, path: "docs/assembly_guide.md#electronics"}
+      - {label: 上游接線圖, path: docs/open_duck_mini_v2_wiring_diagram.png}
+      - {label: 中文組裝指引第 5 步, path: nous_duck/docs/build_log/Open_Duck_Mini_v2_Assembly_Guide_zh-TW.md}
+
+  - id: calibration
+    title: Runtime 校正與第一次站立
+    summary: 架空機體逐軸測試、找軟體偏移量，最後在平地短時間站立。
+    tasks:
+      - 把 Runtime 的 example_config.json 複製成 ~/duck_config.json，填好 imu_upside_down，關閉未安裝的 expression_features。
+      - 固定軀幹、腳離地，執行 `python3 scripts/check_motors.py` 核對 14 軸；有軸失聯就選 n，回頭查線路與 ID。
+      - 執行 `python3 find_soft_offsets.py`，結果寫進 duck_config.json 的 joints_offsets。
+      - 保持支撐啟動步態程式，確認姿勢、停機方式與壓降後，才在平地短時間站立、短步行。
+    check: 14 軸回報正常，偏移量已寫入，能站立並安全停機。
+    warnings:
+      - check_motors.py 與 find_soft_offsets.py 都會命令舵機移動，旁邊要能隨時切斷舵機電源。
+    focus: [servo:10, servo:11, servo:12, servo:13, servo:14, servo:20, servo:21, servo:22, servo:23, servo:24, servo:30, servo:31, servo:32, servo:33]
+    sources:
+      - {label: Runtime v2 測試與步態指令, url: "https://github.com/apirrone/Open_Duck_Mini_Runtime/blob/v2/README.md"}
+      - {label: 中文組裝指引第 6 步, path: nous_duck/docs/build_log/Open_Duck_Mini_v2_Assembly_Guide_zh-TW.md}
