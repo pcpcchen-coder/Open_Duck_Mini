@@ -100,3 +100,20 @@ jobs:
         run: pip install -r nous_duck/hardware/dock/cad/requirements-dev.txt
       - name: 執行測試（列印性、與鴨子的干涉與觸點對位、STL 與程式一致、AprilTag）
         run: python -m pytest nous_duck/hardware/dock/cad/tests -v
+
+  look-at:
+    name: 說話時看著對方（控制器單元測試、MuJoCo 模擬）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: 安裝依賴
+        run: |
+          pip install -r nous_duck/robot/requirements-dev.txt
+          pip install -r nous_duck/sim/requirements-dev.txt
+      - name: 控制器單元測試
+        run: python -m pytest nous_duck/robot/tests -v
+      - name: 模擬（固定機身、合成人臉偵測）
+        run: python -m pytest nous_duck/sim/tests -v
