@@ -10,6 +10,7 @@
 | [ADR-0004](ADR-0004-docking-and-charging.md) | 充電座與自動回充（背後觸點） | 部分採用 | 2026-11-12 |
 | [ADR-0005](ADR-0005-compute-and-sensor-upgrade.md) | 運算與感測硬體升級（Pi Zero 2 W＋Pi 4、AR0144 裝頭上、Flex 麥克風裝身體上） | 部分採用 | 2026-11-12 |
 | [ADR-0006](ADR-0006-privacy-settings.md) | 可開關的隱私設定（預設值已同意） | 部分採用 | 2026-11-12 |
+| [ADR-0007](ADR-0007-duck-link-transport-and-command-bridge.md) | duck-link 傳輸（SSH 通道＋WebSocket）與鴨子端指令橋接 | 草案 | 2026-11-13 |
 
 編號說明：本序列只屬於本 repo 的 `nous_duck/docs/adr/`，與 AIOS repo 的 `docs/adr/`（ADR-0001 本機家人辨識等）是不同的序列。
 
