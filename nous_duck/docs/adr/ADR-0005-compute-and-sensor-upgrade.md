@@ -2,7 +2,7 @@
 
 - 狀態：**部分採用**（2026-11-12 使用者決定：雙板＝Pi Zero 2 W＋**Pi 4**、鏡頭沿用 **AR0144** 並**裝在頭上**、麥克風陣列買 **reSpeaker Flex XVF3800 Circular-4** 並**裝在身體上**、加裝實體隱私開關、眼燈改 RGB 用顏色提示鏡頭狀態）；2026-11-13 決定頭上鏡頭旁加**紅外線補光燈**（沒開燈時的備案，ADR-0002 §4.1）；其餘仍為草案
 - 日期：2026-11-12
-- 相關：[R-001](../requirements/R-001-mobile-companion.md)、[ADR-0002](ADR-0002-indoor-localization-and-navigation.md)、[ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md)、[ADR-0004](ADR-0004-docking-and-charging.md)
+- 相關：[R-001](../requirements/R-001-mobile-companion.md)、[ADR-0002](ADR-0002-indoor-localization-and-navigation.md)、[ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md)、[ADR-0004](ADR-0004-docking-and-charging.md)、[雙目視覺規劃](../stereo_vision_plan.md)（AR0144 的用途清單，2026-11-16）
 
 ## 1. 背景
 

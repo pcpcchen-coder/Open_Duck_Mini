@@ -6,7 +6,7 @@
 |---|---|---|---|
 | P0 | 離線 3D 組裝檢視器 | `assembly_viewer/` | Playwright 截圖驗證三種模式、14 顆舵機 ID 正確、單一 HTML 離線可開 |
 | P1 | 原版組裝完成；上游步態在實機能走；手把控制；本機安全（跌倒、低電壓） | `robot/`、`hardware/` | 實機平地行走與停止；跌倒時停止並記錄 |
-| P2 | 硬體升級決策與上機：感知板、雙目鏡頭（含紅外線補光燈）、麥克風陣列、喇叭（[ADR-0005](adr/ADR-0005-compute-and-sensor-upgrade.md)）；更新模擬質量、必要時重新訓練步態 | `hardware/`、`sim/` | 加裝後實機行走穩定；步態迴圈抖動在可接受範圍（數字待定） |
+| P2 | 硬體升級決策與上機：感知板、雙目鏡頭（含紅外線補光燈；用途與批次 V0～V7 見[雙目視覺規劃](stereo_vision_plan.md)）、麥克風陣列、喇叭（[ADR-0005](adr/ADR-0005-compute-and-sensor-upgrade.md)）；更新模擬質量、必要時重新訓練步態 | `hardware/`、`sim/` | 加裝後實機行走穩定；步態迴圈抖動在可接受範圍（數字待定） |
 | P3 | duck-link 協定與 DuckAdapter 基本工具（status、walk、stop、look）；鴨子當行動終端可對話（[ADR-0003](adr/ADR-0003-mobile-terminal-wake-and-find.md) §2） | `protocol/`、`robot/nous_link/`、`nous_adapter/` | mock 測試通過；實機上 Nous 能讓鴨子動並回讀確認；在鴨子旁邊能對話 |
 | P4 | 帶看建圖、AprilTag 定位、`go_to` 房間（單一樓層）（[ADR-0002](adr/ADR-0002-indoor-localization-and-navigation.md)）；沒開燈時紅外線補光（ADR-0002 §4.1） | `robot/navigation/`、`robot/perception/`、`sim/` | 從客廳到指定房間連續 N 次成功（N 待定）；迷路、門關、禁區處理正確；樓梯口不靠近；關燈時紅外線補光下能讀標籤，太暗時停下回報、不摸黑前進 |
 | P5 | 充電座與自動回充（[ADR-0004](adr/ADR-0004-docking-and-charging.md)） | `hardware/dock/`、`robot/navigation/` | 從家中任一點回充、電氣確認充電，連續 N 次成功 |

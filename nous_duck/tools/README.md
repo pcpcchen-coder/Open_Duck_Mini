@@ -6,6 +6,7 @@
 | [`chatgpt_share_to_md.py`](chatgpt_share_to_md.py) | 把 ChatGPT 分享頁 HTML 轉成 Markdown 對話紀錄（只用標準函式庫） | 可用 |
 | [`extract_chatgpt_viewer_src.py`](extract_chatgpt_viewer_src.py) | 從 ChatGPT 對話紀錄抽出檢視器原始碼；就地修改的腳本只執行 sha256 白名單內的兩段（只用標準函式庫） | 可用 |
 | [`compare_chatgpt_viewer.py`](compare_chatgpt_viewer.py) | 逐件比對 ChatGPT 版檢視器 HTML 與本 repo pipeline 的零件擺放、舵機 ID，列出左右腿膝踝舵機在內側或外側（需要 numpy） | 可用 |
+| [`stereo_geometry.py`](stereo_geometry.py) | AR0144 雙目鏡頭裝在鴨子頭上的名目幾何推算（深度解析度、低頭看得到的地面、看人臉的仰角、物體像素大小）；[雙目視覺規劃](../docs/stereo_vision_plan.md)的數字來源（只用標準函式庫） | 可用（推算，非量測） |
 
 ## 用法
 
@@ -25,4 +26,7 @@ python3 -I nous_duck/tools/extract_chatgpt_viewer_src.py \
 
 # 比對 ChatGPT 版檢視器與本 repo 的零件擺放（先跑 pipeline）
 python3 -I nous_duck/tools/compare_chatgpt_viewer.py
+
+# AR0144 幾何推算（輸出 Markdown 表格；--check 只跑內建檢查）
+python3 -I nous_duck/tools/stereo_geometry.py
 ```

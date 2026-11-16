@@ -33,9 +33,10 @@
 | [`docs/requirements/`](docs/requirements/README.md) | 需求紀錄 | R-001 |
 | [`docs/architecture.md`](docs/architecture.md) | 鴨子與 Nous 的分工和資料流 | 草案 |
 | [`docs/roadmap.md`](docs/roadmap.md) | 階段與 gate、待使用者決定的事 | 草案 |
+| [`docs/stereo_vision_plan.md`](docs/stereo_vision_plan.md) | 雙目視覺規劃：AR0144 裝上鴨子後可以做什麼、限制、順序 | 規劃（草案） |
 | [`docs/adr/`](docs/adr/README.md) | 架構決策紀錄 | ADR-0001～0006 |
 | [`docs/build_log/`](docs/build_log/README.md) | 列印、採購、組裝、校正進度 | 列印完成，周邊採購中 |
-| [`docs/validation/`](docs/validation/README.md) | 實機與測試紀錄 | 3 份（皆非實機） |
+| [`docs/validation/`](docs/validation/README.md) | 實機與測試紀錄 | 4 份（皆非實機） |
 | [`assembly_viewer/`](assembly_viewer/README.md) | ① 離線單一 HTML 3D 組裝檢視器（第一個交付） | 第一版可用（pipeline、步驟、前端）；BOM 規劃中 |
 | [`protocol/`](protocol/README.md) | ② duck-link 協定（JSON Schema） | 規劃中 |
 | [`robot/`](robot/README.md) | ③ 機上程式（Pi Zero 2 W，Python） | 規劃中 |
