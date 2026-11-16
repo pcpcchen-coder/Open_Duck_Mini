@@ -11,7 +11,7 @@
 | 路徑 | 職責 | 狀態 |
 |---|---|---|
 | `nous_link/` | duck-link 端點：收發訊息、依 `../protocol/schemas` 驗證、心跳、ack | 規劃中 |
-| `behaviors/` | 把意圖轉成上游 runtime 的 7 維指令向量；預錄動作（點頭、搖頭）、天線、表情 | 規劃中 |
+| `behaviors/` | 把意圖轉成上游 runtime 的 7 維指令向量；動作庫（點頭、搖頭等具名動作，定義與驗證規則見 [ADR-0008](../docs/adr/ADR-0008-gesture-library.md)）、天線、表情 | 規劃中 |
 | `safety/` | **最後一道關卡**：速度與角度上限、指令 TTL（deadman）、跌倒、過熱、低電壓、斷線處理、緊急停止 | 規劃中 |
 | `config/` | 鴨子設定（對應上游 `example_config.json` 的 `expression_features`、`joints_offsets`）、safety 上限 | 規劃中 |
 | `deploy/` | 安裝與部署：pip 從 git 安裝上游 runtime 並鎖 commit、systemd 服務 | 規劃中 |
