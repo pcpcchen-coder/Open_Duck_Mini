@@ -35,7 +35,8 @@ function git(...args) {
     return "";
   }
 }
-const dirty = git("status", "--porcelain", "--", "..").length > 0;
+// release/ 放的是建置成品本身，不算原始碼有改動
+const dirty = git("status", "--porcelain", "--", "..", ":(exclude)../release").length > 0;
 const commit = (git("rev-parse", "--short", "HEAD") || "unknown") + (dirty ? "-dirty" : "");
 const epoch = process.env.SOURCE_DATE_EPOCH;
 const builtAt = (epoch ? new Date(Number(epoch) * 1000) : new Date()).toISOString().slice(0, 10);

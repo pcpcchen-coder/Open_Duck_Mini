@@ -80,5 +80,6 @@
 - TypeScript：沿用 AIOS 的無框架 TypeScript 風格；前端用 three.js（鎖版本）。
 - 組裝檢視器輸出是**單一 HTML、可離線開啟**，所有資源內嵌，不從網路載入。
 - 建置輸出（`nous_duck/assembly_viewer/dist/`）不進版控。忽略規則寫在 `nous_duck/.gitignore`，不改上游的 `.gitignore`。
+- 例外：給人直接下載的組裝檢視器成品放 `nous_duck/assembly_viewer/release/duck_viewer.html`，進版控。不要手改，改了原始碼後用 `npm run release` 重新產生；CI 會檢查它和原始碼一致。
 - 上游 `.gitignore` 忽略所有 `*.txt`；`nous_duck/.gitignore` 已用 `!*.txt` 重新納入，`requirements.txt` 等檔案才會進版控。
 - 雲端環境注意：`codeload.github.com` 與 GitHub 附件圖片會回 403；`raw.githubusercontent.com`、`git clone`、jsDelivr 可用。Playwright Chromium 可跑 WebGL 2.0（SwiftShader）做截圖驗證。

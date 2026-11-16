@@ -68,6 +68,9 @@ jobs:
         run: |
           npm run build
           npm run check
+      - name: 檢查 release/duck_viewer.html 和原始碼一致
+        working-directory: nous_duck/assembly_viewer/web
+        run: npm run check:release
       - name: 安裝 Playwright 與 Chromium
         working-directory: nous_duck/assembly_viewer/web
         run: |

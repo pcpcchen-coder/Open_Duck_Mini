@@ -13,7 +13,7 @@ This directory holds all of this fork's own development. Upstream files are neve
 | Printing | All 51 original parts printed ([progress](docs/build_log/print_status.md)) |
 | Procurement | Sourcing hardware ([checklist and suppliers](docs/build_log/README.md)) |
 | Assembly | Not started |
-| Software | The first version of the assembly viewer is usable: a single HTML file that opens offline and shows 138 parts, the 14 servo IDs, and the 15 assembly steps from the upstream CAD, with exploded and X-ray views ([pipeline record](docs/validation/viewer-pipeline-2026-11-13.md), [front-end record](docs/validation/viewer-web-2026-11-15.md), Traditional Chinese only; validated by unit tests and a headless browser). The BOM and all other modules are still "Planned" |
+| Software | The first version of the assembly viewer is usable ([download the HTML](assembly_viewer/release/duck_viewer.html)): a single HTML file that opens offline and shows 138 parts, the 14 servo IDs, and the 15 assembly steps from the upstream CAD, with exploded and X-ray views ([pipeline record](docs/validation/viewer-pipeline-2026-11-13.md), [front-end record](docs/validation/viewer-web-2026-11-15.md), Traditional Chinese only; validated by unit tests and a headless browser). The BOM and all other modules are still "Planned" |
 | Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0006 (including switchable privacy settings) are drafts or partly accepted; phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
 | Hardware validation | None |
 

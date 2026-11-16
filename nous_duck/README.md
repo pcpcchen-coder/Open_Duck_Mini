@@ -13,7 +13,7 @@
 | 列印 | 原版 51／51 件已印完（[進度](docs/build_log/print_status.md)） |
 | 採購 | 周邊零件採購中（[清單與賣場](docs/build_log/README.md)） |
 | 組裝 | 尚未開始 |
-| 軟體 | 組裝檢視器第一版可用：單一 HTML、離線開啟，依上游 CAD 顯示 138 個零件、14 顆舵機 ID 與 15 步組裝順序，可爆炸、透視（[pipeline 驗證](docs/validation/viewer-pipeline-2026-11-13.md)、[前端驗證](docs/validation/viewer-web-2026-11-15.md)，層級為單元測試與無頭瀏覽器）。BOM 與其他模組仍是「規劃中」 |
+| 軟體 | 組裝檢視器第一版可用（[直接下載 HTML](assembly_viewer/release/duck_viewer.html)）：單一 HTML、離線開啟，依上游 CAD 顯示 138 個零件、14 顆舵機 ID 與 15 步組裝順序，可爆炸、透視（[pipeline 驗證](docs/validation/viewer-pipeline-2026-11-13.md)、[前端驗證](docs/validation/viewer-web-2026-11-15.md)，層級為單元測試與無頭瀏覽器）。BOM 與其他模組仍是「規劃中」 |
 | 設計 | 行動夥伴需求 [R-001](docs/requirements/R-001-mobile-companion.md)（導航、行動對話、喚醒找人、自動回充）與 ADR-0002～0006（含可開關的隱私設定）為草案或部分採用；階段見 [路線圖](docs/roadmap.md) |
 | 實機驗證 | 無 |
 
