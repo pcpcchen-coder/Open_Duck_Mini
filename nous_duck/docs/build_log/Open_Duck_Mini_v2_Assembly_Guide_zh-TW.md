@@ -4,7 +4,7 @@
 
 **到貨後先做兩件事：核對電源零件規格，再逐顆設定舵機 ID 和零位。** 等舵機到貨前，可以先試配軸承、整理左右件、準備 microSD。
 
-[原版周邊採購清單](Open_Duck_Mini_v2_Procurement.html) · [3D 組裝檢視器原始碼與說明](../handoff/chatgpt_viewer_src/README.md) · [原版組裝照片](https://github.com/pcpcchen-coder/Open_Duck_Mini/blob/v2/docs/assembly_guide.md) · [原版整機接線圖](https://github.com/pcpcchen-coder/Open_Duck_Mini/blob/v2/docs/open_duck_mini_v2_wiring_diagram.png)
+[原版周邊採購清單](Open_Duck_Mini_v2_Procurement.html) · [3D 組裝檢視器（下載 HTML）](../../assembly_viewer/release/duck_viewer.html) · [原版組裝照片](https://github.com/pcpcchen-coder/Open_Duck_Mini/blob/v2/docs/assembly_guide.md) · [原版整機接線圖](https://github.com/pcpcchen-coder/Open_Duck_Mini/blob/v2/docs/open_duck_mini_v2_wiring_diagram.png)
 
 ## 1. 到貨點收與試配
 

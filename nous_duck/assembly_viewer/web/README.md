@@ -20,9 +20,13 @@ npm ci
 npm run typecheck
 npm run build      # → ../dist/duck_viewer.html（不進版控）
 npm run check      # 檢查是單一檔、沒有外部資源、大小在 16 MB 內
+
+# 更新進版控的成品（原始碼先 commit）
+npm run release        # build＋複製到 ../release/duck_viewer.html
+npm run check:release  # 檢查 release 和目前原始碼一致（CI 也會跑）
 ```
 
-打包好的 `duck_viewer.html` 直接用瀏覽器開（雙擊或拖進瀏覽器），不需要網路。
+打包好的 `duck_viewer.html` 直接用瀏覽器開（雙擊或拖進瀏覽器），不需要網路。不想自己建置的話，直接下載 [`../release/duck_viewer.html`](../release/duck_viewer.html)。
 
 ## 功能
 
@@ -53,6 +57,8 @@ npm run check      # 檢查是單一檔、沒有外部資源、大小在 16 MB �
 | `src/main.ts` | 介面：步驟面板、零件清單與搜尋、資訊卡、檢視控制 |
 | `build.mjs` | esbuild 打包程式與樣式，把資料與 gzip＋base64 的網格填進範本 |
 | `check_output.mjs` | 輸出檢查 |
+| `release.mjs` | 把建置結果複製到 `../release/`（原始碼有未 commit 的改動時拒絕） |
+| `check_release.mjs` | 比對 `../release/duck_viewer.html` 和目前建置結果（忽略建置日期與 commit） |
 
 依賴（鎖在 `package-lock.json`）：`three@0.186.1`；建置用 `esbuild@0.28.2`、`typescript@6.0.3`、`@types/three@0.186.0`。three.js 的授權聲明由 esbuild 保留在輸出檔尾端。
 

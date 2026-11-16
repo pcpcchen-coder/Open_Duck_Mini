@@ -27,6 +27,7 @@ data/（cad_parts.yaml、steps.yaml）  ─►  驗證步驟引用（steps.json�
 | [`web/`](web/README.md) | TypeScript＋three.js 前端，打包成單一 HTML | 第一版已完成（[驗證紀錄](../docs/validation/viewer-web-2026-11-15.md)） |
 | [`tests/`](tests/README.md) | pipeline 與步驟資料單元測試、前端輸出檢查、Playwright 無頭瀏覽器檢查 | 已完成 |
 | `dist/` | 建置輸出（gitignore，不進版控） | — |
+| [`release/`](release/README.md) | 進版控的成品 `duck_viewer.html`，直接下載就能用；CI 檢查它和原始碼一致 | 已提供 |
 
 ## 輸入
 
@@ -38,6 +39,7 @@ data/（cad_parts.yaml、steps.yaml）  ─►  驗證步驟引用（steps.json�
 ## 輸出
 
 - `dist/duck_viewer.html`：單一檔、所有資源（程式、樣式、網格、資料）內嵌、不連網，約 4.3 MB。
+- 進版控的同一份成品：[`release/duck_viewer.html`](release/duck_viewer.html)（下載就能用，不用自己建置）。
 
 ## 依賴
 
