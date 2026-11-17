@@ -46,7 +46,7 @@ Pi Zero 2 W 的算力只夠跑步態策略與基本 I/O，不適合跑語音或�
 | `app.duck.look` | `reversible_write` | 頭部看向目標姿態 | `neck_pitch`、`head_pitch`、`head_yaw`、`head_roll`（rad）、`duration_s` | ack＋state 回讀頭部目標 |
 | `app.duck.gesture` | `reversible_write` | 執行鴨子端白名單內的預錄動作（例如點頭、搖頭、歪頭） | `name`（列舉，來自鴨子回報的清單） | ack accepted → `confirmed`（代表已開始） |
 | `app.duck.antennas` | `reversible_write` | 天線位置或擺動 | `left`、`right`（−1～1）或 `pattern` | ack＋state |
-| `app.duck.express` | `reversible_write` | 眼燈、投影燈、音效 | `eyes`、`projector`、`sound`（列舉） | 依上游 `expression_features` 推導；硬體不存在 → capability `unsupported` |
+| `app.duck.express` | `reversible_write` | 眼睛螢幕（2026-11-17 由眼燈改，ADR-0006 §4.2）、投影燈、音效 | `eyes`、`projector`、`sound`（列舉） | 依上游 `expression_features` 推導；硬體不存在 → capability `unsupported` |
 
 設計說明：
 
