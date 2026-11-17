@@ -5,7 +5,7 @@
 | 子目錄 | 內容 | 狀態 |
 |---|---|---|
 | `mg995_head_proto/` | 用手上 5 顆 MG995 做的**頭部原型**（只用於原型，正式機身用 STS3215）：支架、控制方式、與 STS3215 的差異 | 規劃中 |
-| `expression_mods/` | 表情相關改裝：**眼燈改 RGB LED、由 Pi 4 驅動，用顏色提示鏡頭狀態**（[ADR-0006 §4.2](../docs/adr/ADR-0006-privacy-settings.md#42-鏡頭狀態提示眼燈顏色2026-11-12-決定)）、投影燈、喇叭（上游 BOM 的「Expression package」） | 規劃中 |
+| `expression_mods/` | 表情相關改裝：**眼睛改用 [GC9A01 1.28 吋圓形螢幕](expression_mods/gc9a01_eyes.md)、由 Pi 4 驅動，最外圈狀態環用顏色提示鏡頭狀態**（[ADR-0006 §4.2](../docs/adr/ADR-0006-privacy-settings.md#42-鏡頭狀態提示眼燈顏色2026-11-12-決定)；2026-11-17 由 RGB LED 改為螢幕）、投影燈、喇叭（上游 BOM 的「Expression package」） | 眼睛為**設計 v0**（STL 量測與推算，螢幕未到貨）；其餘規劃中 |
 | `wiring/` | 本機身實際的接線圖與 GPIO 對照、電源路徑、線材規格；以上游 `docs/open_duck_mini_v2_wiring_diagram.png` 為基礎；**實體隱私開關**（切斷鏡頭與麥克風電源、狀態接 Pi 4 GPIO，[ADR-0006 §4.1](../docs/adr/ADR-0006-privacy-settings.md#41-實體隱私開關2026-11-12-決定加裝)） | 規劃中 |
 | `sensors/` | 重新設計的頭殼（AR0144 雙目鏡頭裝頭上，旁邊加紅外線補光燈，[ADR-0002 §4.1](../docs/adr/ADR-0002-indoor-localization-and-navigation.md#41-沒開燈時的備案紅外線補光2026-11-13-使用者同意以此為主)）；機身頂面的麥克風支架（reSpeaker Flex XVF3800 裝身體上）；喇叭位置（[ADR-0005](../docs/adr/ADR-0005-compute-and-sensor-upgrade.md)）；[麥克風陣列選型](sensors/mic_array_selection.md) | 規劃中（型號已決定） |
 | `compute/` | 感知板（已決定 Raspberry Pi 4）的安裝位置、散熱、身體板與感知板的連線與供電（ADR-0005） | 規劃中 |
