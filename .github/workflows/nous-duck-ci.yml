@@ -100,3 +100,39 @@ jobs:
         run: pip install -r nous_duck/hardware/dock/cad/requirements-dev.txt
       - name: 執行測試（列印性、與鴨子的干涉與觸點對位、STL 與程式一致、AprilTag）
         run: python -m pytest nous_duck/hardware/dock/cad/tests -v
+
+  eye-display-fit:
+    name: 眼睛螢幕尺寸核對（上游 STL）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: 內建檢查（眼孔、螺絲孔、頭殼內高、SPI 頻寬）
+        run: python3 -I nous_duck/tools/eye_display_fit.py --check
+
+  robot-eyes:
+    name: 眼睛渲染程式測試
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: 安裝依賴
+        run: pip install -r nous_duck/robot/eyes/requirements-dev.txt
+      - name: 執行測試（狀態環規則、青色保留、表情、動畫、文件一致）
+        working-directory: nous_duck/robot/eyes
+        run: python -m pytest tests -v
+      - name: 產生預覽圖（總覽、狀態環）
+        working-directory: nous_duck/robot/eyes
+        run: python -m duck_eyes.preview --out ../../../eyes-preview --no-gif --bench
+      - name: 上傳預覽圖
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eyes-preview
+          path: eyes-preview/
+          if-no-files-found: ignore
+

@@ -6,6 +6,7 @@
 | [`chatgpt_share_to_md.py`](chatgpt_share_to_md.py) | 把 ChatGPT 分享頁 HTML 轉成 Markdown 對話紀錄（只用標準函式庫） | 可用 |
 | [`extract_chatgpt_viewer_src.py`](extract_chatgpt_viewer_src.py) | 從 ChatGPT 對話紀錄抽出檢視器原始碼；就地修改的腳本只執行 sha256 白名單內的兩段（只用標準函式庫） | 可用 |
 | [`compare_chatgpt_viewer.py`](compare_chatgpt_viewer.py) | 逐件比對 ChatGPT 版檢視器 HTML 與本 repo pipeline 的零件擺放、舵機 ID，列出左右腿膝踝舵機在內側或外側（需要 numpy） | 可用 |
+| [`eye_display_fit.py`](eye_display_fit.py) | GC9A01 圓形螢幕當眼睛：從上游 `print/*.stl` 唯讀量眼孔、螺絲孔、頭殼內高，推算看得到的像素與 Pi 4 SPI 頻寬；[眼睛設計](../hardware/expression_mods/gc9a01_eyes.md)的數字來源（只用標準函式庫） | 可用（STL 量測＋推算，非實物量測） |
 | [`stereo_geometry.py`](stereo_geometry.py) | AR0144 雙目鏡頭裝在鴨子頭上的名目幾何推算（深度解析度、低頭看得到的地面、看人臉的仰角、物體像素大小）；[雙目視覺規劃](../docs/stereo_vision_plan.md)的數字來源（只用標準函式庫） | 可用（推算，非量測） |
 
 ## 用法
@@ -29,4 +30,7 @@ python3 -I nous_duck/tools/compare_chatgpt_viewer.py
 
 # AR0144 幾何推算（輸出 Markdown 表格；--check 只跑內建檢查）
 python3 -I nous_duck/tools/stereo_geometry.py
+
+# GC9A01 眼睛的尺寸核對與 SPI 頻寬（輸出 Markdown 表格；--check 只跑內建檢查）
+python3 -I nous_duck/tools/eye_display_fit.py
 ```
