@@ -13,6 +13,7 @@
 | P6 | 鴨子喚醒詞與找人（[ADR-0003](adr/ADR-0003-mobile-terminal-wake-and-find.md) §3–4） | `robot/audio/`、`robot/perception/`、`nous_adapter/` | 同房間與隔壁房間的喚醒找人成功率（目標待定）；找不到時誠實回報 |
 | P7 | 情境任務：叫人起床、排程 | `nous_adapter/`、AIOS | R-001 S1 情境實機通過 |
 | P8 | 視覺地圖重定位，減少 AprilTag | `robot/navigation/` | 標籤數量減少後 P4 的 gate 仍通過 |
+| P9 | 「跟著我來」與「在這等我」（[R-002](requirements/R-002-follow-me.md)、[ADR-0007](adr/ADR-0007-follow-me-and-wait-here.md)）。依相依關係可在 P6 之後、P7 之前做；F0 模擬不需要硬體，F1 原地轉身跟著看在 V3 之後就能做（ADR-0007 §11） | `robot/navigation/`、`robot/perception/`、`robot/audio/`、`sim/`、`nous_adapter/` | R-002 F-S1～F-S8 實機通過；走路中說停止句的漏聽率（目標待定）；任何情況下不為了跟人越過禁區 |
 
 ## 需要使用者先決定的事
 
@@ -26,7 +27,8 @@
 | ~~沒開燈時的定位備案~~ | 已決定（2026-11-13）：頭上紅外線補光燈為主，AR0144 判斷照度低於門檻就自動開。待確認：要支援的摸黑情況、AR0144 有無 IR-cut 濾片、是否加 ToF 落差感測器與藍牙房間輔助、夜間臥室是否允許紅外線 | [ADR-0002 §4.1](adr/ADR-0002-indoor-localization-and-navigation.md#41-沒開燈時的備案紅外線補光2026-11-13-使用者同意以此為主)、ADR-0006 §5 |
 | ~~充電座外型~~ | 已決定（2026-11-13）：設計 v0「屋形靠背扶手椅」（外掛觸點板，不用重印 `body_back`） | [ADR-0004 §7](adr/ADR-0004-docking-and-charging.md#7-設計-v02026-11-13)、[`hardware/dock/`](../hardware/dock/README.md) |
 | ~~鴨子的雙目鏡頭從哪來、第一個視覺成果~~ | 已決定（2026-11-16）：另買一台 AR0144（Nous 那台不拆）；先做 V3「說話時看著對方」 | [雙目視覺規劃 §8](stereo_vision_plan.md#8-需要你決定的事) |
-| 鴨子的喚醒詞 | 使用者表示晚一點再取 | ADR-0003 §8 |
+| 鴨子的喚醒詞 | 使用者表示晚一點再取；2026-11-19 的 R-002 用了「Hey 鴨子」，是否就定為喚醒詞待確認 | ADR-0003 §8、ADR-0007 §13 |
+| 跟隨的細節：停止句、距離與逾時、鏡頭使用清單加「跟隨」、臥室與夜間規則、沒有地圖時能否跟、是否必須加 ToF、跟丟後怎麼辦 | 待決（2026-11-19 使用者要求先設計，實作晚點做） | [ADR-0007 §13](adr/ADR-0007-follow-me-and-wait-here.md#13-待決需要使用者決定) |
 | ~~隱私設定的預設值~~ | 已同意建議預設值 | [ADR-0006](adr/ADR-0006-privacy-settings.md) §5 |
 | ~~是否加實體隱私開關、鏡頭提示方式~~ | 已決定：加實體開關；眼燈顏色（眼燈改 RGB）。待確認：是否另加硬體直連的鏡頭電源指示燈 | ADR-0006 §4 |
 

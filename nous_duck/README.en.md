@@ -6,7 +6,7 @@ Build a full-size (100%) [Open Duck Mini v2](../README.md) and connect it to [No
 
 This directory holds all of this fork's own development. Upstream files are never modified (see the root [`CLAUDE.md`](../CLAUDE.md), Traditional Chinese only).
 
-## Current status (2026-11-15)
+## Current status (2026-11-19)
 
 | Item | Status |
 |---|---|
@@ -14,7 +14,7 @@ This directory holds all of this fork's own development. Upstream files are neve
 | Procurement | Sourcing hardware ([checklist and suppliers](docs/build_log/README.md)) |
 | Assembly | Not started |
 | Software | The first version of the assembly viewer is usable ([download the HTML](assembly_viewer/release/duck_viewer.html)): a single HTML file that opens offline and shows 138 parts, the 14 servo IDs, and the 15 assembly steps from the upstream CAD, with exploded and X-ray views ([pipeline record](docs/validation/viewer-pipeline-2026-11-13.md), [front-end record](docs/validation/viewer-web-2026-11-15.md), Traditional Chinese only; validated by unit tests and a headless browser). The BOM and all other modules are still "Planned" |
-| Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0006 (including switchable privacy settings) are drafts or partly accepted; phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
+| Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0006 (including switchable privacy settings) are drafts or partly accepted; the "follow me / wait here" requirement [R-002](docs/requirements/R-002-follow-me.md) and [ADR-0007](docs/adr/ADR-0007-follow-me-and-wait-here.md) are drafts (design only; implementation comes later); phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
 | Hardware validation | None |
 
 ## Division of work
@@ -30,13 +30,13 @@ See the [architecture](docs/architecture.md) and [ADR-0001](docs/adr/ADR-0001-du
 | Path | Contents | Status |
 |---|---|---|
 | [`docs/handoff/`](docs/handoff/README.md) | Handoff summary, environment survey, ChatGPT conversation log, upstream BOM | Done |
-| [`docs/requirements/`](docs/requirements/README.md) | Requirement records | R-001 |
+| [`docs/requirements/`](docs/requirements/README.md) | Requirement records | R-001, R-002 |
 | [`docs/architecture.md`](docs/architecture.md) | Division of work and data flow between the duck and Nous | Draft |
 | [`docs/roadmap.md`](docs/roadmap.md) | Phases and gates, decisions waiting for the owner | Draft |
 | [`docs/stereo_vision_plan.md`](docs/stereo_vision_plan.md) | Stereo vision plan: what the duck can do with the AR0144 camera, limits, and order of work (Traditional Chinese only) | Planned (draft) |
-| [`docs/adr/`](docs/adr/README.md) | Architecture decision records | ADR-0001 to 0006 |
+| [`docs/adr/`](docs/adr/README.md) | Architecture decision records | ADR-0001 to 0007 |
 | [`docs/build_log/`](docs/build_log/README.md) | Printing, procurement, assembly, and calibration progress | Printing complete, procurement underway |
-| [`docs/validation/`](docs/validation/README.md) | Hardware and test records | 4 records (none on hardware) |
+| [`docs/validation/`](docs/validation/README.md) | Hardware and test records | 5 records (none on hardware) |
 | [`assembly_viewer/`](assembly_viewer/README.md) | ① Offline single-HTML 3D assembly viewer (first deliverable) | First version usable (pipeline, steps, front end); BOM planned |
 | [`protocol/`](protocol/README.en.md) | ② duck-link protocol (JSON Schema) | Planned |
 | [`robot/`](robot/README.md) | ③ On-board software (Pi Zero 2 W, Python) | Planned |
