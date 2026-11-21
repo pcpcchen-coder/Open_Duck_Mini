@@ -42,6 +42,13 @@
 python3 scripts/configure_motor.py --port /dev/ttyACM0 --id 14
 ```
 
+也可以用本 repo 的[舵機工作台](../../tools/README.md#舵機工作台說明)，不用先裝 Runtime，Mac 直接跑。寫入的參數相同，另外會擋下「同時接了兩顆」、低電壓，並記錄進度：
+
+```bash
+python3 -m pip install --user pyserial
+python3 -I nous_duck/tools/servo_bench.py wizard
+```
+
 - [ ] 看見設定完成和目標 ID，確認舵機已轉到電子零位。依原圖對齊舵盤，固定前先比對舵盤方向。每顆貼上 ID 與部位，再換下一顆。
 - [ ] 記下每顆 ID 與安裝方向。若單顆讀不到，先查電源、資料線、序列埠和 D／V／G 線序。
 
