@@ -177,7 +177,20 @@ class Bus:
         self.link = link
         self.timeout = timeout
 
-    def _send(self, sid: int, instr: int, params: bytes = b"", reply: bool = True):
+    def _send(self, sid: int, instr: int, params: bytes = b"", reply: bool = True, retries: int = 2):
+        """送出並等回應；沒回應或封包壞掉時重送（讀取和同值寫入重送無副作用）。
+
+        實機（Mac＋CH343）偶爾會掉一個回應包，所以讀寫預設重試 2 次；掃描用的 ping 不重試。
+        """
+        for attempt in range(retries + 1):
+            try:
+                return self._send_once(sid, instr, params, reply)
+            except BusError:
+                if attempt == retries:
+                    raise
+                time.sleep(0.01)
+
+    def _send_once(self, sid: int, instr: int, params: bytes, reply: bool):
         pkt = build_packet(sid, instr, params)
         try:
             self.link.reset_input_buffer()
@@ -215,9 +228,9 @@ class Bus:
                     raise BadReply(f"回應不完整：{bytes(buf).hex(' ')}")
                 raise NoReply(f"ID {sid} 沒有回應")
 
-    def ping(self, sid: int) -> bool:
+    def ping(self, sid: int, retries: int = 0) -> bool:
         try:
-            self._send(sid, INST_PING)
+            self._send(sid, INST_PING, retries=retries)
             return True
         except NoReply:
             return False
@@ -338,8 +351,21 @@ def label(sid: int) -> str:
 # 序列埠
 # ---------------------------------------------------------------------------
 
-# WCH（CH34x，Waveshare Bus Servo Adapter 常見）、Silicon Labs CP210x、FTDI
-KNOWN_VIDS = {0x1A86: "WCH CH34x", 0x10C4: "Silicon Labs CP210x", 0x0403: "FTDI"}
+# 只認 USB 轉序列晶片的 VID:PID。同一家廠商的其他裝置（例如 WCH 1a86:5722 的 USB 小螢幕）不算。
+# Waveshare Bus Servo Adapter (A) 是 CH343（1a86:55d3），見 Waveshare FAQ。
+KNOWN_CHIPS = {
+    (0x1A86, 0x55D3): "WCH CH343",
+    (0x1A86, 0x7523): "WCH CH340",
+    (0x1A86, 0x55D4): "WCH CH9102",
+    (0x10C4, 0xEA60): "Silicon Labs CP210x",
+    (0x0403, 0x6001): "FTDI FT232R",
+    (0x0403, 0x6014): "FTDI FT232H",
+    (0x0403, 0x6015): "FTDI FT231X",
+}
+
+
+def chip_of(p):
+    return KNOWN_CHIPS.get((p.vid, p.pid))
 SKIP_WORDS = ("bluetooth", "debug-console", "wlan")
 
 
@@ -363,10 +389,10 @@ def pick_port(explicit: str | None) -> str:
     if explicit:
         return explicit
     ports = list_ports()
-    known = [p for p in ports if p.vid in KNOWN_VIDS]
+    known = [p for p in ports if chip_of(p)]
     if len(known) == 1:
         p = known[0]
-        print(f"使用序列埠 {p.device}（{KNOWN_VIDS[p.vid]}）")
+        print(f"使用序列埠 {p.device}（{chip_of(p)}）")
         return p.device
     cands = known or ports
     if not cands:
@@ -437,7 +463,7 @@ def configure_servo(bus: Bus, target: int, log=print, settle: float = 1.0) -> di
         # 改 ID 的回應可能用新或舊 ID，不依賴它，改用 ping 新 ID 確認
         bus.write_u8(cur, ADDR_ID, target, reply=False)
         time.sleep(0.05)
-        if not bus.ping(target):
+        if not bus.ping(target, retries=3):
             raise BusError(f"寫入 ID {target} 後 ping 不到。斷電重開再 `scan` 看看它現在是幾號。")
     bus.write_u8(target, ADDR_LOCK, 1)  # 上鎖，寫入的 EEPROM 值斷電後保留
 
@@ -478,7 +504,7 @@ def check_all(bus: Bus, ids=ALL_IDS) -> list:
     for sid in ids:
         row = {"id": sid, "ok": False}
         try:
-            if not bus.ping(sid):
+            if not bus.ping(sid, retries=2):
                 row["error"] = "沒有回應"
             else:
                 row.update(bus.telemetry(sid))
@@ -533,7 +559,7 @@ def cmd_ports(args):
         print("沒有序列埠。")
     for p in ports:
         vid = f"{p.vid:04x}:{p.pid:04x}" if p.vid is not None else "—"
-        tag = f"  ← 可能是舵機板（{KNOWN_VIDS[p.vid]}）" if p.vid in KNOWN_VIDS else ""
+        tag = f"  ← 可能是舵機板（{chip_of(p)}）" if chip_of(p) else ""
         print(f"{p.device}    {vid}    {p.description}{tag}")
 
 
@@ -577,7 +603,8 @@ def cmd_setup(args):
     chime("ok")
     banner([f"✅ 完成：{label(target)}",
             f"零位 {r['position_raw']}（誤差 {r['zero_error_steps']:+d} 步）  {r['voltage']:.1f} V",
-            "舵機正保持在零位。現在依上游照片對齊並裝上舵盤，再貼上 ID 標籤。"], "green")
+            "舵機正保持在零位。鋁舵盤 4 孔排成「十」字對齊機身四邊，壓進齒軸，",
+            "中心螺絲上一點 Loctite 243 鎖緊，再貼上 ID 標籤。"], "green")
     append_log(args.log, r)
 
 
@@ -636,7 +663,10 @@ def cmd_wizard(args):
             banner([f"✅ 完成：{label(sid)}",
                     f"零位 {r['position_raw']}（誤差 {r['zero_error_steps']:+d} 步）  {r['voltage']:.1f} V",
                     "",
-                    "現在：依上游照片對齊並裝上舵盤（舵機正保持零位）",
+                    "現在裝主動舵盤（舵機正保持零位，不要用手轉輸出軸）：",
+                    "  鋁舵盤 4 個孔排成「十」字、對齊機身四邊，垂直壓進齒軸；",
+                    "  對不準就拔起來轉一齒再壓，差一齒沒關係（之後軟體補償）",
+                    "  中心螺絲上一點 Loctite 243，捏住舵盤再鎖緊",
                     f"貼標籤：「{sid} {zh}」，放進對應的零件盤",
                     "",
                     "按 Enter 換下一顆"], "green")
@@ -771,9 +801,10 @@ class FakeServo:
 
 
 class FakeLink:
-    def __init__(self, servos, echo: bool = False):
+    def __init__(self, servos, echo: bool = False, drop_writes=()):
         self.servos = servos
         self.echo = echo
+        self.drop_writes = set(drop_writes)  # 第幾個封包的回應要丟掉（模擬實機掉包）
         self.rx = bytearray()
         self.writes = []
 
@@ -791,6 +822,7 @@ class FakeLink:
 
     def write(self, pkt):
         self.writes.append(bytes(pkt))
+        drop = (len(self.writes) - 1) in self.drop_writes
         if self.echo:
             self.rx += pkt
         sid, length, instr = pkt[2], pkt[3], pkt[4]
@@ -808,6 +840,8 @@ class FakeLink:
                 if s.mem[ADDR_TORQUE] and addr <= ADDR_GOAL_POS < addr + len(data):
                     s.set_pos(s.mem[ADDR_GOAL_POS] | (s.mem[ADDR_GOAL_POS + 1] << 8))
             body = bytes([reply_id, len(out) + 2, 0]) + out
+            if drop:
+                continue
             self.rx += b"\xff\xff" + body + bytes([checksum(body)])
 
 
@@ -847,6 +881,17 @@ def selftest():
     bus = Bus(FakeLink([s], echo=True), timeout=0.001)
     r = configure_servo(bus, 23, log=quiet, settle=0)
     check("有回送時仍能設定", s.sid == 23 and r["position_raw"] == 2048)
+
+    print("掉包重試（實機 2026-11-21 遇過：寫 lock 沒等到回應）")
+    s = FakeServo(1)
+    link = FakeLink([s])
+    bus = Bus(link, timeout=0.001)
+    bus.scan()  # 先掃描，之後的封包從這裡開始算
+    n = len(link.writes)
+    link.drop_writes = {n + 2, n + 3}  # 掃描後：讀型號、讀電壓、寫 lock（連掉兩次）
+    link.writes.clear(); link.writes.extend([b""] * n)
+    r = configure_servo(bus, 10, log=quiet, settle=0)
+    check("寫入回應掉了兩次仍完成", s.sid == 10 and s.mem[ADDR_D] == 0)
 
     print("安全檢查")
     bus = Bus(FakeLink([FakeServo(1), FakeServo(5)]), timeout=0.001)
