@@ -1,0 +1,282 @@
+{
+  "10": {
+    "id": 10,
+    "joint": "right_hip_yaw",
+    "previous_id": 1,
+    "model": 777,
+    "voltage": 7.0,
+    "temperature": 26,
+    "position_raw": 2049,
+    "zero_error_steps": 1,
+    "params": {
+      "id": 10,
+      "mode": 0,
+      "maximum acceleration": 0,
+      "acceleration": 0,
+      "P coefficient": 32,
+      "I coefficient": 0,
+      "D coefficient": 0
+    },
+    "time": "2026-11-21T19:42:26"
+  },
+  "11": {
+    "id": 11,
+    "joint": "right_hip_roll",
+    "previous_id": 11,
+    "model": 777,
+    "voltage": 6.9,
+    "temperature": 25,
+    "position_raw": 2047,
+    "zero_error_steps": -1,
+    "params": {
+      "id": 11,
+      "mode": 0,
+      "maximum acceleration": 0,
+      "acceleration": 0,
+      "P coefficient": 32,
+      "I coefficient": 0,
+      "D coefficient": 0
+    },
+    "time": "2026-11-21T20:15:01"
+  },
+  "12": {
+    "id": 12,
+    "joint": "right_hip_pitch",
+    "previous_id": 12,
+    "model": 777,
+    "voltage": 6.9,
+    "temperature": 24,
+    "position_raw": 2047,
+    "zero_error_steps": -1,
+    "params": {
+      "id": 12,
+      "mode": 0,
+      "maximum acceleration": 0,
+      "acceleration": 0,
+      "P coefficient": 32,
+      "I coefficient": 0,
+      "D coefficient": 0
+    },
+    "time": "2026-11-21T20:18:27"
+  },
+  "13": {
+    "id": 13,
+    "joint": "right_knee",
+    "previous_id": 1,
+    "model": 777,
+    "voltage": 7.0,
+    "temperature": 25,
+    "position_raw": 2048,
+    "zero_error_steps": 0,
+    "params": {
+      "id": 13,
+      "mode": 0,
+      "maximum acceleration": 0,
+      "acceleration": 0,
+      "P coefficient": 32,
+      "I coefficient": 0,
+      "D coefficient": 0
+    },
+    "time": "2026-11-21T20:21:08"
+  },
+  "14": {
+    "id": 14,
+    "joint": "right_ankle",
+    "previous_id": 1,
+    "model": 777,
+    "voltage": 7.0,
+    "temperature": 23,
+    "position_raw": 2048,
+    "zero_error_steps": 0,
+    "params": {
+      "id": 14,
+      "mode": 0,
+      "maximum acceleration": 0,
+      "acceleration": 0,
+      "P coefficient": 32,
+      "I coefficient": 0,
+      "D coefficient": 0
+    },
+    "time": "2026-11-21T20:23:38"
+  },
+  "20": {
+    "id": 20,
+    "joint": "left_hip_yaw",
+    "previous_id": 20,
+    "model": 777,
+    "voltage": 6.9,
+    "temperature": 24,
+    "position_raw": 2047,
+    "zero_error_steps": -1,
+    "params": {
+      "id": 20,
+      "mode": 0,
+      "maximum acceleration": 0,
+      "acceleration": 0,
+      "P coefficient": 32,
+      "I coefficient": 0,
+      "D coefficient": 0
+    },
+    "time": "2026-11-21T20:26:32"
+  },
+  "21": {
+    "id": 21,
+    "joint": "left_hip_roll",
+    "previous_id": 1,
+    "model": 777,
+    "voltage": 7.0,
+    "temperature": 23,
+    "position_raw": 2049,
+    "zero_error_steps": 1,
+    "params": {
+      "id": 21,
+      "mode": 0,
+      "maximum acceleration": 0,
+      "acceleration": 0,
+      "P coefficient": 32,
+      "I coefficient": 0,
+      "D coefficient": 0
+    },
+    "time": "2026-11-21T20:28:17"
+  },
+  "22": {
+    "id": 22,
+    "joint": "left_hip_pitch",
+    "previous_id": 1,
+    "model": 777,
+    "voltage": 7.0,
+    "temperature": 23,
+    "position_raw": 2048,
+    "zero_error_steps": 0,
+    "params": {
+      "id": 22,
+      "mode": 0,
+      "maximum acceleration": 0,
+      "acceleration": 0,
+      "P coefficient": 32,
+      "I coefficient": 0,
+      "D coefficient": 0
+    },
+    "time": "2026-11-21T20:33:14"
+  },
+  "23": {
+    "id": 23,
+    "joint": "left_knee",
+    "previous_id": 1,
+    "model": 777,
+    "voltage": 7.0,
+    "temperature": 25,
+    "position_raw": 2046,
+    "zero_error_steps": -2,
+    "params": {
+      "id": 23,
+      "mode": 0,
+      "maximum acceleration": 0,
+      "acceleration": 0,
+      "P coefficient": 32,
+      "I coefficient": 0,
+      "D coefficient": 0
+    },
+    "time": "2026-11-21T20:35:37"
+  },
+  "24": {
+    "id": 24,
+    "joint": "left_ankle",
+    "previous_id": 1,
+    "model": 777,
+    "voltage": 6.9,
+    "temperature": 25,
+    "position_raw": 2050,
+    "zero_error_steps": 2,
+    "params": {
+      "id": 24,
+      "mode": 0,
+      "maximum acceleration": 0,
+      "acceleration": 0,
+      "P coefficient": 32,
+      "I coefficient": 0,
+      "D coefficient": 0
+    },
+    "time": "2026-11-21T20:37:42"
+  },
+  "30": {
+    "id": 30,
+    "joint": "neck_pitch",
+    "previous_id": 1,
+    "model": 777,
+    "voltage": 6.9,
+    "temperature": 23,
+    "position_raw": 2048,
+    "zero_error_steps": 0,
+    "params": {
+      "id": 30,
+      "mode": 0,
+      "maximum acceleration": 0,
+      "acceleration": 0,
+      "P coefficient": 32,
+      "I coefficient": 0,
+      "D coefficient": 0
+    },
+    "time": "2026-11-21T20:40:23"
+  },
+  "31": {
+    "id": 31,
+    "joint": "head_pitch",
+    "previous_id": 31,
+    "model": 777,
+    "voltage": 6.9,
+    "temperature": 24,
+    "position_raw": 2048,
+    "zero_error_steps": 0,
+    "params": {
+      "id": 31,
+      "mode": 0,
+      "maximum acceleration": 0,
+      "acceleration": 0,
+      "P coefficient": 32,
+      "I coefficient": 0,
+      "D coefficient": 0
+    },
+    "time": "2026-11-21T20:44:17"
+  },
+  "32": {
+    "id": 32,
+    "joint": "head_yaw",
+    "previous_id": 1,
+    "model": 777,
+    "voltage": 7.0,
+    "temperature": 23,
+    "position_raw": 2049,
+    "zero_error_steps": 1,
+    "params": {
+      "id": 32,
+      "mode": 0,
+      "maximum acceleration": 0,
+      "acceleration": 0,
+      "P coefficient": 32,
+      "I coefficient": 0,
+      "D coefficient": 0
+    },
+    "time": "2026-11-21T20:46:25"
+  },
+  "33": {
+    "id": 33,
+    "joint": "head_roll",
+    "previous_id": 1,
+    "model": 777,
+    "voltage": 7.0,
+    "temperature": 23,
+    "position_raw": 2046,
+    "zero_error_steps": -2,
+    "params": {
+      "id": 33,
+      "mode": 0,
+      "maximum acceleration": 0,
+      "acceleration": 0,
+      "P coefficient": 32,
+      "I coefficient": 0,
+      "D coefficient": 0
+    },
+    "time": "2026-11-21T20:48:22"
+  }
+}
