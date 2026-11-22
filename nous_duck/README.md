@@ -20,7 +20,7 @@
 ## 分工
 
 - **Nous（Mac mini）**：語音、視覺、記憶、決策。
-- **鴨子（身體板 Pi Zero 2 W＋感知板 Pi 4）**：步態、動作、安全（安全判斷只在鴨子本機）；R-001 後加上室內定位導航、收音與播放、喚醒詞、找人、自動回充。
+- **鴨子（目前單板 Pi 4 試用，步態＋安全與感知分成獨立服務；不行再拆回 Pi Zero 2 W＋Pi 4，見 [ADR-0008](docs/adr/ADR-0008-single-board-pi4.md)）**：步態、動作、安全（安全判斷只在鴨子本機）；R-001 後加上室內定位導航、收音與播放、喚醒詞、找人、自動回充。
 - 兩邊只透過 [`protocol/`](protocol/README.md) 的版本化 JSON Schema 溝通。
 
 詳見 [架構](docs/architecture.md) 與 [ADR-0001](docs/adr/ADR-0001-duck-role-in-nous.md)。
@@ -39,7 +39,7 @@
 | [`docs/validation/`](docs/validation/README.md) | 實機與測試紀錄 | 5 份（皆非實機） |
 | [`assembly_viewer/`](assembly_viewer/README.md) | ① 離線單一 HTML 3D 組裝檢視器（第一個交付） | 第一版可用（pipeline、步驟、前端）；BOM 規劃中 |
 | [`protocol/`](protocol/README.md) | ② duck-link 協定（JSON Schema） | 規劃中 |
-| [`robot/`](robot/README.md) | ③ 機上程式（Pi Zero 2 W，Python） | 規劃中 |
+| [`robot/`](robot/README.md) | ③ 機上程式（單板 Pi 4 試用，Python） | 規劃中 |
 | [`nous_adapter/`](nous_adapter/README.md) | ④ 要搬進 AIOS 的 `app.duck.*` adapter 與終端（TypeScript） | 規劃中 |
 | [`sim/`](sim/README.md) | ⑤ MuJoCo 模擬 | 規劃中 |
 | [`hardware/`](hardware/README.md) | ⑥ 改裝：MG995 頭部原型、表情模組、接線、感測頭、感知板、充電座 | 規劃中；[充電座](hardware/dock/README.md)為設計 v0（STL 已產生，未列印、未實機） |
