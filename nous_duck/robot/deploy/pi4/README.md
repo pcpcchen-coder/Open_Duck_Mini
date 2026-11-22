@@ -1,6 +1,6 @@
 # 感知板 Pi 4：SD 卡燒錄與首次開機
 
-狀態：**腳本完成，待實機驗證**。設定檔已在雲端容器用映像內附的 cloud-init 與 netplan 檢查過（見 [驗證紀錄](../../../docs/validation/pi4-sd-image-2026-11-22.md)）；在 Mac 上燒錄、Pi 4 開機連上 Wi-Fi 還沒有實機紀錄。開機後用 [`check_pi4.sh`](check_pi4.sh) 收集實機結果。
+狀態：**實機通過（第一版腳本＋`--clean`）**。設定檔已在雲端容器用映像內附的 cloud-init 與 netplan 檢查過（見 [靜態檢查紀錄](../../../docs/validation/pi4-sd-image-2026-11-22.md)）。2026-11-22 用第一版腳本在 Mac 上燒卡，Pi 4 開機連上 Wi-Fi，`check_pi4.sh --clean` 後重開機，27 項全部通過（見 [實機紀錄](../../../docs/validation/pi4-firstboot-2026-11-22.md)）。修正後的腳本（首次開機就清掉全部快取明文）還沒有燒過實機。
 
 ## 做什麼
 
