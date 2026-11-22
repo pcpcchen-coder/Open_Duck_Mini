@@ -8,7 +8,7 @@
 | [ADR-0002](ADR-0002-indoor-localization-and-navigation.md) | 室內定位與導航（AprilTag＋視覺慣性里程計，不用步數；沒開燈時紅外線補光） | 草案 | 2026-11-12 |
 | [ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md) | 行動終端、喚醒詞與找人 | 草案 | 2026-11-12 |
 | [ADR-0004](ADR-0004-docking-and-charging.md) | 充電座與自動回充（背後觸點） | 部分採用 | 2026-11-12 |
-| [ADR-0005](ADR-0005-compute-and-sensor-upgrade.md) | 運算與感測硬體升級（Pi Zero 2 W＋Pi 4、AR0144 裝頭上、Flex 麥克風裝身體上） | 部分採用 | 2026-11-12 |
+| [ADR-0005](ADR-0005-compute-and-sensor-upgrade.md) | 運算與感測硬體升級（先試單板 Pi 4，不行再拆回 Pi Zero 2 W＋Pi 4；AR0144 裝頭上、Flex 麥克風裝身體上） | 部分採用 | 2026-11-12（2026-11-22 修訂） |
 | [ADR-0006](ADR-0006-privacy-settings.md) | 可開關的隱私設定（預設值已同意） | 部分採用 | 2026-11-12 |
 | [ADR-0007](ADR-0007-follow-me-and-wait-here.md) | 跟著我來與在這等我（跟隨任務、本機停止句、原地等待） | 草案 | 2026-11-19 |
 

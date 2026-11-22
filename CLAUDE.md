@@ -25,7 +25,7 @@
 |---|---|---|
 | `nous_duck/assembly_viewer/` | ① 離線單一 HTML 3D 組裝檢視器（第一個交付） | Python pipeline＋TypeScript/three.js |
 | `nous_duck/protocol/` | ② duck-link：鴨子與 Nous 之間唯一的介面（版本化 JSON Schema） | JSON Schema |
-| `nous_duck/robot/` | ③ 機上程式（身體板 Pi Zero 2 W：連線、行為、安全；感知板 Pi 4：定位導航、感知、音訊） | Python |
+| `nous_duck/robot/` | ③ 機上程式（目前先試單板：全部跑在一片 Pi 4 上，分成身體與感知兩組程式；身體：連線、行為、安全；感知：定位導航、感知、音訊。不行再拆回 Pi Zero 2 W＋Pi 4，見 ADR-0005 §2.1.2） | Python |
 | `nous_duck/nous_adapter/` | ④ 之後要搬回 AIOS 的 `app.duck.*` adapter 與終端 | TypeScript |
 | `nous_duck/sim/` | ⑤ MuJoCo 模擬 | Python |
 | `nous_duck/hardware/` | ⑥ 硬體改裝（MG995 頭部原型、表情模組、接線、感測頭、感知板、充電座） | 文件、CAD、STL |

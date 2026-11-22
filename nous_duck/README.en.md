@@ -20,7 +20,7 @@ This directory holds all of this fork's own development. Upstream files are neve
 ## Division of work
 
 - **Nous (Mac mini)**: voice, vision, memory, decisions.
-- **Duck (Pi Zero 2 W body board plus a Pi 4 perception board)**: gait, motion, safety (safety decisions happen only on the duck). After R-001 it also adds indoor localization and navigation, audio capture and playback, a wake word, finding people, and automatic docking.
+- **Duck (for now a single Pi 4 running two program groups, body and perception; if that falls short, split back into a Pi Zero 2 W body board plus a Pi 4 perception board, see [ADR-0005 §2.1.2](docs/adr/ADR-0005-compute-and-sensor-upgrade.md), Traditional Chinese only)**: gait, motion, safety (safety decisions happen only on the duck). After R-001 it also adds indoor localization and navigation, audio capture and playback, a wake word, finding people, and automatic docking.
 - The two sides communicate only through the versioned JSON Schemas in [`protocol/`](protocol/README.en.md).
 
 See the [architecture](docs/architecture.md) and [ADR-0001](docs/adr/ADR-0001-duck-role-in-nous.md) (both Traditional Chinese only).
@@ -39,7 +39,7 @@ See the [architecture](docs/architecture.md) and [ADR-0001](docs/adr/ADR-0001-du
 | [`docs/validation/`](docs/validation/README.md) | Hardware and test records | 5 records (none on hardware) |
 | [`assembly_viewer/`](assembly_viewer/README.md) | ① Offline single-HTML 3D assembly viewer (first deliverable) | First version usable (pipeline, steps, front end); BOM planned |
 | [`protocol/`](protocol/README.en.md) | ② duck-link protocol (JSON Schema) | Planned |
-| [`robot/`](robot/README.md) | ③ On-board software (Pi Zero 2 W, Python) | Planned |
+| [`robot/`](robot/README.md) | ③ On-board software (single Pi 4 trial, Python) | Planned |
 | [`nous_adapter/`](nous_adapter/README.en.md) | ④ `app.duck.*` adapter and terminal to move into AIOS (TypeScript) | Planned |
 | [`sim/`](sim/README.md) | ⑤ MuJoCo simulation | Planned |
 | [`hardware/`](hardware/README.md) | ⑥ Modifications: MG995 head prototype, expression modules, wiring, sensor head, perception board, charging dock | Planned; the [charging dock](hardware/dock/README.md) is design v0 (STL files generated; not printed, not tested on hardware; docs in Traditional Chinese) |
