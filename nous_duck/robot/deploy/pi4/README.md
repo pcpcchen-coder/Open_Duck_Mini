@@ -1,6 +1,6 @@
 # 感知板 Pi 4：SD 卡燒錄與首次開機
 
-狀態：**腳本完成，待實機驗證**。設定檔已在雲端容器用映像內附的 cloud-init 與 netplan 檢查過（見 [驗證紀錄](../../../docs/validation/pi4-sd-image-2026-11-22.md)）；在 Mac 上燒錄、Pi 4 開機連上 Wi-Fi 還沒實測。
+狀態：**腳本完成，待實機驗證**。設定檔已在雲端容器用映像內附的 cloud-init 與 netplan 檢查過（見 [驗證紀錄](../../../docs/validation/pi4-sd-image-2026-11-22.md)）；在 Mac 上燒錄、Pi 4 開機連上 Wi-Fi 還沒有實機紀錄。開機後用 [`check_pi4.sh`](check_pi4.sh) 收集實機結果。
 
 ## 做什麼
 
@@ -21,7 +21,7 @@
 | 網路 | Wi-Fi（NetworkManager，國碼 TW）；有線 `eth0` DHCP 當備援 |
 | 時區 | Asia/Taipei |
 | 套件 | git、python3-venv、python3-pip、python3-dev、tmux、htop、i2c-tools |
-| 清理 | 裝完後清掉開機分割區上的明文密碼與 cloud-init 快取，並停用 cloud-init |
+| 清理 | 裝完後清掉開機分割區上的明文密碼，以及 cloud-init 快取裡的三份副本（`user-data.txt`、`cloud-config.txt`、`network-config.json`），並停用 cloud-init。Wi-Fi 密碼只留在 `/etc/netplan/`（600 root，連線需要） |
 
 紀錄寫在 Pi 上的 `/var/log/nous-duck-firstboot.log`。
 
@@ -45,11 +45,41 @@ SD 卡插進 Pi 4、接 5V 3A 電源，等 3–5 分鐘（會自動擴充分割�
 ssh duck-pi4
 ```
 
+## 開機後檢查
+
+連得上之後，在 Mac 上跑 [`check_pi4.sh`](check_pi4.sh)。它會 SSH 進 Pi 檢查約 30 項，產生一份 Markdown 報告：
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/pcpcchen-coder/Open_Duck_Mini/v2/nous_duck/robot/deploy/pi4/check_pi4.sh
+```
+
+```bash
+bash check_pi4.sh
+```
+
+| 類別 | 檢查 |
+|---|---|
+| 系統 | 主機名稱、板子型號與記憶體、OS（trixie／aarch64）、根分割區有沒有自動擴充 |
+| 電源 | `vcgencmd get_throttled`（電壓不足、降頻）、CPU 溫度 |
+| 首次開機 | cloud-init 有沒有錯、`/var/log/nous-duck-firstboot.log` 有沒有跑完、cloud-init 是否已停用 |
+| 明文 | 開機分割區、`/var/lib/cloud`、`/run/cloud-init` 還有沒有密碼（只列檔名、不印內容）；`/etc/netplan` 權限 |
+| 網路 | Wi-Fi 是否連線、訊號、國碼、IPv4、mDNS、DNS 與 HTTPS、NTP、時區 |
+| 帳號 | SSH 只收金鑰、sudo 免密碼、使用者群組（gpio、i2c、spi…） |
+| 開發 | 套件是否裝齊、能不能建立 Python venv、有沒有失敗的 systemd 服務 |
+
+報告存到 `~/Downloads/nous-duck-pi4/check-<時間>.md`，macOS 上會順便複製到剪貼簿，可以直接貼給 Claude 整理成驗證紀錄。報告**不含** Wi-Fi 名稱、IP、MAC 位址或密碼。
+
+用 2026-11-22 早期版本燒錄的卡（cloud-init 快取裡還留著 `cloud-config.txt` 等副本），報告會在「cloud-init 快取明文」顯示失敗。用下面的指令清掉後重新檢查：
+
+```bash
+bash check_pi4.sh --clean
+```
+
 ## 常見問題
 
 - **`ssh duck-pi4` 找不到主機**：先 `ping duck-pi4.local`；不行就到路由器的 DHCP 清單找 `duck-pi4` 的 IP，用 `ssh duck@<IP> -i ~/.ssh/nous_duck_pi4`。
 - **Wi-Fi 沒連上**：接網路線（`eth0` 會自動 DHCP）登入後用 `nmcli` 檢查；SSID 大小寫要完全一致。只支援 WPA2-PSK（WPA2/WPA3 混合模式可以；純 WPA3 的路由器要另外設定）。
-- **想重來**：重新執行腳本即可；每次會產生新的 cloud-init `instance-id`。
+- **想重來**：重新執行腳本即可；每次會產生新的 cloud-init `instance-id`。重燒後 Pi 的主機金鑰會變，`ssh` 會警告 `REMOTE HOST IDENTIFICATION HAS CHANGED`，先執行 `ssh-keygen -R duck-pi4.local`。
 
 ## 可調整的環境變數
 

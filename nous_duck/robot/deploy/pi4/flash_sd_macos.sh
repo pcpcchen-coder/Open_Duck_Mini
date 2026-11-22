@@ -107,8 +107,12 @@ runcmd:
     # 清掉開機分割區上的明文密碼與 cloud-init 快取，並停用 cloud-init
     printf '# cleared by nous_duck after first boot\n' > /boot/firmware/network-config
     printf '#cloud-config\n# cleared by nous_duck after first boot\n' > /boot/firmware/user-data
-    rm -f /var/lib/cloud/instance/user-data.txt* /var/lib/cloud/instance/obj.pkl
-    rm -f /var/lib/cloud/instances/*/user-data.txt* /var/lib/cloud/instances/*/obj.pkl
+    # cloud-init 另外存了三份：原始 user-data、合併後的 cloud-config.txt（含 plain_text_passwd）、
+    # network-config.json（含 Wi-Fi 密碼）。Wi-Fi 密碼只留在 /etc/netplan（600 root，連線需要）。
+    for d in /var/lib/cloud/instances/*/; do
+      rm -f "\$d"user-data.txt* "\$d"obj.pkl "\$d"cloud-config.txt "\$d"vendor-cloud-config.txt \\
+        "\$d"vendor2-cloud-config.txt "\$d"network-config.json
+    done
     touch /etc/cloud/cloud-init.disabled
     echo "[\$(date -Is)] nous-duck firstboot done"
 EOF
