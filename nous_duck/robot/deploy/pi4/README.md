@@ -1,4 +1,4 @@
-# 感知板 Pi 4：SD 卡燒錄與首次開機
+# Pi 4：SD 卡燒錄、首次開機與 runtime 安裝
 
 狀態：**實機通過（第一版腳本＋`--clean`）**。設定檔已在雲端容器用映像內附的 cloud-init 與 netplan 檢查過（見 [靜態檢查紀錄](../../../docs/validation/pi4-sd-image-2026-11-22.md)）。2026-11-22 用第一版腳本在 Mac 上燒卡，Pi 4 開機連上 Wi-Fi，`check_pi4.sh --clean` 後重開機，27 項全部通過（見 [實機紀錄](../../../docs/validation/pi4-firstboot-2026-11-22.md)）。修正後的腳本（首次開機就清掉全部快取明文）還沒有燒過實機。
 
@@ -74,6 +74,40 @@ bash check_pi4.sh
 ```bash
 bash check_pi4.sh --clean
 ```
+
+## 安裝上游 runtime（單板，ADR-0008）
+
+Pi 4 取代 Pi Zero 2 W 之後（[ADR-0008](../../../docs/adr/ADR-0008-single-board-pi4.md)），上游 [Open_Duck_Mini_Runtime](https://github.com/apirrone/Open_Duck_Mini_Runtime) 也裝在 Pi 4。在 repo 的 checkout 裡執行（要用到根目錄的 `BEST_WALK_ONNX_2.onnx`）：
+
+```bash
+bash nous_duck/robot/deploy/pi4/setup_runtime.sh
+```
+
+[`setup_runtime.sh`](setup_runtime.sh) 透過 SSH 在 Pi 的 `~/duck/` 安裝：
+
+| 項目 | 內容 |
+|---|---|
+| `Open_Duck_Mini_Runtime/` | 上游 runtime，鎖 commit `376de65`，不 fork、不改 |
+| `runtime-venv/` | uv 裝的 **Python 3.11.18**（Trixie 的系統 Python 3.13 裝不了上游鎖的版本），套件版本全部鎖在 [`runtime-constraints.txt`](runtime-constraints.txt)，另加 `gpiod`（Blinka 在 Pi 4 需要） |
+| `BEST_WALK_ONNX_2.onnx` | 步態策略，從 repo 根目錄複製並檢查 SHA-256 |
+| I2C | 打開（BNO055 用），第一次打開要重開機 |
+| `~/duck_config.json` | 不存在時從上游 `example_config.json` 複製，已存在就不覆蓋 |
+
+最後會跑煙霧測試（模組匯入、Blinka 板子、步態策略推論速度、I2C 上有沒有 BNO055、有沒有 `/dev/ttyACM0`）。不會讓舵機動。只跑測試：
+
+```bash
+bash nous_duck/robot/deploy/pi4/setup_runtime.sh --check
+```
+
+用 runtime（在 Pi 上）：
+
+```bash
+source ~/duck/runtime-venv/bin/activate && cd ~/duck/Open_Duck_Mini_Runtime/scripts
+```
+
+之後照上游 README 的順序：`python ../mini_bdx_runtime/mini_bdx_runtime/raw_imu.py`（IMU）→ `python check_motors.py`（舵機）→ `python find_soft_offsets.py`（零點偏移）→ `python v2_rl_walk_mujoco.py --onnx_model_path ~/duck/BEST_WALK_ONNX_2.onnx`（走路）。注意：不要在 `~/duck/Open_Duck_Mini_Runtime` 根目錄直接跑 Python，同名資料夾會蓋過已安裝的套件。
+
+驗證紀錄：[pi4-runtime-2026-11-22.md](../../../docs/validation/pi4-runtime-2026-11-22.md)（實機，沒接周邊）。
 
 ## 常見問題
 

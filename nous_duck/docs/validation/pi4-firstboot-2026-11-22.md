@@ -63,7 +63,7 @@ removed '/var/lib/cloud/instances/<id>/network-config.json'
 - `~/duck/Open_Duck_Mini_Runtime`：clone 上游 runtime，`git checkout 376de65`（2026-11-22 時 `v2` 的最新 commit），**沒有**安裝整套。
 - `~/duck/servo-venv`：只裝 `pypot @ git+https://github.com/pollen-robotics/pypot@support-feetech-sts3215`（當時分支 commit `f6d305e`），帶入 numpy 2.5.5、pyserial 3.5、scipy 1.18.1 等；版本清單存在 `~/duck/servo-venv-freeze.txt`。
 
-為什麼不裝整套：runtime 的 `setup.cfg` 鎖了 `onnxruntime==1.18.1`、`numpy==1.26.4`、`pygame==2.6.0`。依目前所知，這幾版沒有 Python 3.13 的 wheel，Trixie 預設是 Python 3.13。**這是推論，沒有在 Pi 上試裝整套。**身體板 Pi Zero 2 W 要跑整套 runtime，燒卡前要先確認 Python 版本（可能要用 Bookworm／Python 3.11）。
+為什麼不裝整套：runtime 的 `setup.cfg` 鎖了 `onnxruntime==1.18.1`、`numpy==1.26.4`、`pygame==2.6.0`。依目前所知，這幾版沒有 Python 3.13 的 wheel，Trixie 預設是 Python 3.13。**這是推論，沒有在 Pi 上試裝整套。**（同日後續：改成 Pi 4 單板，整套 runtime 用 uv 裝的 Python 3.11 裝在 Pi 4 上，見 [ADR-0008](../adr/ADR-0008-single-board-pi4.md) 與 [runtime 驗證紀錄](pi4-runtime-2026-11-22.md)。）
 
 | 測試 | 結果 |
 |---|---|
