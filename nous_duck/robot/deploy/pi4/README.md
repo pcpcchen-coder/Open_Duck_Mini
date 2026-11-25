@@ -105,6 +105,16 @@ bash nous_duck/robot/deploy/pi4/setup_runtime.sh --check
 source ~/duck/runtime-venv/bin/activate && cd ~/duck/Open_Duck_Mini_Runtime/scripts
 ```
 
+第一次接上舵機、打開舵機電源後，先用 [`servo_scan_readonly.py`](servo_scan_readonly.py) 確認 14 顆的 ID、電壓、溫度（只讀不寫，舵機不會動）：
+
+```bash
+scp nous_duck/robot/deploy/pi4/servo_scan_readonly.py duck-pi4:duck/
+```
+
+```bash
+ssh duck-pi4 '~/duck/runtime-venv/bin/python ~/duck/servo_scan_readonly.py'
+```
+
 之後照上游 README 的順序：`python ../mini_bdx_runtime/mini_bdx_runtime/raw_imu.py`（IMU）→ `python check_motors.py`（舵機）→ `python find_soft_offsets.py`（零點偏移）→ `python v2_rl_walk_mujoco.py --onnx_model_path ~/duck/BEST_WALK_ONNX_2.onnx`（走路）。注意：不要在 `~/duck/Open_Duck_Mini_Runtime` 根目錄直接跑 Python，同名資料夾會蓋過已安裝的套件。
 
 驗證紀錄：[pi4-runtime-2026-11-22.md](../../../docs/validation/pi4-runtime-2026-11-22.md)（實機，沒接周邊）。
