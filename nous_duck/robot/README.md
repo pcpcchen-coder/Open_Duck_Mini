@@ -12,7 +12,7 @@
 | 路徑 | 職責 | 狀態 |
 |---|---|---|
 | `nous_link/` | duck-link 端點：收發訊息、依 `../protocol/schemas` 驗證、心跳、ack | 規劃中 |
-| `behaviors/` | 把意圖轉成上游 runtime 的 7 維指令向量；動作庫（點頭、搖頭等具名動作，定義與驗證規則見 [ADR-0008](../docs/adr/ADR-0008-gesture-library.md)）、天線、表情 | 規劃中 |
+| `behaviors/` | 把意圖轉成上游 runtime 的 7 維指令向量；動作庫（點頭、搖頭等具名動作，定義與驗證規則見 [ADR-0011](../docs/adr/ADR-0011-gesture-library.md)）、天線、表情 | 規劃中 |
 | `behaviors/` | 把意圖轉成上游 runtime 的 7 維指令向量；預錄動作（點頭、搖頭）、天線、表情 | 規劃中 |
 | `behaviors/look_at.py` | 說話時看著對方：人臉位置（只有位置，不含影像與身分）＋說話者方向 → 頭部 4 維指令與轉身角速度。**在感知板執行**（需要影像結果），輸出經內部連線送身體板，由 safety 再夾限 | 控制器完成；單元測試＋[模擬](../docs/validation/look-at-sim-2026-11-16.md)，未實機；人臉偵測器與內部連線未做 |
 | `safety/` | **最後一道關卡**：速度與角度上限、指令 TTL（deadman）、跌倒、過熱、低電壓、斷線處理、緊急停止 | 規劃中 |
@@ -23,7 +23,7 @@
 | `perception/` | （感知板）雙目擷取、深度、AprilTag 偵測、人臉偵測與特徵（[ADR-0003](../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md)） | 規劃中 |
 | `audio/` | （感知板）喚醒詞（sherpa-onnx KWS）、聲源方向、語音串流、喇叭（ADR-0003） | 規劃中 |
 | [`servo_console/`](servo_console/README.md) | **舵機控制台**：Pi 4 上的網頁工具，控制 14 顆舵機、即時 3D 姿勢、姿勢與偏移、感測器、緊急停止（本機開發工具，不經過 Nous） | 第一版可用（[驗證](../docs/validation/servo-console-2026-11-25.md)：單元測試、模擬、實機只動頭部） |
-| `audio/` | （感知板）喚醒詞（sherpa-onnx KWS）、聲源方向、語音串流、喇叭（ADR-0003）；變聲輸出 `duck_voice`、本機音效 `duck_raw`、播放閘門與音量上限（[ADR-0007](../docs/adr/ADR-0007-duck-voice.md)） | 規劃中 |
+| `audio/` | （感知板）喚醒詞（sherpa-onnx KWS）、聲源方向、語音串流、喇叭（ADR-0003）；變聲輸出 `duck_voice`、本機音效 `duck_raw`、播放閘門與音量上限（[ADR-0010](../docs/adr/ADR-0010-duck-voice.md)） | 規劃中 |
 | `tests/` | 單元測試（safety 規則、意圖轉換、schema 驗證）；不需要硬體的部分可在雲端跑 | 規劃中 |
 | `tests/` | 單元測試（safety 規則、意圖轉換、schema 驗證）；不需要硬體的部分可在雲端跑 | `test_look_at.py`（15 項）；其他規劃中 |
 

@@ -121,7 +121,7 @@ IMU 偵測跌倒 → safety 立即停止步態（本機，不等 Nous）
 
 ## 6. 傳輸（待決）
 
-2026-11-13：[ADR-0007](adr/ADR-0007-duck-link-transport-and-command-bridge.md)（草案）建議採方案 A，並定義鴨子端如何把 duck-link 接進上游 runtime。ADR-0007 採用前，本節維持待決。
+2026-11-13：[ADR-0009](adr/ADR-0009-duck-link-transport-and-command-bridge.md)（草案）建議採方案 A，並定義鴨子端如何把 duck-link 接進上游 runtime。ADR-0007 採用前，本節維持待決。
 
 候選方案與考量，決定前不實作：
 

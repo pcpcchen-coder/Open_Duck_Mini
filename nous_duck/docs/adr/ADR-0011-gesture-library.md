@@ -1,8 +1,8 @@
-# ADR-0008：動作庫——先用現有步態策略編排具名動作，動態動作另開訓練批次
+# ADR-0011：動作庫——先用現有步態策略編排具名動作，動態動作另開訓練批次
 
 - 狀態：**草案（Proposed）**
 - 日期：2026-11-15
-- 相關：[ADR-0007 草案](https://github.com/pcpcchen-coder/Open_Duck_Mini/pull/9)（duck-link 傳輸與指令橋接，尚未合併）、[ADR-0001](ADR-0001-duck-role-in-nous.md)（§4 `app.duck.gesture`、`look`、`antennas`、`express`）、[ADR-0005](ADR-0005-compute-and-sensor-upgrade.md)（§2.4 重量與步態策略）、[ADR-0006](ADR-0006-privacy-settings.md)（§4.2 眼燈優先順序）、[`../architecture.md`](../architecture.md) §4、[`../../robot/README.md`](../../robot/README.md)、[`../../sim/README.md`](../../sim/README.md)
+- 相關：[ADR-0009 草案](https://github.com/pcpcchen-coder/Open_Duck_Mini/pull/9)（duck-link 傳輸與指令橋接，尚未合併）、[ADR-0001](ADR-0001-duck-role-in-nous.md)（§4 `app.duck.gesture`、`look`、`antennas`、`express`）、[ADR-0005](ADR-0005-compute-and-sensor-upgrade.md)（§2.4 重量與步態策略）、[ADR-0006](ADR-0006-privacy-settings.md)（§4.2 眼燈優先順序）、[`../architecture.md`](../architecture.md) §4、[`../../robot/README.md`](../../robot/README.md)、[`../../sim/README.md`](../../sim/README.md)
 
 本 ADR 的依據是**閱讀上游程式碼**，沒有在模擬或實機上跑過。查閱版本：Open_Duck_Mini_Runtime `v2` commit `376de65`（2026-09-07）、Open_Duck_Playground `main` commit `b9be205`（2025-08-05）。根目錄的 `BEST_WALK_ONNX*.onnx` 是用哪個版本的 Playground 訓練的，目前不知道。
 
@@ -31,7 +31,7 @@ ADR-0001 已經列出 `app.duck.gesture`（執行鴨子端白名單內的預錄�
 1. **天線、眼燈、投影燈、音效**跟平衡無關，可以自由編排。
 2. **速度指令**在訓練範圍內有獎勵追蹤，是策略真正學過的。但訓練時指令約 10 秒才換一次，頻繁切換速度不在訓練分布裡。
 3. **頭部**：依這個版本的 Playground，策略沒有學過「頭照指令轉動時要怎麼平衡」。實機上，頭部指令是直接疊加到策略輸出上的。所以頭部動作能不能不摔、能動多快，**不能用「訓練過」來保證**，要在模擬和實機上一個一個驗證。上游手把讓人在站立時動頭，代表作者有這樣用，但這不是我們的驗證。
-4. **「站著」有兩種狀態**：策略在跑、速度指令為 0；或是暫停。依 §1.1 暫停那一列，暫停時頭不會動。ADR-0007 草案（[PR #9](https://github.com/pcpcchen-coder/Open_Duck_Mini/pull/9) §2.5）記載「速度為 0 時策略仍會原地踏步」，這點我還沒在模擬裡確認。如果屬實，頭部動作會在原地踏步時進行，平衡條件和完全站定不同。
+4. **「站著」有兩種狀態**：策略在跑、速度指令為 0；或是暫停。依 §1.1 暫停那一列，暫停時頭不會動。ADR-0009 草案（[PR #9](https://github.com/pcpcchen-coder/Open_Duck_Mini/pull/9) §2.5）記載「速度為 0 時策略仍會原地踏步」，這點我還沒在模擬裡確認。如果屬實，頭部動作會在原地踏步時進行，平衡條件和完全站定不同。
 5. 我們的頭部會重新設計（AR0144 鏡頭與紅外線補光燈裝在頭上，ADR-0005），頭的質量會變。原版上驗證過的頭部動作，換頭之後要重新驗證。
 
 ## 2. 決定
@@ -100,7 +100,7 @@ ADR-0001 已經列出 `app.duck.gesture`（執行鴨子端白名單內的預錄�
 
 ### 2.4 執行與安全
 
-1. **在身體板執行**：`robot/behaviors` 的播放器以 50 Hz 產生 7 維指令和天線位置，經 `robot/safety` 再交給上游 runtime。這和 [`architecture.md` §4](../architecture.md#4-與上游-runtime-的接點) 規劃的包裝指令來源是同一個接點。如果 ADR-0007 草案採用，播放器就是它的 `CommandArbiter` 的一個指令來源，和手把、duck-link 意圖一起仲裁；動作的頭部範圍比 ADR-0007 草案的夾限更嚴（neck_pitch 固定 0）。
+1. **在身體板執行**：`robot/behaviors` 的播放器以 50 Hz 產生 7 維指令和天線位置，經 `robot/safety` 再交給上游 runtime。這和 [`architecture.md` §4](../architecture.md#4-與上游-runtime-的接點) 規劃的包裝指令來源是同一個接點。如果 ADR-0009 草案採用，播放器就是它的 `CommandArbiter` 的一個指令來源，和手把、duck-link 意圖一起仲裁；動作的頭部範圍比 ADR-0009 草案的夾限更嚴（neck_pitch 固定 0）。
 2. **載入時檢查，不偷偷夾限**：定義檔任何一個關鍵影格超出 §2.3 的範圍，或插值後超出速率上限，整個動作拒絕載入並記錄原因，不會悄悄截斷之後照做。safety 在執行時仍會夾限，作為最後一道關卡。
 3. **永遠可以中斷**：`stop`、緊急停止、跌倒、低電壓、斷線，都會立刻中斷動作。中斷後頭部依速率上限回到中立姿勢，天線回到 0。
 4. **一次只做一個動作**：動作進行中又收到新動作，回 `refused`（`busy`），Nous 要先 `stop`。

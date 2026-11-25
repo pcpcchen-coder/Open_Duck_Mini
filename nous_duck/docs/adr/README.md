@@ -9,16 +9,16 @@
 | [ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md) | 行動終端、喚醒詞與找人 | 草案 | 2026-11-12 |
 | [ADR-0004](ADR-0004-docking-and-charging.md) | 充電座與自動回充（背後觸點） | 部分採用 | 2026-11-12 |
 | [ADR-0005](ADR-0005-compute-and-sensor-upgrade.md) | 運算與感測硬體升級（AR0144 裝頭上、Flex 麥克風裝身體上；雙板部分被 ADR-0008 取代） | 部分採用 | 2026-11-12 |
-| [ADR-0006](ADR-0006-privacy-settings.md) | 可開關的隱私設定（預設值已同意） | 部分採用 | 2026-11-12 |
+| [ADR-0006](ADR-0006-privacy-settings.md) | 可開關的隱私設定（預設值已同意；鏡頭預設由 ADR-0013 改為常開） | 部分採用 | 2026-11-12 |
 | [ADR-0007](ADR-0007-follow-me-and-wait-here.md) | 跟著我來與在這等我（跟隨任務、本機停止句、原地等待） | 草案 | 2026-11-19 |
 | [ADR-0008](ADR-0008-single-board-pi4.md) | 單板 Pi 4，取代 Pi Zero 2 W（Pi 4 裝機身、Python 3.11 跑上游 runtime、5 V 電源要重選；試用期，達不到門檻拆回雙板） | 採用（試用期） | 2026-11-22 |
-| [ADR-0005](ADR-0005-compute-and-sensor-upgrade.md) | 運算與感測硬體升級（Pi Zero 2 W＋Pi 4、AR0144 裝頭上、Flex 麥克風裝身體上） | 部分採用 | 2026-11-12 |
-| [ADR-0006](ADR-0006-privacy-settings.md) | 可開關的隱私設定（預設值已同意；鏡頭預設由 ADR-0007 改為常開） | 部分採用 | 2026-11-12 |
-| [ADR-0007](ADR-0007-camera-always-on-and-home-monitoring.md) | 鏡頭常開（已決定）與家庭監控（提議） | 部分採用 | 2026-11-18 |
-| [ADR-0007](ADR-0007-duck-link-transport-and-command-bridge.md) | duck-link 傳輸（SSH 通道＋WebSocket）與鴨子端指令橋接 | 草案 | 2026-11-13 |
-| [ADR-0007](ADR-0007-duck-voice.md) | 鴨子的語音（Nous 的聲音加變聲、本機音效、回音消除、喇叭） | 部分採用 | 2026-11-15 |
-| [ADR-0008](ADR-0008-gesture-library.md) | 動作庫：先用現有步態策略編排具名動作，動態動作另開訓練批次 | 草案 | 2026-11-15 |
-| [ADR-0007](ADR-0007-duck-memory.md) | 鴨子的記憶系統（沿用 Nous 記憶層，不另做 Hermes 式記憶；鴨子只補身體、空間、任務記憶） | 草案 | 2026-11-17 |
+| [ADR-0009](ADR-0009-duck-link-transport-and-command-bridge.md) | duck-link 傳輸（SSH 通道＋WebSocket）與鴨子端指令橋接（原 PR #9 的「ADR-0007」） | 草案 | 2026-11-13 |
+| [ADR-0010](ADR-0010-duck-voice.md) | 鴨子的語音（Nous 的聲音加變聲、本機音效、回音消除、喇叭）（原 PR #14 的「ADR-0007」） | 部分採用 | 2026-11-15 |
+| [ADR-0011](ADR-0011-gesture-library.md) | 動作庫：先用現有步態策略編排具名動作，動態動作另開訓練批次（原 PR #13 的「ADR-0008」） | 草案 | 2026-11-15 |
+| [ADR-0012](ADR-0012-duck-memory.md) | 鴨子的記憶系統（沿用 Nous 記憶層；鴨子只補身體、空間、任務記憶）（原 PR #19 的「ADR-0007」） | 草案 | 2026-11-17 |
+| [ADR-0013](ADR-0013-camera-always-on-and-home-monitoring.md) | 鏡頭常開（已決定）與家庭監控（提議）（原 PR #21 的「ADR-0007」） | 部分採用 | 2026-11-18 |
+
+**2026-11-25 重新編號**：PR #9、#13、#14、#19、#21 各自在分支上用了 ADR-0007／0008，和已合併的 ADR-0007（跟著我來）、ADR-0008（單板 Pi 4）撞號。整合分支 `claude/duck-companion-overnight` 把它們改成 ADR-0009～0013（對照見上表）。連結已全部改到新檔名；內文裡沒有連結的「ADR-0007」字樣，若出自這五份文件或 PR #21 帶進來的眼睛文件，指的可能是舊編號，以連結為準。
 
 編號說明：本序列只屬於本 repo 的 `nous_duck/docs/adr/`，與 AIOS repo 的 `docs/adr/`（ADR-0001 本機家人辨識等）是不同的序列。
 
