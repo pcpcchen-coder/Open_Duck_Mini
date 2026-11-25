@@ -1,6 +1,6 @@
 # 鴨子夥伴功能：分步進度
 
-最後更新：2026-11-25 22:40（整合線）。設計見 [總體設計](README.md)。
+最後更新：2026-11-25 22:55（整合線）。A～D 四條線已啟動，分支：`claude/duck-a-body-8fca8a`、`claude/duck-b-nous-a19b67`、`claude/duck-c-sim-nav-2e1cfa`、`claude/duck-d-percept-audio-eae98e`（worktree 在 `.claude/worktrees/` 底下同名目錄）。設計見 [總體設計](README.md)。
 
 怎麼讀：
 
