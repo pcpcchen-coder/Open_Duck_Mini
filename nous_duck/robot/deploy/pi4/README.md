@@ -115,6 +115,16 @@ scp nous_duck/robot/deploy/pi4/servo_scan_readonly.py duck-pi4:duck/
 ssh duck-pi4 '~/duck/runtime-venv/bin/python ~/duck/servo_scan_readonly.py'
 ```
 
+零點偏移可以用中文版 [`find_offsets_zh.py`](find_offsets_zh.py)（流程照上游 `find_soft_offsets.py`，提示改中文、顯示舵機 ID、可直接寫入 `~/duck_config.json` 並先備份；`--ids 23 24` 只校正指定的舵機）：
+
+```bash
+scp nous_duck/robot/deploy/pi4/find_offsets_zh.py duck-pi4:duck/
+```
+
+```bash
+ssh -t duck-pi4 'cd ~/duck/Open_Duck_Mini_Runtime/scripts && ~/duck/runtime-venv/bin/python ~/duck/find_offsets_zh.py'
+```
+
 之後照上游 README 的順序：`python ../mini_bdx_runtime/mini_bdx_runtime/raw_imu.py`（IMU）→ `python check_motors.py`（舵機）→ `python find_soft_offsets.py`（零點偏移）→ `python v2_rl_walk_mujoco.py --onnx_model_path ~/duck/BEST_WALK_ONNX_2.onnx`（走路）。注意：不要在 `~/duck/Open_Duck_Mini_Runtime` 根目錄直接跑 Python，同名資料夾會蓋過已安裝的套件。
 
 驗證紀錄：[pi4-runtime-2026-11-22.md](../../../docs/validation/pi4-runtime-2026-11-22.md)（實機，沒接周邊）。
