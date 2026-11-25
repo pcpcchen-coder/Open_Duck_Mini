@@ -18,6 +18,7 @@ pytestmark = pytest.mark.skipif(not (RUNTIME and ONNX), reason="需要上游 run
 
 
 def build(tmp_path, n_writes=None, on_poll=None):
+    """建立 RLWalk（假硬體）。注意：建立時上游的 start() 會 sleep 2 s。"""
     import json
 
     from duckd.arbiter import SafetyArbiter
@@ -43,7 +44,17 @@ def test_locked_commit():
 
 
 def test_upstream_main_loop_runs_on_arbiter_without_gamepad(tmp_path):
-    arb, rl, source, module = build(tmp_path, n_writes=100)
+    box = {}
+
+    def on_poll(polls):  # 測試扮演 Nous：每圈續租；另外設上限，迴圈不會卡死
+        box["arb"].heartbeat(time.monotonic())
+        if polls > 600:
+            from duckd.gait_fakes import LoopFinished
+
+            raise LoopFinished()
+
+    arb, rl, source, module = build(tmp_path, n_writes=100, on_poll=on_poll)
+    box["arb"] = arb
     assert rl.xbox_controller is source  # 上游的 __init__ 拿到的是仲裁器，不是手把
     assert type(rl.hwi).__name__ == "FakeHWI" and rl.hwi.turned_on
     now = time.monotonic()

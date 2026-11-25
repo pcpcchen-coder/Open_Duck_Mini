@@ -95,7 +95,7 @@ RuntimeDirectory=duckd
 RuntimeDirectoryMode=0700
 # 啟動時不碰硬體：要在 Pi 上執行 ~/duck/duckd/duckd-ctl engage 才會開匯流排。
 # --head-window-deg 15 --head-speed-deg 30 是 2026-11-25 無人看顧時的規定（初始值，使用者看過實機後再放寬）。
-ExecStart=$PI_HOME/duck/duckd-venv/bin/python -m duckd --body head --head-window-deg 15 --head-speed-deg 30 --ctl-socket /run/duckd/duckd.sock --eyes-panel /run/duckd/eyes.png ${DUCKD_EXTRA_ARGS:-}
+ExecStart=$PI_HOME/duck/duckd-venv/bin/python -m duckd --body head --head-window-deg 15 --head-speed-deg 30 --ctl-socket /run/duckd/duckd.sock --eyes-panel /run/duckd/eyes.png --eyes-fps 1 ${DUCKD_EXTRA_ARGS:-}
 Restart=on-failure
 RestartSec=3
 # 結束時：頭以限速回到接手時的位置、恢復接手前的扭力狀態、放開匯流排
