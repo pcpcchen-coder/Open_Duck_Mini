@@ -191,7 +191,7 @@ async function main(): Promise<number> {
     const duck = result.duck as { software: string; duck_id: string | null; mock: boolean } | null;
     console.log(`hub：${String(result.listening)}`);
     console.log(`鴨子：${result.connected ? "已連線" : "沒有連線"}${duck ? `（${duck.software}${duck.duck_id ? `，${duck.duck_id}` : ""}${duck.mock ? "，⚠ 模擬" : ""}${result.connected ? "" : "，上一次連線的資料"}）` : ""}`);
-    if (result.connected) console.log(`往返時間：${result.rtt_ms === null ? "還沒量到" : `${String(result.rtt_ms)} ms`}；已連線 ${Math.round(Number(result.connected_for_ms) / 1000)} 秒；最新 state 是 ${String(result.state_age_ms)} ms 前`);
+    if (result.connected) console.log(`往返時間：${result.rtt_ms === null ? "還沒量到" : `${String(result.rtt_ms)} ms`}；已連線 ${Math.round(Number(result.connected_for_ms) / 1000)} 秒；${result.state_age_ms === null ? "還沒收到 state" : `最新 state 是 ${String(result.state_age_ms)} ms 前`}`);
     console.log(`health：${JSON.stringify(result.health)}`);
     console.log(`計數：${JSON.stringify(result.counters)}`);
     console.log(`presence 來源：${(result.presence_source as { label: string } | null)?.label ?? "無"}`);

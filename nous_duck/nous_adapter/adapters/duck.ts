@@ -416,6 +416,9 @@ export class DuckAdapter implements IntegrationAdapter {
           ttlMs: 2_000,
           skipCapabilityCheck: true,
           onRead: (ack, snap) => ({ message: DUCK_TEXT.missionStatus, data: { mission_status: ack.data ?? null, mission: snap.state?.mission ?? null } }),
+          // 沒有任務時，有的鴨子端實作回 accepted＋空資料，有的回 rejected: no_mission（協定沒有規定，見
+          // protocol/proposals/b-nous-readback-and-semantics.md）。兩種都是「讀到了：沒有任務」，不是失敗。
+          onRejected: (ack: AckMessage, snap: LinkSnapshot) => (ack.reason === "no_mission" && args.mission_id === undefined && snap.state && !snap.state.mission ? this.wrap("confirmed", DUCK_TEXT.cancelNothing, snap, { mission: null }) : null),
         });
       case DUCK_TOOL.goTo: {
         const place = String(args.place);
@@ -472,7 +475,7 @@ export class DuckAdapter implements IntegrationAdapter {
         ttlMs: 2_000,
         skipCapabilityCheck: true,
         ...base,
-        onRead: (ack, snap) => ({
+        onRead: (_ack, snap) => ({
           message: DUCK_TEXT.status,
           data: {
             duck: { software: snap.hello?.software ?? null, duck_id: snap.hello?.duck_id ?? null },
@@ -480,7 +483,8 @@ export class DuckAdapter implements IntegrationAdapter {
             gestures: snap.hello?.gestures ?? [],
             expressions: snap.hello?.expressions ?? [],
             link_rtt_ms: snap.rttMs,
-            ...(ack.data ? { reported: ack.data } : {}),
+            // ack.data 不放進來：duckd 的 status 會回整份 state（和下面的 state 摘要重複），
+            // 加上去會讓 data 逼近 AIOS 的 4096 bytes 上限（對 duckd 實測 2750 bytes），超過就整個被丟掉。
           },
         }),
       },

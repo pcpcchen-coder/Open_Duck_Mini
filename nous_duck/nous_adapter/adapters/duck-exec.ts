@@ -141,6 +141,7 @@ export async function runDuckCommand(link: DuckLink, spec: CommandSpec, timing: 
   switch (outcome.kind) {
     case "not_sent":
       if (outcome.why === "invalid") return finish(link, timing, "refused", DUCK_TEXT.invalidCommand, { reason: "invalid_arguments", data: { errors: outcome.errors ?? [], sent: false } });
+      if (outcome.why === "aborted") return finish(link, timing, "refused", DUCK_TEXT.abortedBeforeSend, { reason: "aborted", data: { sent: false } });
       return finish(link, timing, "failed", DUCK_TEXT.notConnected, { reason: "unavailable" });
     case "no_ack":
       return finish(link, timing, "unknown", DUCK_TEXT.noAck, { reason: "timeout" });

@@ -292,6 +292,15 @@ describe("不回 ack、斷線、中止 → unknown；沒送出 → failed", () =
     expect(await pending).toMatchObject({ status: "unknown", reason: "aborted" });
   });
 
+  it("送出前就已經中止 → refused／aborted，沒有送出（和 AIOS Dispatcher 相同）", async () => {
+    r = await rig();
+    const controller = new AbortController();
+    controller.abort();
+    const result = await r.adapter.execute(DUCK_TOOL.look, { head_yaw: 0.1 }, ctx(controller.signal));
+    expect(result).toMatchObject({ status: "refused", reason: "aborted" });
+    expect(r.duck.received).toHaveLength(0);
+  });
+
   it("沒有連線 → failed／unavailable，沒有送出", async () => {
     r = await rig({ connect: false });
     const result = await r.adapter.execute(DUCK_TOOL.look, { head_yaw: 0.1 }, ctx());
@@ -372,6 +381,14 @@ describe("任務（非同步）", () => {
     expect(wrongId.status).toBe("refused");
   });
 
+  it("mission_status 沒有任務時鴨子回 rejected: no_mission（duckd 的行為）→ 仍是成功的讀取", async () => {
+    r = await rig({ duck: { reject: (c) => (c.action === "mission_status" ? "no_mission" : null) } });
+    const result = await r.adapter.execute(DUCK_TOOL.missionStatus, {}, ctx());
+    expect(result).toMatchObject({ ok: true, status: "confirmed" });
+    expect(data(result).mission).toBeNull();
+    expect((await r.adapter.execute(DUCK_TOOL.missionStatus, { mission_id: "m_x" }, ctx())).status).toBe("refused");
+  });
+
   it("任務失敗的事件帶原因代碼", async () => {
     r = await rig({ duck: { missionOutcome: "failed" } });
     const failed: Data[] = [];
@@ -391,6 +408,29 @@ describe("任務（非同步）", () => {
     const follow = await r.adapter.execute(DUCK_TOOL.followMe, { distance_m: 1 }, ctx());
     expect(follow.status).toBe("confirmed");
     expect(r.duck.received.at(-1)).toMatchObject({ action: "follow_me", params: { target: "speaker", distance_m: 1 } });
+  });
+});
+
+describe("AIOS Dispatcher 的限制", () => {
+  it("每個工具的 data 都小於 4096 bytes（超過會被 AIOS 整個丟掉），message 不超過 500 字", async () => {
+    r = await rig({ duck: { missionOutcome: "hold", capabilities: { antennas: { status: "mock" } } } });
+    const calls: [string, Record<string, unknown>][] = [
+      [DUCK_TOOL.status, {}], [DUCK_TOOL.look, { neck_pitch: 0.1, head_pitch: 0.1, head_yaw: 2, head_roll: 0.1, duration_s: 0.3 }], [DUCK_TOOL.gesture, { name: "nod" }],
+      [DUCK_TOOL.gesture, { name: "backflip" }], [DUCK_TOOL.antennas, { left: 1, right: -1 }], [DUCK_TOOL.express, { expression: "happy" }], [DUCK_TOOL.track, { target: "face" }],
+      [DUCK_TOOL.where, {}], [DUCK_TOOL.places, {}], [DUCK_TOOL.goTo, { place: "brother_room" }], [DUCK_TOOL.missionStatus, {}], [DUCK_TOOL.walk, { vx: 0.15, vy: 0.2, yaw_rate: 1, duration_s: 10 }],
+      [DUCK_TOOL.cancelMission, {}], [DUCK_TOOL.walk, { vx: 0.15, vy: 0.2, yaw_rate: 1, duration_s: 10 }], [DUCK_TOOL.stop, {}], [DUCK_TOOL.waitHere, {}], [DUCK_TOOL.returnHome, {}], [DUCK_TOOL.followMe, {}], [DUCK_TOOL.findPerson, { person: "brother" }],
+    ];
+    let largest = 0;
+    for (const [tool, args] of calls) {
+      const result = await r.adapter.execute(tool as never, args, ctx());
+      expect(isToolResult(result), tool).toBe(true);
+      const bytes = Buffer.byteLength(JSON.stringify(result.data ?? null), "utf8");
+      largest = Math.max(largest, bytes);
+      expect(bytes, tool).toBeLessThan(4096);
+      expect(result.message.length, tool).toBeLessThanOrEqual(500);
+    }
+    // 目前最大的是 status；留一半以上的餘裕給真的鴨子多回的欄位。
+    expect(largest).toBeLessThan(2048);
   });
 });
 

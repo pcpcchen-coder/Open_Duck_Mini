@@ -35,8 +35,8 @@ export interface DuckLinkHubOptions {
 }
 
 export type CommandOutcome =
-  /** 沒有送出：沒有連線，或指令本身不合 schema。 */
-  | { kind: "not_sent"; why: "not_connected" | "invalid"; errors?: string[] }
+  /** 沒有送出：沒有連線、指令本身不合 schema，或送出前呼叫端已經中止。 */
+  | { kind: "not_sent"; why: "not_connected" | "invalid" | "aborted"; errors?: string[] }
   /** 鴨子回了 ack（accepted 或 rejected）。ackSeq 之後收到的 state 才算回讀。 */
   | { kind: "ack"; ack: AckMessage; requestId: string; sentSeq: number; ackSeq: number; rttMs: number }
   /** 已送出，時限內沒有 ack：結果不明。 */
@@ -366,7 +366,7 @@ export class DuckLinkHub implements DuckLink {
       this.counters.txInvalid += 1;
       return Promise.resolve({ kind: "not_sent", why: "invalid", errors: check.errors });
     }
-    if (options.signal?.aborted) return Promise.resolve({ kind: "not_sent", why: "not_connected" });
+    if (options.signal?.aborted) return Promise.resolve({ kind: "not_sent", why: "aborted" });
     const sentSeq = this.rxSeq;
     return new Promise<CommandOutcome>((resolve) => {
       const timer = setTimeout(() => {
