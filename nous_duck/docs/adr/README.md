@@ -12,6 +12,9 @@
 | [ADR-0006](ADR-0006-privacy-settings.md) | 可開關的隱私設定（預設值已同意） | 部分採用 | 2026-11-12 |
 | [ADR-0007](ADR-0007-follow-me-and-wait-here.md) | 跟著我來與在這等我（跟隨任務、本機停止句、原地等待） | 草案 | 2026-11-19 |
 | [ADR-0008](ADR-0008-single-board-pi4.md) | 單板 Pi 4，取代 Pi Zero 2 W（Pi 4 裝機身、Python 3.11 跑上游 runtime、5 V 電源要重選；試用期，達不到門檻拆回雙板） | 採用（試用期） | 2026-11-22 |
+| [ADR-0005](ADR-0005-compute-and-sensor-upgrade.md) | 運算與感測硬體升級（Pi Zero 2 W＋Pi 4、AR0144 裝頭上、Flex 麥克風裝身體上） | 部分採用 | 2026-11-12 |
+| [ADR-0006](ADR-0006-privacy-settings.md) | 可開關的隱私設定（預設值已同意；鏡頭預設由 ADR-0007 改為常開） | 部分採用 | 2026-11-12 |
+| [ADR-0007](ADR-0007-camera-always-on-and-home-monitoring.md) | 鏡頭常開（已決定）與家庭監控（提議） | 部分採用 | 2026-11-18 |
 
 編號說明：本序列只屬於本 repo 的 `nous_duck/docs/adr/`，與 AIOS repo 的 `docs/adr/`（ADR-0001 本機家人辨識等）是不同的序列。
 

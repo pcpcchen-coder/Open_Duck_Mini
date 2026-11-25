@@ -116,4 +116,4 @@ Pi Zero 2 W 的 512 MB 記憶體與 A53 核心，不可能同時做到上表全�
 4. 是否願意為了感測器與充電觸點修改尚未列印的外殼件。
 5. 是否接受重新訓練步態策略的工作量（需要 GPU 環境）。
 6. ~~是否加裝實體隱私開關~~：要（[ADR-0006](ADR-0006-privacy-settings.md) §4.1）。
-7. ~~鏡頭提示方式~~：眼燈顏色；上游眼燈是單色 LED（Pi Zero GPIO D24／D23 開關），要改成 RGB LED（ADR-0006 §4.2）。
+7. ~~鏡頭提示方式~~：眼燈顏色；上游眼燈是單色 LED（Pi Zero GPIO D24／D23 開關），要改成 RGB LED（ADR-0006 §4.2）。2026-11-17 改為 **GC9A01 1.28 吋圓形螢幕**，由 Pi 4 以 SPI 驅動（ADR-0006 §4.2.1、[`hardware/expression_mods/gc9a01_eyes.md`](../../hardware/expression_mods/gc9a01_eyes.md)）；新頭殼要同時容納兩片螢幕、AR0144 與紅外線燈。
