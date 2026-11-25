@@ -29,8 +29,32 @@ KIND_RGBA = {
     "dock": (0.95, 0.75, 0.25, 1.0),
     "extra": (0.85, 0.35, 0.30, 1.0),
 }
-#: 鏡頭在 head body 座標的位置（假設值，與 look_at_sim 相同；頭殼還沒重新設計）。
-CAMERA_MOUNT = (0.095, 0.0, -0.03)
+
+
+def mount_head_camera(sim: WalkSim) -> None:
+    """把 `head_cam` 固定在頭上：站姿、頭回正時，鏡頭在機身前方 `CAM_FORWARD_M`、離地 `CAM_HEIGHT_M`、朝正前方。
+
+    這兩個數字是 mock 感測器用的名目值（`duck_nav.mock_sensors`；頭殼還沒重新設計，鏡頭位置是假設）。
+    相機座標：x 右、y 上、看 −z。之後頭轉動時相機跟著 head_assembly 動。
+    """
+    from duck_nav.mock_sensors import CAM_FORWARD_M, CAM_HEIGHT_M
+
+    m, d = sim.m, sim.d
+    cam = m.camera("head_cam").id
+    head = m.body("head_assembly").id
+    x, y, yaw = sim.base_pose()
+    c, s_ = math.cos(yaw), math.sin(yaw)
+    p_w = np.array([x + CAM_FORWARD_M * c, y + CAM_FORWARD_M * s_, CAM_HEIGHT_M])
+    # 策略在站姿時會讓 head_yaw 停在一個小角度（不是 0）；相機要對齊「head_yaw = 0 時的正前方」。
+    yaw += float(sim.joint_positions()[7])
+    c, s_ = math.cos(yaw), math.sin(yaw)
+    R_w = np.array([[s_, 0, -c], [-c, 0, -s_], [0, 1, 0]])  # 欄：相機 x（右）、y（上）、z（後）在世界座標
+    Rh = d.xmat[head].reshape(3, 3)
+    m.cam_pos[cam] = Rh.T @ (p_w - d.xpos[head])
+    q = np.zeros(4)
+    mujoco.mju_mat2Quat(q, (Rh.T @ R_w).flatten())
+    m.cam_quat[cam] = q
+    mujoco.mj_forward(m, d)
 
 
 def tag_image(tag_id: int, px: int = 200) -> np.ndarray:
@@ -88,7 +112,7 @@ def make_extender(duck_map: DuckMap, extra_boxes=(), with_tag_textures: bool = F
                 img = tag_image(t.id)
                 rgb = np.repeat(img[:, :, None], 3, axis=2)
                 tex = spec.add_texture(name=f"tag{t.id}", type=mujoco.mjtTexture.mjTEXTURE_2D, width=img.shape[1], height=img.shape[0], nchannel=3)
-                tex.data = np.flipud(rgb).tobytes()
+                tex.data = rgb.tobytes()  # 這個方向算出來的圖不是鏡像（鏡像的標籤偵測器讀不到）
                 mat = spec.add_material(name=f"tag{t.id}")
                 mat.textures[mujoco.mjtTextureRole.mjTEXROLE_RGB] = f"tag{t.id}"
                 kw["material"] = f"tag{t.id}"
@@ -109,12 +133,8 @@ def make_extender(duck_map: DuckMap, extra_boxes=(), with_tag_textures: bool = F
                 conaffinity=0,
                 **kw,
             )
-        # 頭上的鏡頭（AR0144 名目值：垂直視角 39.4°）。相機看 −z、上方是 +y；轉成朝 head 的 +x。
-        head = spec.body("head_assembly")
-        Rc = np.array([[0, 0, -1], [-1, 0, 0], [0, 1, 0]])
-        qc = np.zeros(4)
-        mujoco.mju_mat2Quat(qc, Rc.flatten())
-        head.add_camera(name="head_cam", pos=list(CAMERA_MOUNT), quat=qc.tolist(), fovy=39.4)
+        # 頭上的鏡頭（AR0144 名目值：垂直視角 39.4°）。位置與朝向在站穩後由 `mount_head_camera` 設定。
+        spec.body("head_assembly").add_camera(name="head_cam", pos=[0, 0, 0], fovy=39.4)
         spec.worldbody.add_camera(name="top", pos=[3.5, 3.5, 11.0], quat=[1, 0, 0, 0], fovy=40)
 
     return extend
@@ -152,6 +172,7 @@ class MujocoBody:
         # 先站穩。
         for _ in range(25):
             self.info = self.sim.step()
+        mount_head_camera(self.sim)
 
     @property
     def t(self) -> float:

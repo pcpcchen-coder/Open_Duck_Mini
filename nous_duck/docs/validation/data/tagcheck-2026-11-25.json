@@ -1,0 +1,243 @@
+{
+ "simulated": true,
+ "note": "MuJoCo 相機算圖（無畸變、無模糊、無雜訊）＋ OpenCV aruco DICT_APRILTAG_36h11；不是實機偵測結果",
+ "image": [
+  1280,
+  720
+ ],
+ "focal_px": 1005.4,
+ "mock_focal_px": 1004.6,
+ "poses": 9,
+ "poses_where_detector_and_mock_agree": 7,
+ "detections": 13,
+ "pos_err_m_max": 0.0242,
+ "pos_err_m_mean": 0.0068,
+ "yaw_err_deg_max_abs": 6.9,
+ "rows": [
+  {
+   "pose": "dock_staging_0.5m",
+   "detector_ids": [
+    0
+   ],
+   "mock_ids": [
+    0
+   ],
+   "agree": true,
+   "camera_height_m": 0.37,
+   "detections": [
+    {
+     "tag_id": 0,
+     "range_m": 0.562,
+     "side_px": 188.3,
+     "pos_err_m": 0.0009,
+     "yaw_err_deg": -0.66,
+     "height_err_m": 0.0001
+    }
+   ]
+  },
+  {
+   "pose": "dock_far_1.25m",
+   "detector_ids": [
+    0,
+    4
+   ],
+   "mock_ids": [
+    0,
+    4
+   ],
+   "agree": true,
+   "camera_height_m": 0.37,
+   "detections": [
+    {
+     "tag_id": 0,
+     "range_m": 1.15,
+     "side_px": 91.5,
+     "pos_err_m": 0.0002,
+     "yaw_err_deg": 1.71,
+     "height_err_m": -0.0001
+    },
+    {
+     "tag_id": 4,
+     "range_m": 1.571,
+     "side_px": 97.3,
+     "pos_err_m": 0.0045,
+     "yaw_err_deg": 0.23,
+     "height_err_m": 0.0008
+    }
+   ]
+  },
+  {
+   "pose": "living_facing_east",
+   "detector_ids": [
+    1
+   ],
+   "mock_ids": [
+    1
+   ],
+   "agree": true,
+   "camera_height_m": 0.37,
+   "detections": [
+    {
+     "tag_id": 1,
+     "range_m": 1.838,
+     "side_px": 86.0,
+     "pos_err_m": 0.006,
+     "yaw_err_deg": -2.35,
+     "height_err_m": 0.0005
+    }
+   ]
+  },
+  {
+   "pose": "living_facing_south",
+   "detector_ids": [
+    2
+   ],
+   "mock_ids": [
+    2
+   ],
+   "agree": true,
+   "camera_height_m": 0.37,
+   "detections": [
+    {
+     "tag_id": 2,
+     "range_m": 1.288,
+     "side_px": 122.8,
+     "pos_err_m": 0.0035,
+     "yaw_err_deg": 0.02,
+     "height_err_m": 0.0006
+    }
+   ]
+  },
+  {
+   "pose": "hallway_facing_east",
+   "detector_ids": [
+    6,
+    18
+   ],
+   "mock_ids": [],
+   "agree": false,
+   "camera_height_m": 0.37,
+   "detections": [
+    {
+     "tag_id": 6,
+     "range_m": 1.366,
+     "side_px": 74.3,
+     "pos_err_m": 0.0126,
+     "yaw_err_deg": -0.52,
+     "height_err_m": 0.001
+    },
+    {
+     "tag_id": 18,
+     "range_m": 3.688,
+     "side_px": 43.0,
+     "pos_err_m": 0.0154,
+     "yaw_err_deg": -0.51,
+     "height_err_m": 0.0015
+    }
+   ]
+  },
+  {
+   "pose": "hallway_facing_west",
+   "detector_ids": [
+    7,
+    8,
+    11
+   ],
+   "mock_ids": [
+    7,
+    11
+   ],
+   "agree": false,
+   "camera_height_m": 0.37,
+   "detections": [
+    {
+     "tag_id": 8,
+     "range_m": 1.747,
+     "side_px": 64.5,
+     "pos_err_m": 0.0242,
+     "yaw_err_deg": 1.0,
+     "height_err_m": 0.0012
+    },
+    {
+     "tag_id": 7,
+     "range_m": 2.488,
+     "side_px": 63.5,
+     "pos_err_m": 0.003,
+     "yaw_err_deg": 0.62,
+     "height_err_m": 0.002
+    },
+    {
+     "tag_id": 11,
+     "range_m": 2.809,
+     "side_px": 52.0,
+     "pos_err_m": 0.0015,
+     "yaw_err_deg": 1.98,
+     "height_err_m": 0.0017
+    }
+   ]
+  },
+  {
+   "pose": "brother_room_facing_north",
+   "detector_ids": [
+    9
+   ],
+   "mock_ids": [
+    9
+   ],
+   "agree": true,
+   "camera_height_m": 0.37,
+   "detections": [
+    {
+     "tag_id": 9,
+     "range_m": 1.899,
+     "side_px": 80.0,
+     "pos_err_m": 0.0052,
+     "yaw_err_deg": 3.46,
+     "height_err_m": 0.0008
+    }
+   ]
+  },
+  {
+   "pose": "study_facing_east",
+   "detector_ids": [
+    13
+   ],
+   "mock_ids": [
+    13
+   ],
+   "agree": true,
+   "camera_height_m": 0.37,
+   "detections": [
+    {
+     "tag_id": 13,
+     "range_m": 1.688,
+     "side_px": 93.5,
+     "pos_err_m": 0.0075,
+     "yaw_err_deg": 3.98,
+     "height_err_m": 0.0011
+    }
+   ]
+  },
+  {
+   "pose": "living_oblique_to_tag1",
+   "detector_ids": [
+    1
+   ],
+   "mock_ids": [
+    1
+   ],
+   "agree": true,
+   "camera_height_m": 0.37,
+   "detections": [
+    {
+     "tag_id": 1,
+     "range_m": 1.255,
+     "side_px": 123.3,
+     "pos_err_m": 0.0042,
+     "yaw_err_deg": -6.9,
+     "height_err_m": -0.0001
+    }
+   ]
+  }
+ ]
+}
