@@ -8,3 +8,9 @@ __pycache__/
 
 # 上游 .gitignore 忽略所有 *.txt；nous_duck 底下的文字檔（例如 requirements.txt）要進版控
 !*.txt
+
+# D 線（感知與音訊）：下載的第三方模型、venv、量測暫存不進版控
+robot/perception/models/
+robot/audio/models/
+robot/audio/build/
+robot/perception/build/
