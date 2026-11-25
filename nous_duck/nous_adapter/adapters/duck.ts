@@ -95,7 +95,7 @@ export const DUCK_TOOLS: readonly ToolDefinition[] = [
       type: "object",
       properties: {
         neck_pitch: { type: "number", description: "頸部俯仰 rad", minimum: -1.6, maximum: 1.6 },
-        head_pitch: { type: "number", description: "頭部俯仰 rad（負＝抬頭，依上游 runtime 的慣例）", minimum: -1.6, maximum: 1.6 },
+        head_pitch: { type: "number", description: "頭部俯仰 rad（正＝抬頭，依鴨子端 duckd 的慣例；尚未在實機確認方向）", minimum: -1.6, maximum: 1.6 },
         head_yaw: { type: "number", description: "頭部左右轉 rad（正＝往左）", minimum: -1.6, maximum: 1.6 },
         head_roll: { type: "number", description: "頭部歪頭 rad", minimum: -1.6, maximum: 1.6 },
         duration_s: { type: "number", description: "幾秒內轉到（鴨子可能因限速而更慢）", minimum: 0.1, maximum: 10 },

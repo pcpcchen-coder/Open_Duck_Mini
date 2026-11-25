@@ -35,6 +35,10 @@ const HELP = `duckctl — 從終端機對鴨子下指令（開發用，不經過
   duckctl go_to <地點> ／ find_person [家人ID] ／ return_home ／ follow_me ／ wait_here
   duckctl where ／ places ／ mission_status ／ cancel_mission
 
+開發用的文字命令（固定關鍵字規則；不是 Nous、不是語音辨識、不是語言模型）：
+  duckctl say-command "往左看"            把一句文字對應到一個工具並執行；認不得就不送
+  duckctl say-command "點頭" --dry-run    只看會對應到什麼，不送出
+
 不是模型工具、只給在場的人用：
   duckctl presence <狀態> [--level 0.4]   手動送互動狀態（${PRESENCE_STATES.join("／")}）
                                           這是「開發用手動來源」，不是 Nous 語音工作階段的真實事件
@@ -226,6 +230,25 @@ async function main(): Promise<number> {
     printResult(`presence ${result.sent.state}${result.sent.speechLevel !== undefined ? ` level=${result.sent.speechLevel}` : ""}`, result.sent.result, false);
     if (result.sent.state !== state) console.log(`  （要求的是 ${state}；依工作階段規則目前送出的是 ${result.sent.state}，例如 wake 之後會自動接著下一個狀態）`);
     return exitCode(result.sent.result);
+  }
+
+  if (command === "say_command") {
+    const dryRun = takeFlag(argv, "dry-run");
+    const text = argv.join(" ").trim();
+    if (!text) throw new Error('用法：duckctl say-command "往左看" [--dry-run]');
+    const reply = await withHub(port, (c) => c.request<{ matched: { tool: string; args: Record<string, unknown>; rule: string } | null; result?: ToolResult | null; examples?: string[]; gestures?: string[] }>("say_command", { text, dry_run: dryRun }));
+    if (json) return console.log(JSON.stringify(reply, null, 2)), reply.result ? exitCode(reply.result) : reply.matched ? 0 : 1;
+    console.log("開發用的文字命令對應（固定規則）：不是 Nous、不是語音辨識、不是語言模型。");
+    if (!reply.matched) {
+      console.log(`認不得「${text}」，沒有送出任何指令。`);
+      console.log(`認得的說法例如：${(reply.examples ?? []).join("、")}`);
+      console.log(`鴨子目前回報的動作清單：${(reply.gestures ?? []).join("、") || "（空的；點頭、搖頭這類命令現在對應不到）"}`);
+      return 1;
+    }
+    console.log(`「${text}」 → ${reply.matched.tool} ${JSON.stringify(reply.matched.args)}   （規則：${reply.matched.rule}）`);
+    if (!reply.result) return console.log("（--dry-run：只顯示對應，沒有送出）"), 0;
+    printResult(reply.matched.tool, reply.result, false);
+    return exitCode(reply.result);
   }
 
   if (command === "resume") {

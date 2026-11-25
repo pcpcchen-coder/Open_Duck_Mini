@@ -7,6 +7,7 @@ import { DuckTerminal } from "../terminal/duck-terminal.ts";
 import { ManualPresenceSource } from "../terminal/manual-presence-source.ts";
 import { defaultSocketPath, startControlServer, type ControlRequest } from "./control.ts";
 import { devExecute } from "./dev-dispatch.ts";
+import { interpretTextCommand, TEXT_COMMAND_EXAMPLES } from "./text-command.ts";
 
 // 開發用的 hub 行程：duck-link hub ＋ DuckAdapter ＋ DuckTerminal（presence 接「開發用手動來源」）＋ duckctl 的控制通道。
 // 之後在 AIOS 裡，這些元件由 AIOS 核心建立（docs/aios-integration-plan.md §4）；這個檔案不會搬過去。
@@ -36,6 +37,14 @@ export async function runHub(options: { port?: number; socketPath?: string; log?
         return adapter.tools().map((t) => ({ id: t.id, effect: t.effect, description: t.description, inputSchema: t.inputSchema, timeoutMs: t.timeoutMs }));
       case "execute":
         return devExecute(adapter, String(request.tool), (request.args as Record<string, unknown>) ?? {});
+      case "say_command": {
+        // 開發用：固定規則把一句文字對應到一個工具（不是 Nous、不是語音辨識、不是語言模型）。
+        const hello = hub.snapshot().hello;
+        const text = String(request.text ?? "").slice(0, 200);
+        const match = interpretTextCommand(text, { gestures: hello?.gestures ?? [], expressions: hello?.expressions ?? [] });
+        if (!match) return { source: "dev_text_rules", matched: null, examples: TEXT_COMMAND_EXAMPLES, gestures: hello?.gestures ?? [], expressions: hello?.expressions ?? [] };
+        return { source: "dev_text_rules", matched: match, result: request.dry_run ? null : await devExecute(adapter, match.tool, match.args) };
+      }
       case "resume":
         return adapter.resume();
       case "presence": {
