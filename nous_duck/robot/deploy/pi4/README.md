@@ -127,7 +127,17 @@ ssh -t duck-pi4 'cd ~/duck/Open_Duck_Mini_Runtime/scripts && ~/duck/runtime-venv
 
 之後照上游 README 的順序：`python ../mini_bdx_runtime/mini_bdx_runtime/raw_imu.py`（IMU）→ `python check_motors.py`（舵機）→ `python find_soft_offsets.py`（零點偏移）→ `python v2_rl_walk_mujoco.py --onnx_model_path ~/duck/BEST_WALK_ONNX_2.onnx`（走路）。注意：不要在 `~/duck/Open_Duck_Mini_Runtime` 根目錄直接跑 Python，同名資料夾會蓋過已安裝的套件。
 
-驗證紀錄：[pi4-runtime-2026-11-22.md](../../../docs/validation/pi4-runtime-2026-11-22.md)（實機，沒接周邊）。
+驗證紀錄：[pi4-runtime-2026-11-22.md](../../../docs/validation/pi4-runtime-2026-11-22.md)（實機）。
+
+## 舵機控制台（網頁）
+
+[`deploy_console.sh`](deploy_console.sh) 把 [舵機控制台](../../servo_console/README.md) 裝成 Pi 上的 systemd 服務 `duck-console`（開機自動啟動、啟動時不碰硬體），印出 `http://duck-pi4.local:8080/#t=<token>`：
+
+```bash
+bash nous_duck/robot/deploy/pi4/deploy_console.sh
+```
+
+跑上游腳本前，在頁面按「釋放硬體」或 `ssh duck-pi4 'sudo systemctl stop duck-console'`。移除：`--uninstall`。驗證紀錄：[servo-console-2026-11-25.md](../../../docs/validation/servo-console-2026-11-25.md)。
 
 ## 常見問題
 
