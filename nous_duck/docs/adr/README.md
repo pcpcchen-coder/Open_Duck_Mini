@@ -16,6 +16,7 @@
 | [ADR-0006](ADR-0006-privacy-settings.md) | 可開關的隱私設定（預設值已同意；鏡頭預設由 ADR-0007 改為常開） | 部分採用 | 2026-11-12 |
 | [ADR-0007](ADR-0007-camera-always-on-and-home-monitoring.md) | 鏡頭常開（已決定）與家庭監控（提議） | 部分採用 | 2026-11-18 |
 | [ADR-0007](ADR-0007-duck-link-transport-and-command-bridge.md) | duck-link 傳輸（SSH 通道＋WebSocket）與鴨子端指令橋接 | 草案 | 2026-11-13 |
+| [ADR-0007](ADR-0007-duck-voice.md) | 鴨子的語音（Nous 的聲音加變聲、本機音效、回音消除、喇叭） | 部分採用 | 2026-11-15 |
 
 編號說明：本序列只屬於本 repo 的 `nous_duck/docs/adr/`，與 AIOS repo 的 `docs/adr/`（ADR-0001 本機家人辨識等）是不同的序列。
 
