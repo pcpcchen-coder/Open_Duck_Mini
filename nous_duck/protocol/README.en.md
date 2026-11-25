@@ -2,7 +2,31 @@
 
 # ② duck-link protocol
 
-Status: **Planned** (no schemas yet).
+Status: **v0 draft usable** (2026-11-25): [`schemas/duck-link.v0.schema.json`](schemas/duck-link.v0.schema.json), valid and invalid examples, and schema tests (level: unit tests). Fields may still change; the privacy policy schema is still planned. For the implementations on both ends see the [companion step tracker](../docs/companion/steps.md) (Traditional Chinese).
+
+## v0 contents (2026-11-25)
+
+| Path | Contents |
+|---|---|
+| [`schemas/duck-link.v0.schema.json`](schemas/duck-link.v0.schema.json) | One file, six message types: `hello`, `heartbeat`, `command`, `ack`, `state`, `event`; `protocol_version` is fixed at `"0.1"` |
+| [`examples/valid.jsonl`](examples/valid.jsonl), [`examples/invalid.jsonl`](examples/invalid.jsonl) | One message per line; shared by the tests on both ends |
+| [`tests/test_schema.py`](tests/test_schema.py) | Every valid example passes and every invalid example is rejected; confirms the protocol has no torque-off, reboot, or offset-writing operations |
+
+```bash
+uv run --no-project --with jsonschema --with pytest python -m pytest nous_duck/protocol/tests -q
+```
+
+Key points of v0:
+
+- **Transport**: WebSocket text frames, one JSON message per frame. The duck is the client and connects to its own `127.0.0.1:<port>/duck-link`, which an SSH tunnel carries to the Mac's loopback ([ADR-0009](../docs/adr/ADR-0009-duck-link-transport-and-command-bridge.md) §2.1).
+- **Lease**: Nous sends a `heartbeat` every 500 ms; after 1.5 s without one the duck stops moving and sends `link_lost`.
+- **Commands** (`action`): `status`, `stop`, `resume`, `walk`, `look`, `track`, `gesture`, `express`, `antennas`, `sound`, `presence`, `where`, `places`, `mission_status`, `go_to`, `find_person`, `return_home`, `follow_me`, `wait_here`, `cancel_mission`.
+- **`presence`**: the real state of the Nous voice session (`idle` / `wake` / `listening` / `thinking` / `speaking` / `working` / `error` / `sleeping`); the duck acts it out with its eyes, head, and antennas.
+- **`track`**: vision- or sound-linked head (optionally body) following, computed on the duck; Nous only switches it on and off.
+- **`capabilities`**: each capability reports `available` / `degraded` / `unsupported` / `mock`. Hardware that is absent or unverified must not be reported as `available`.
+- A simulated or mock end must set `mock: true` in `hello` and `state`.
+
+The "planned contents" below are the original 2026-11-12 plan, kept as a record; v0 merges command / state / event / mission into one file.
 
 ## Responsibility
 
