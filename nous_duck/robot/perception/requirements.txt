@@ -1,0 +1,4 @@
+# robot/perception 執行依賴（鎖定版本；Pi 4 上也用這份，見 README）
+# numpy 2.5.x 需要 Python >= 3.12；Pi 4（Debian 13）是 Python 3.13.5
+numpy==2.5.3
+opencv-python-headless==5.1.0.95

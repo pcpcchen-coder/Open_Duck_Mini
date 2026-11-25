@@ -1,0 +1,225 @@
+{
+  "comment": "由 duck_audio/sfx_synth.py 用 numpy 合成的自製音效（原創，沒有取樣任何錄音）。不要手改 wav；改程式後重新產生。尚未試聽。",
+  "generator": "python -m duck_audio.sfx_synth --out sounds",
+  "spec": "nous_duck/docs/eye_expressions.md §5.3",
+  "rate_hz": 24000,
+  "channels": 1,
+  "peak_dbfs": -6,
+  "level_gain_db": {
+    "small": -12.0,
+    "medium": -6.0
+  },
+  "listened": false,
+  "sounds": [
+    {
+      "name": "boot_chirp",
+      "zh": "開機啾啾",
+      "file": "boot_chirp.wav",
+      "level": "small",
+      "cooldown_s": 3.0,
+      "duration_s": 0.18,
+      "spec_duration_s": 0.25,
+      "sha256": "1ccd30ab582375968165513c6de1d24f6bd99957bbc2fbc159a756883c2168d4"
+    },
+    {
+      "name": "quack_hello",
+      "zh": "打招呼鴨叫",
+      "file": "quack_hello.wav",
+      "level": "medium",
+      "cooldown_s": 3.0,
+      "duration_s": 0.25,
+      "spec_duration_s": 0.25,
+      "sha256": "e197b16d2d7fec950e0f8362fc90b81346ebe34561a8d797d78df947369c7d53"
+    },
+    {
+      "name": "quack_happy",
+      "zh": "開心兩聲鴨叫",
+      "file": "quack_happy.wav",
+      "level": "medium",
+      "cooldown_s": 3.0,
+      "duration_s": 0.25,
+      "spec_duration_s": 0.3,
+      "sha256": "ffed6c1bdaf41a89c8d787ed27f2a7a5c72770dcc42c9d5fa24e68fb8ff1bd01"
+    },
+    {
+      "name": "giggle_trill",
+      "zh": "咯咯笑顫音",
+      "file": "giggle_trill.wav",
+      "level": "medium",
+      "cooldown_s": 3.0,
+      "duration_s": 0.26,
+      "spec_duration_s": 0.35,
+      "sha256": "8a1d702764d44f7eb30a7ac7da2598b6e2fa8311eef89783492bd768e84d2fc6"
+    },
+    {
+      "name": "coo_love",
+      "zh": "撒嬌咕嚕",
+      "file": "coo_love.wav",
+      "level": "small",
+      "cooldown_s": 3.0,
+      "duration_s": 0.4,
+      "spec_duration_s": 0.4,
+      "sha256": "d7b1ea74ed76fad709fd3861d1552c246e1d384939bad0a605da0527568f5f83"
+    },
+    {
+      "name": "sad_slide",
+      "zh": "下滑嗚",
+      "file": "sad_slide.wav",
+      "level": "small",
+      "cooldown_s": 3.0,
+      "duration_s": 0.6,
+      "spec_duration_s": 0.6,
+      "sha256": "864aa39a7cc919a73e64fd4e5b2ab5b397ab84f594077b40f022fba6c2c1f7ab"
+    },
+    {
+      "name": "sorry_hum",
+      "zh": "低聲嗯…",
+      "file": "sorry_hum.wav",
+      "level": "small",
+      "cooldown_s": 3.0,
+      "duration_s": 0.34,
+      "spec_duration_s": 0.35,
+      "sha256": "6d4819563ccb62abfd9d9d46a3ddbee97b5b70a9aaa4941eb7387d2769eb9068"
+    },
+    {
+      "name": "grumble",
+      "zh": "嘟囔",
+      "file": "grumble.wav",
+      "level": "small",
+      "cooldown_s": 3.0,
+      "duration_s": 0.35,
+      "spec_duration_s": 0.35,
+      "sha256": "440cedc184766fefd6234113025c7f11bf9d437847a9e5f3d94353e62b339935"
+    },
+    {
+      "name": "surprise_up",
+      "zh": "上揚「喔！」",
+      "file": "surprise_up.wav",
+      "level": "medium",
+      "cooldown_s": 3.0,
+      "duration_s": 0.21,
+      "spec_duration_s": 0.25,
+      "sha256": "14254f9a91580b00ab8686fe02d0be8ea1262b4fef2f6c2d3041c2d9f5e7c0a6"
+    },
+    {
+      "name": "scared_wobble",
+      "zh": "顫抖嗚",
+      "file": "scared_wobble.wav",
+      "level": "small",
+      "cooldown_s": 3.0,
+      "duration_s": 0.3,
+      "spec_duration_s": 0.3,
+      "sha256": "a9a0e1624f2f076f69d2673e2c4995cd7a06e3f620fb19f15fc2000f7994c4d9"
+    },
+    {
+      "name": "yawn",
+      "zh": "打哈欠",
+      "file": "yawn.wav",
+      "level": "small",
+      "cooldown_s": 3.0,
+      "duration_s": 0.8,
+      "spec_duration_s": 0.8,
+      "sha256": "d9c80cb38d01bc5f865c663adb9f0368c0123dfbe35b7340b66eec8a850c04e3"
+    },
+    {
+      "name": "curious_chirp",
+      "zh": "好奇「啾？」",
+      "file": "curious_chirp.wav",
+      "level": "small",
+      "cooldown_s": 3.0,
+      "duration_s": 0.12,
+      "spec_duration_s": 0.12,
+      "sha256": "f8ec16cf9e8f7d5c4572600c5c2d06ddc552c28b0b79f3cfcba7e245e42eba3e"
+    },
+    {
+      "name": "confused_hm",
+      "zh": "疑問「嗯？」",
+      "file": "confused_hm.wav",
+      "level": "small",
+      "cooldown_s": 3.0,
+      "duration_s": 0.3,
+      "spec_duration_s": 0.3,
+      "sha256": "b75640ae2e31b2a0e9a3ce1d979bf277fd2ab420c76d219f2b5bdf070217cd75"
+    },
+    {
+      "name": "listen_on",
+      "zh": "開始聽",
+      "file": "listen_on.wav",
+      "level": "small",
+      "cooldown_s": 3.0,
+      "duration_s": 0.1,
+      "spec_duration_s": 0.12,
+      "sha256": "890224c6443aa3a287864412b48c0c35ee8e4df1f7b85ed67d3016ac23226076"
+    },
+    {
+      "name": "listen_off",
+      "zh": "聽完了",
+      "file": "listen_off.wav",
+      "level": "small",
+      "cooldown_s": 3.0,
+      "duration_s": 0.1,
+      "spec_duration_s": 0.12,
+      "sha256": "93e33211c568d8ed53e41ef6762b9de337843735e484ccc9eba2833f2b15f8f9"
+    },
+    {
+      "name": "dizzy_wobble",
+      "zh": "暈眩搖擺音",
+      "file": "dizzy_wobble.wav",
+      "level": "small",
+      "cooldown_s": 3.0,
+      "duration_s": 0.8,
+      "spec_duration_s": 0.8,
+      "sha256": "2a923ce22ff2661bd02bf2468711a52b49336059e26ad6ab3fb33775cf55fb37"
+    },
+    {
+      "name": "proud_fanfare",
+      "zh": "小號角",
+      "file": "proud_fanfare.wav",
+      "level": "medium",
+      "cooldown_s": 3.0,
+      "duration_s": 0.34,
+      "spec_duration_s": 0.4,
+      "sha256": "6aeea111f5441266d37e6fd753897ae58dcbbdf4bb02a356de403c281ed367d6"
+    },
+    {
+      "name": "help_call",
+      "zh": "求救三聲",
+      "file": "help_call.wav",
+      "level": "medium",
+      "cooldown_s": 20.0,
+      "duration_s": 0.95,
+      "spec_duration_s": 0.95,
+      "sha256": "bf29ad34f59a44c4b8e8248996a42190e5ee7b4050f82181d4953c465404d701"
+    },
+    {
+      "name": "battery_low",
+      "zh": "沒電下降兩音",
+      "file": "battery_low.wav",
+      "level": "medium",
+      "cooldown_s": 300.0,
+      "duration_s": 0.3,
+      "spec_duration_s": 0.3,
+      "sha256": "736e287942b59d95d74e1f538414306cd3e093b854fbc0964eebb92994a74e02"
+    },
+    {
+      "name": "charge_start",
+      "zh": "充電上升琶音",
+      "file": "charge_start.wav",
+      "level": "small",
+      "cooldown_s": 3.0,
+      "duration_s": 0.21,
+      "spec_duration_s": 0.25,
+      "sha256": "622a845e289417796d95122c61a65f62cf1393f14e3b76a88e5fcf4bfb871f32"
+    },
+    {
+      "name": "wink_click",
+      "zh": "眨眼「叮」",
+      "file": "wink_click.wav",
+      "level": "small",
+      "cooldown_s": 3.0,
+      "duration_s": 0.05,
+      "spec_duration_s": 0.05,
+      "sha256": "66335e889353cbf9ed36c4b554055aef2b58273e3f1516c7e4d1c5b0cb2309cd"
+    }
+  ]
+}
