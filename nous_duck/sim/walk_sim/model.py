@@ -159,8 +159,9 @@ def build_spec(options: ModelOptions | None = None) -> mujoco.MjSpec:
         trunk.add_geom(
             name="hull_trunk",
             type=mujoco.mjtGeom.mjGEOM_BOX,
-            pos=[-0.06, 0.0, 0.06],
-            size=[0.085, 0.065, 0.055],
+            # 後緣在 base x = −0.162：背後觸點凸台的外表面（hardware/dock 的外掛觸點板）。
+            pos=[-0.0685, 0.0, 0.06],
+            size=[0.0935, 0.065, 0.055],
             contype=0,
             conaffinity=_BIT_FLOOR | _BIT_WALL,
             rgba=[0.2, 0.6, 1.0, 0.0],

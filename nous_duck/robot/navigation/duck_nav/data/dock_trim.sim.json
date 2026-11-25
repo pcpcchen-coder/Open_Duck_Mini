@@ -1,0 +1,6 @@
+{
+ "simulated": true,
+ "source": "nous_duck/sim/nav_sim：20 次回充（種子 0～19、trim = 0）第一次進導引座開口時的平均橫向偏差 +28.9 mm（標準差 17.6 mm）；MuJoCo 模擬值，不是實機量測",
+ "dock_lateral_trim_m": -0.029,
+ "notes": "實機要自己量：讓鴨子回充幾次，量背後觸點面進導引座時偏左或偏右多少，把平均值的負號填進來"
+}

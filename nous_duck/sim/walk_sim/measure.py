@@ -577,6 +577,72 @@ def run_all(quick: bool = False) -> dict:
     return out
 
 
+
+def gait_table(phases: list[int] | None = None) -> dict:
+    """「指令 → 實際機身速度」的反應表，給導航當短程里程的模型（`duck_nav/data/gait_response.sim.json`）。
+
+    每格從站立開始，在幾個步態相位下指令，3 秒後取 5 秒的機身座標平均速度。沒起步的格子記 0。
+    **模擬值**；實機要用同樣的方法重量一次。
+
+        python -c "from walk_sim.measure import write_gait_table; write_gait_table()"
+    """
+    phases = phases or list(range(0, PHASE_PERIOD_STEPS, 3))
+    vxs = [-0.15, -0.12, 0.0, 0.10, 0.12, 0.15]
+    ws = [-1.0, -0.6, -0.3, 0.0, 0.3, 0.6, 1.0]
+    cells = []
+    for vx in vxs:
+        row = []
+        for w in ws:
+            acc, started = [], 0
+            if vx == 0.0 and w == 0.0:
+                row.append({"vx": 0.0, "vy": 0.0, "yaw_rate": 0.0, "started": 1.0})
+                continue
+            for k in phases:
+                sim = WalkSim()
+                run_segment(sim, [0, 0, 0], (50 + k) / HZ)
+                run_segment(sim, [vx, 0, w], 3.0)
+                tr, infos, _ = run_segment(sim, [vx, 0, w], 5.0)
+                if stepping_fraction(infos) > 0.2 and not infos[-1].fallen:
+                    started += 1
+                    T = len(infos) * CONTROL_DT
+                    acc.append((np.mean([i.vx_body for i in infos]), np.mean([i.vy_body for i in infos]), tr.yaw / T))
+            frac = started / len(phases)
+            if frac >= 0.99:
+                m = np.mean(acc, axis=0)
+                row.append({"vx": round(float(m[0]), 4), "vy": round(float(m[1]), 4), "yaw_rate": round(float(m[2]), 4), "started": 1.0})
+            else:
+                row.append({"vx": 0.0, "vy": 0.0, "yaw_rate": 0.0, "started": round(frac, 2)})
+        cells.append(row)
+    return {
+        "simulated": True,
+        "source": "nous_duck/sim/walk_sim/measure.py gait_table()；MuJoCo 模擬值，不是實機量測",
+        "policy": "BEST_WALK_ONNX_2.onnx",
+        "cmd_vx": vxs,
+        "cmd_yaw_rate": ws,
+        "cells": cells,
+        "notes": "cells[i][j] 對應 cmd_vx[i]、cmd_yaw_rate[j]；started < 1 的格子從站立起步不可靠，導航不使用",
+    }
+
+
+def write_gait_table(path: Path | None = None) -> Path:
+    from .model import REPO_ROOT
+
+    path = path or REPO_ROOT / "nous_duck/robot/navigation/duck_nav/data/gait_response.sim.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    t = gait_table()
+    lines = ["{"]
+    for k, v in t.items():
+        if k == "cells":
+            lines.append(' "cells": [')
+            lines += ["  " + json.dumps(r) + ("," if i < len(v) - 1 else "") for i, r in enumerate(v)]
+            lines.append(" ],")
+        else:
+            lines.append(f' "{k}": {json.dumps(v, ensure_ascii=False)},')
+    lines[-1] = lines[-1].rstrip(",")
+    lines.append("}")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return path
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="python -m walk_sim.measure")
     p.add_argument("--quick", action="store_true")
