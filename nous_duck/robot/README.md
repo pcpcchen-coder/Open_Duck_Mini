@@ -18,6 +18,7 @@
 | `navigation/` | （感知板）定位融合（VIO＋AprilTag，**不用步數**）、拓撲與柵格路徑規劃、避障、回充對位（[ADR-0002](../docs/adr/ADR-0002-indoor-localization-and-navigation.md)、[ADR-0004](../docs/adr/ADR-0004-docking-and-charging.md)）；跟隨任務與原地等待（[ADR-0007](../docs/adr/ADR-0007-follow-me-and-wait-here.md)） | 規劃中 |
 | `perception/` | （感知板）雙目擷取、深度、AprilTag 偵測、人臉偵測與特徵（[ADR-0003](../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md)） | 規劃中 |
 | `audio/` | （感知板）喚醒詞（sherpa-onnx KWS）、聲源方向、語音串流、喇叭（ADR-0003） | 規劃中 |
+| [`servo_console/`](servo_console/README.md) | **舵機控制台**：Pi 4 上的網頁工具，控制 14 顆舵機、即時 3D 姿勢、姿勢與偏移、感測器、緊急停止（本機開發工具，不經過 Nous） | 第一版可用（[驗證](../docs/validation/servo-console-2026-11-25.md)：單元測試、模擬、實機只動頭部） |
 | `tests/` | 單元測試（safety 規則、意圖轉換、schema 驗證）；不需要硬體的部分可在雲端跑 | 規劃中 |
 
 全部在同一片 Pi 4 執行（ADR-0008）。`nous_link/`、`behaviors/`、`safety/` 和上游步態是一組服務，`navigation/`、`perception/`、`audio/` 是另一組；safety 要與感知工作隔離（CPU 核心、優先權、記憶體上限，ADR-0008 §2.4）。

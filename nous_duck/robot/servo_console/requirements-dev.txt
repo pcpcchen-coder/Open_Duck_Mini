@@ -1,0 +1,2 @@
+# 舵機控制台測試依賴（鎖定版本）。伺服器本身只用標準函式庫；在 Pi 上用 runtime-venv 的 pypot、Blinka、adafruit_bno055。
+pytest==9.2.0
