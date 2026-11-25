@@ -64,19 +64,35 @@ uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requi
 - 回充的橫向校正量 −29 mm（`duck_nav/data/dock_trim.sim.json`）是用種子 0～19 在模擬裡量的；實機要重量。
 - 已知限制：倒退進座是盲退（鏡頭看不到充電座），靠陀螺儀航向與步態反應表；運動學 mock 加 8% 模型誤差時含重試成功率約 75%。
 
-## 還沒寫完（用量上限，停在這裡）
+## 文件與收尾（2026-11-26 完成）
 
-- 驗證紀錄 `docs/validation/sim-nav-2026-11-25.md` **還沒寫**（數字都在 `docs/validation/data/`）。
-- `sim/README.md`、`robot/navigation/README.md` **還沒更新**；ADR-0016 與 `protocol/proposals/` **還沒寫**
-  （想提的：`mission_failed` 原因代碼列舉含 `dock_failed`／`cancelled`、`SensorFrame.lifted` 對應 `picked_up`）。
-- slow 測試（`--runslow`）這一版還沒重跑。
+- 驗證紀錄：[`docs/validation/sim-nav-2026-11-25.md`](../../validation/sim-nav-2026-11-25.md)（全部是模擬；§9 列模擬與實機的差距）。
+- README：[`sim/README.md`](../../../sim/README.md)、[`robot/navigation/README.md`](../../../robot/navigation/README.md)（含導航核心對外的 `SensorFrame`／`NavOutput` 介面與給 duckd 的接法）。
+- [ADR-0016](../../adr/ADR-0016-navigation-core-and-sim-findings.md)（草案）：導航核心的作法，以及模擬對 ADR-0009／0004／0002／0011 的回饋。
+- 協定提案：[`protocol/proposals/c-nav-mission-events.md`](../../../protocol/proposals/c-nav-mission-events.md)（`mission_failed` 原因代碼、事件資料欄位、`picked_up`）。沒有動 schema。
+- `--runslow` 重跑（2026-11-26）：`sim/tests` 31 通過（54 秒）、`robot/navigation/tests` 66 通過（21 秒）。
+
+## 要整合線更新的共用檔（我沒有動）
+
+- `docs/adr/README.md`：加 ADR-0016。
+- `docs/validation/README.md`：加 `sim-nav-2026-11-25.md`。
+- `robot/README.md`：`navigation/` 那一列的狀態改成「導航核心可用（單元測試＋模擬），未實機」。
+- `docs/companion/steps.md`：C1～C7 的狀態與驗證層級（見本檔最上面的表）。
 
 ## 沒做的
 
 - 沒有背隙關節的模型（Playground 訓練時可選）；用 Playground 的背隙場景對照過，起步門檻現象相同。
 - 沒有對照實機（實機還不能走）。
+- 沒有做視覺慣性里程、太暗就不走、落差偵測、建圖工具、`find_person`／`follow_me`／`wait_here`。
+- 沒有跟 A 線的 duckd 實際接起來（介面在 `robot/navigation/README.md`）。
+- 充電座的 V 形導引與電氣行為沒有模擬。
 
 ## 需要你處理
 
 - 實機能走之後，要重量一次 C2 的表（特別是起步門檻、速度比例、速度為 0 時是否踏步、頭部角度的安全範圍）。
   模擬裡頭部大角度會跌倒這件事，**在實機驗證前不要讓頭部在走路時轉到大角度**。
+- ADR-0009 §2.5 的室內上限 vx 0.10 剛好是模擬裡前進的起步門檻、後退完全走不動：要不要調整，等實機量過再決定（ADR-0016 §3.1）。
+- 回充盲退的精度：模擬裡 60 趟有 10 趟第一次沒對準（重試後成功）。要不要加硬體輔助（加寬 V 形座、充電座對面加一張標籤、朝後的感測器）由你決定（ADR-0016 §3.3）。
+- 回充的橫向校正量要在實機上量（`duck_nav/data/dock_trim.sim.json` 的說明）。
+- 家裡貼標籤時，走道盡頭的牆要貼一張：只貼側牆時沿著走道走會讀不到（ADR-0016 §3.4）。
+- 審核 ADR-0016 與協定提案。
