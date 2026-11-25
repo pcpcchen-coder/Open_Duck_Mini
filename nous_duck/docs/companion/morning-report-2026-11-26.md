@@ -1,6 +1,6 @@
 # 晨間報告：2026-11-26
 
-整合線寫於 02:40。細節在 [分步進度](steps.md)、[工作紀錄](log-2026-11-25.md) 與各線的進度檔。
+整合線寫於 02:40，03:30 更新（C 線收尾完成）。細節在 [分步進度](steps.md)、[工作紀錄](log-2026-11-25.md) 與各線的進度檔。
 
 ## 一句話
 
@@ -19,10 +19,10 @@
 | 整合 | `claude/duck-companion-overnight` | 併入 6 個舊設計 PR 的分支、ADR 重新編號（0009～0013）、duck-link 協定 v0、總體設計、進度表 | 協定 32 項單元測試 |
 | A 身體 | `claude/duck-a-body-8fca8a` | `duckd`：連線與租約、安全仲裁、頭部後端（程式上不會對腿部舵機寫入）、動作庫（點頭、搖頭、歪頭、環顧）、`presence` 編排、眼睛虛擬面板、步態 host 載入測試、Pi 部署 | 107 項單元測試；Mac↔Pi 通道端到端（模擬身體）；**實機頭部沒測** |
 | B Nous 端 | `claude/duck-b-nous-a19b67` | hub、17 個 `app.duck.*` 工具、DuckTerminal、`duckctl`、AIOS 整合計畫、語音路徑設計（中英雙語） | 137 項測試；對 duckd 的全 mock 端到端 |
-| C 模擬與導航 | `claude/duck-c-sim-nav-2e1cfa` | MuJoCo 全身走路模擬（上游步態策略）、走停轉量測、地圖格式與合成的家、AprilTag 定位、`go_to`、`return_home`、禁區保護 | 模擬：60 趟來回 60 趟成功；導航 65 項、模擬 29 項測試。**文件還在補** |
+| C 模擬與導航 | `claude/duck-c-sim-nav-2e1cfa` | MuJoCo 全身走路模擬（上游步態策略）、走停轉量測、地圖格式與合成的家、AprilTag 定位、`go_to`、`return_home`、禁區保護 | 模擬：60 趟來回 60 趟成功；導航 65 項、模擬 29 項測試；文件已補齊（驗證紀錄、ADR-0016、協定提案） |
 | D 感知與音訊 | `claude/duck-d-percept-audio-eae98e` | 鏡頭抽象、人臉到擺頭、轉身靠近控制器、雙目估距；21 個自製音效、播放路徑、變聲與喚醒詞的 Pi 4 量測 | 感知 67 項、音訊 75 項測試；全部是合成資料；**沒有人聽過任何聲音** |
 
-整合線在 02:29 重跑過 A、B、D 的測試與全 mock 端到端，數字相符（[紀錄](../validation/companion-e2e-2026-11-26.md)）。C 線的數字是它自己回報的，我還沒有重跑。
+整合線在 02:29 重跑過 A、B、D 的測試與全 mock 端到端，數字相符（[紀錄](../validation/companion-e2e-2026-11-26.md)）。C 線的預設測試我在 03:28 重跑過（29、65 項通過）；60 趟來回與 `--runslow` 的數字是它自己回報的。
 
 ## 對照你要的七件事
 
@@ -72,7 +72,7 @@ cd /Users/georgechen/NousDuck/.claude/worktrees/duck-b-nous-a19b67/nous_duck/nou
 | 五個分支怎麼合併、要不要推送與開 PR | 先合 A、B（互相需要），再 D、C；一條線一個 PR。我沒有合併也沒有推送 |
 | 開著的 PR #9、#13、#14、#18、#19、#21 | 整合分支已包含並重新編號 ADR；可以關掉改用整合分支，或逐一合併後我再對齊編號 |
 | AIOS 批次要不要開 | B 線建議先做三個：`/duck-link` 端點、註冊 adapter、粗略的 `presence`。做完加上實機頭部，就能用語音叫鴨子轉頭點頭 |
-| 協定提案（A、B、D 各一份，C 還在寫） | 多數是補回讀欄位與原因代碼；我建議收進 v0.2，一次改 schema 再改兩端 |
+| 協定提案（A、B、C、D 各一份） | 多數是補回讀欄位與原因代碼；我建議收進 v0.2，一次改 schema 再改兩端 |
 | 變聲參數、音效、喚醒詞、音量上限 | 等你試聽；中文喚醒詞在這個模型上可能不好認 |
 | Pi 上多的東西 | `~/duck/duckd/`、`~/duck/duckd-venv/`、服務 `duckd`（disabled、已停止）、音訊與感知的 venv、apt 的 `rubberband-cli` 與 `sox` |
 
@@ -81,4 +81,3 @@ cd /Users/georgechen/NousDuck/.claude/worktrees/duck-b-nous-a19b67/nous_duck/nou
 - 實機頭部端到端（I2）。
 - README、路線圖、ADR 索引、驗證索引還沒反映各線成果（要等合併，免得索引指向不存在的檔）。
 - 導航、感知還沒接進 duckd；CI 還沒加新模組的測試。
-- C 線的驗證紀錄、兩份 README、協定提案（已請它接續，完成後我會更新進度表）。

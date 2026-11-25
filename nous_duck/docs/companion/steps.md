@@ -1,6 +1,6 @@
 # 鴨子夥伴功能：分步進度
 
-最後更新：2026-11-26 02:40（整合線）。A、B、D 三條線已停下並回報；C 線程式完成、正在補文件。各線分支（都只有本機提交，還沒合進整合分支）：`claude/duck-a-body-8fca8a`、`claude/duck-b-nous-a19b67`、`claude/duck-c-sim-nav-2e1cfa`、`claude/duck-d-percept-audio-eae98e`，worktree 在 `.claude/worktrees/` 底下同名目錄。先看 [晨間報告](morning-report-2026-11-26.md)。
+最後更新：2026-11-26 03:30（整合線）。A～D 四條線都已停下並回報，整合線重跑過四條線的預設測試。各線分支（都只有本機提交，還沒合進整合分支）：`claude/duck-a-body-8fca8a`、`claude/duck-b-nous-a19b67`、`claude/duck-c-sim-nav-2e1cfa`、`claude/duck-d-percept-audio-eae98e`，worktree 在 `.claude/worktrees/` 底下同名目錄。先看 [晨間報告](morning-report-2026-11-26.md)。
 
 怎麼讀：
 
