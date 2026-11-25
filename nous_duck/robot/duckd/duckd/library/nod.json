@@ -1,0 +1,42 @@
+{
+  "id": "nod",
+  "version": 1,
+  "category": "A",
+  "description": "點頭兩下",
+  "interpolation": "min_jerk",
+  "allowed_modes": [
+    "standing"
+  ],
+  "requires": [],
+  "tracks": {
+    "head": {
+      "head_pitch": [
+        [
+          0,
+          0
+        ],
+        [
+          0.7,
+          -0.18
+        ],
+        [
+          1.4,
+          0
+        ],
+        [
+          2.1,
+          -0.18
+        ],
+        [
+          2.8,
+          0
+        ]
+      ]
+    }
+  },
+  "verification": {
+    "level": "none",
+    "hardware_profile": null,
+    "record": null
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "id": "shake",
+  "version": 1,
+  "category": "A",
+  "description": "搖頭（左、右、左、回正）",
+  "interpolation": "min_jerk",
+  "allowed_modes": [
+    "standing"
+  ],
+  "requires": [],
+  "tracks": {
+    "head": {
+      "head_yaw": [
+        [
+          0,
+          0
+        ],
+        [
+          0.8,
+          0.2
+        ],
+        [
+          2.3,
+          -0.2
+        ],
+        [
+          3.8,
+          0.2
+        ],
+        [
+          4.6,
+          0
+        ]
+      ]
+    }
+  },
+  "verification": {
+    "level": "none",
+    "hardware_profile": null,
+    "record": null
+  }
+}
