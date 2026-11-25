@@ -71,7 +71,7 @@ removed '/var/lib/cloud/instances/<id>/network-config.json'
 | `configure_motor.py --help` | 正常 |
 | `configure_motor.py --id 14`（沒接驅動板） | `SerialException: could not open port /dev/ttyACM0`，符合預期 |
 
-使用者回報 14 顆舵機的 ID 與零位已經設定完成。**這次紀錄沒有回讀驗證**：檢查時 Pi 4 上沒有接驅動板。
+使用者回報 14 顆舵機的 ID 與零位已經設定完成。**這次紀錄沒有回讀驗證**：檢查時 Pi 4 上沒有接驅動板。（2026-11-25 補充：唯讀掃描回讀到的 ID 正好是上游的 14 個，見 [runtime 紀錄 §4.4](pi4-runtime-2026-11-22.md#44-舵機匯流排唯讀掃描2026-11-25)；零位還沒驗證。）
 
 ## 5. 限制
 
