@@ -14,3 +14,7 @@ robot/perception/models/
 robot/audio/models/
 robot/audio/build/
 robot/perception/build/
+# 模擬與導航的本機產出（軌跡 CSV、截圖、示範輸出）
+uv.lock
+walk_sim_out/
+nav_demo_out/

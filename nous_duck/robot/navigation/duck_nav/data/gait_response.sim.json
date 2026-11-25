@@ -1,0 +1,16 @@
+{
+ "simulated": true,
+ "source": "nous_duck/sim/walk_sim/measure.py gait_table()；MuJoCo 模擬值，不是實機量測",
+ "policy": "BEST_WALK_ONNX_2.onnx",
+ "cmd_vx": [-0.15, -0.12, 0.0, 0.1, 0.12, 0.15],
+ "cmd_yaw_rate": [-1.0, -0.6, -0.3, 0.0, 0.3, 0.6, 1.0],
+ "cells": [
+  [{"vx": -0.0847, "vy": -0.084, "yaw_rate": -0.8918, "started": 1.0}, {"vx": -0.0628, "vy": -0.0667, "yaw_rate": -0.5695, "started": 1.0}, {"vx": -0.0526, "vy": -0.0421, "yaw_rate": -0.2698, "started": 1.0}, {"vx": -0.0514, "vy": -0.0051, "yaw_rate": 0.0364, "started": 1.0}, {"vx": -0.0441, "vy": 0.0097, "yaw_rate": 0.3091, "started": 1.0}, {"vx": -0.0539, "vy": 0.0305, "yaw_rate": 0.6059, "started": 1.0}, {"vx": -0.0816, "vy": 0.0639, "yaw_rate": 0.8859, "started": 1.0}],
+  [{"vx": -0.0814, "vy": -0.0784, "yaw_rate": -0.8993, "started": 1.0}, {"vx": -0.061, "vy": -0.0667, "yaw_rate": -0.5967, "started": 1.0}, {"vx": -0.037, "vy": -0.0418, "yaw_rate": -0.3079, "started": 1.0}, {"vx": -0.0443, "vy": -0.008, "yaw_rate": 0.0109, "started": 1.0}, {"vx": -0.0364, "vy": 0.0143, "yaw_rate": 0.3029, "started": 1.0}, {"vx": -0.0542, "vy": 0.0381, "yaw_rate": 0.6115, "started": 1.0}, {"vx": -0.0741, "vy": 0.066, "yaw_rate": 0.8547, "started": 1.0}],
+  [{"vx": -0.0184, "vy": -0.0395, "yaw_rate": -0.875, "started": 1.0}, {"vx": -0.0036, "vy": -0.0156, "yaw_rate": -0.3968, "started": 1.0}, {"vx": 0.0, "vy": 0.0, "yaw_rate": 0.0, "started": 0.0}, {"vx": 0.0, "vy": 0.0, "yaw_rate": 0.0, "started": 1.0}, {"vx": 0.0034, "vy": 0.0052, "yaw_rate": 0.1784, "started": 1.0}, {"vx": -0.0007, "vy": 0.0243, "yaw_rate": 0.5027, "started": 1.0}, {"vx": -0.0055, "vy": 0.0492, "yaw_rate": 0.8274, "started": 1.0}],
+  [{"vx": 0.0821, "vy": -0.0477, "yaw_rate": -0.9258, "started": 1.0}, {"vx": 0.0796, "vy": -0.0221, "yaw_rate": -0.5523, "started": 1.0}, {"vx": 0.0811, "vy": 0.0015, "yaw_rate": -0.2543, "started": 1.0}, {"vx": 0.0723, "vy": 0.0136, "yaw_rate": 0.0025, "started": 1.0}, {"vx": 0.0725, "vy": 0.0212, "yaw_rate": 0.2757, "started": 1.0}, {"vx": 0.0627, "vy": 0.0401, "yaw_rate": 0.5754, "started": 1.0}, {"vx": 0.061, "vy": 0.0644, "yaw_rate": 0.9008, "started": 1.0}],
+  [{"vx": 0.0991, "vy": -0.0511, "yaw_rate": -0.9071, "started": 1.0}, {"vx": 0.0979, "vy": -0.0273, "yaw_rate": -0.5632, "started": 1.0}, {"vx": 0.0979, "vy": 0.0007, "yaw_rate": -0.2687, "started": 1.0}, {"vx": 0.0942, "vy": 0.0137, "yaw_rate": 0.0078, "started": 1.0}, {"vx": 0.0901, "vy": 0.0247, "yaw_rate": 0.2805, "started": 1.0}, {"vx": 0.0767, "vy": 0.0414, "yaw_rate": 0.5793, "started": 1.0}, {"vx": 0.0733, "vy": 0.0637, "yaw_rate": 0.8921, "started": 1.0}],
+  [{"vx": 0.1164, "vy": -0.056, "yaw_rate": -0.845, "started": 1.0}, {"vx": 0.121, "vy": -0.0312, "yaw_rate": -0.5681, "started": 1.0}, {"vx": 0.1196, "vy": -0.0071, "yaw_rate": -0.2781, "started": 1.0}, {"vx": 0.1147, "vy": 0.0106, "yaw_rate": 0.0083, "started": 1.0}, {"vx": 0.1119, "vy": 0.0262, "yaw_rate": 0.2869, "started": 1.0}, {"vx": 0.0949, "vy": 0.0431, "yaw_rate": 0.583, "started": 1.0}, {"vx": 0.0919, "vy": 0.0641, "yaw_rate": 0.8818, "started": 1.0}]
+ ],
+ "notes": "cells[i][j] 對應 cmd_vx[i]、cmd_yaw_rate[j]；started < 1 的格子從站立起步不可靠，導航不使用"
+}

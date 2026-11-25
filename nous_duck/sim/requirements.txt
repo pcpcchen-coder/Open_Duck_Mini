@@ -1,3 +1,10 @@
-# sim/ 執行依賴（鎖定版本，與 hardware/dock/cad 相同）
+# sim/ 執行依賴（鎖定版本；mujoco、numpy 與 hardware/dock/cad 相同）
+# numpy 2.5.4 需要 Python 3.12 以上；sim/ 只在開發機上跑，不上鴨子。
 mujoco==4.0.1
 numpy==2.5.4
+# 全身走路模擬（walk_sim）：跑上游步態策略
+onnxruntime==1.32.0
+# 截圖／GIF、軌跡圖、相機算圖後的 AprilTag 偵測（nav_sim）
+pillow==13.0.0
+matplotlib==3.11.2
+opencv-contrib-python-headless==5.1.0.95
