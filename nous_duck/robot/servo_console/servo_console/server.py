@@ -1,10 +1,11 @@
 """HTTP 伺服器（只用標準函式庫）：提供頁面與 JSON API，背景執行控制迴圈。
 
 - GET  /            頁面（duck_console.html，可 gzip）
-- GET  /api/state   狀態（需要 token）
-- POST /api/<動作>  指令（需要 token），body 是 JSON
+- GET  /api/state   狀態
+- POST /api/<動作>  指令，body 是 JSON
 
-token 放在 HTTP 標頭 X-Duck-Token；頁面網址用 #t=<token> 帶進去（# 後面不會送到伺服器的記錄裡）。
+預設**不需要 token**（使用者在家裡區網使用，2026-11-25 決定）：同一個網路裡任何人都能操作。
+啟動時加 --require-token 才會檢查 HTTP 標頭 X-Duck-Token；頁面網址用 #t=<token> 帶進去。
 """
 from __future__ import annotations
 
@@ -31,7 +32,7 @@ LOOP_HZ = 50
 class ConsoleApp:
     """把控制核心、感測器、音效、Pi 狀態包在一起，給 HTTP handler 用。"""
 
-    def __init__(self, controller: Controller, sensors: Sensors, sound: SoundPlayer, token: str, html: bytes):
+    def __init__(self, controller: Controller, sensors: Sensors, sound: SoundPlayer, token: str | None, html: bytes):
         self.controller = controller
         self.sensors = sensors
         self.sound = sound
@@ -74,6 +75,7 @@ class ConsoleApp:
         data["pi"] = self._pi
         data["sounds"] = self.sound.names()
         data["version"] = __version__
+        data["auth"] = self.token is not None
         return data
 
     def command(self, action: str, body: dict) -> dict:
@@ -160,6 +162,9 @@ def make_handler(app: ConsoleApp):
             self._send(status, json.dumps(data, ensure_ascii=False).encode(), "application/json; charset=utf-8")
 
         def _authorized(self) -> bool:
+            if app.token is None:  # 沒開 token 檢查
+                app.controller.client_seen()
+                return True
             token = self.headers.get("X-Duck-Token", "")
             if hmac.compare_digest(token.encode(), app.token.encode()):
                 app.controller.client_seen()
