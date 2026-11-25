@@ -8,3 +8,8 @@ __pycache__/
 
 # 上游 .gitignore 忽略所有 *.txt；nous_duck 底下的文字檔（例如 requirements.txt）要進版控
 !*.txt
+
+# 模擬與導航的本機產出（軌跡 CSV、截圖、示範輸出）
+uv.lock
+walk_sim_out/
+nav_demo_out/
