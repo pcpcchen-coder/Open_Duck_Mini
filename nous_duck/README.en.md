@@ -18,6 +18,8 @@ This directory holds all of this fork's own development. Upstream files are neve
 | Software | The first version of the assembly viewer is usable: a single HTML file that opens offline and shows 138 parts, the 14 servo IDs, and the 15 assembly steps from the upstream CAD, with exploded and X-ray views ([pipeline record](docs/validation/viewer-pipeline-2026-11-13.md), [front-end record](docs/validation/viewer-web-2026-11-15.md), Traditional Chinese only; validated by unit tests and a headless browser). The BOM and all other modules are still "Planned" |
 | Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0007 (including switchable privacy settings and the duck's voice) are drafts or partly accepted; phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
 | Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0007 (including switchable privacy settings and the memory system) are drafts or partly accepted; phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
+| Software | The first version of the assembly viewer is usable ([download the HTML](assembly_viewer/release/duck_viewer.html)): a single HTML file that opens offline and shows 138 parts, the 14 servo IDs, and the 15 assembly steps from the upstream CAD, with exploded and X-ray views ([pipeline record](docs/validation/viewer-pipeline-2026-11-13.md), [front-end record](docs/validation/viewer-web-2026-11-15.md), Traditional Chinese only; validated by unit tests and a headless browser). The head controller for V3 "look at the person who is talking" is done and passes unit tests and a MuJoCo simulation ([record](docs/validation/look-at-sim-2026-11-16.md), Traditional Chinese only; not on hardware). The BOM and all other modules are still "Planned" |
+| Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0006 (including switchable privacy settings) are drafts or partly accepted; phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
 | Hardware validation | None |
 
 ## Division of work
@@ -43,8 +45,9 @@ See the [architecture](docs/architecture.md) and [ADR-0001](docs/adr/ADR-0001-du
 | [`assembly_viewer/`](assembly_viewer/README.md) | ① Offline single-HTML 3D assembly viewer (first deliverable) | First version usable (pipeline, steps, front end); BOM planned |
 | [`protocol/`](protocol/README.en.md) | ② duck-link protocol (JSON Schema) | Planned |
 | [`robot/`](robot/README.md) | ③ On-board software (single Pi 4 on trial, Python) | Planned |
+| [`robot/`](robot/README.md) | ③ On-board software (Pi Zero 2 W, Python) | Mostly planned; `behaviors/look_at.py` exists (simulation only) |
 | [`nous_adapter/`](nous_adapter/README.en.md) | ④ `app.duck.*` adapter and terminal to move into AIOS (TypeScript) | Planned |
-| [`sim/`](sim/README.md) | ⑤ MuJoCo simulation | Planned |
+| [`sim/`](sim/README.md) | ⑤ MuJoCo simulation | Mostly planned; `look_at_sim/` exists |
 | [`hardware/`](hardware/README.md) | ⑥ Modifications: MG995 head prototype, expression modules, wiring, sensor head, perception board, charging dock | Planned; the [charging dock](hardware/dock/README.md) is design v0 (STL files generated; not printed, not tested on hardware; docs in Traditional Chinese) |
 | [`tools/`](tools/README.md) | Development tools (upstream-untouched check, ChatGPT share-page converter, ChatGPT viewer comparison) | Usable |
 

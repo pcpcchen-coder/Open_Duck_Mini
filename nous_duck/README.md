@@ -18,6 +18,8 @@
 | 軟體 | 組裝檢視器第一版可用：單一 HTML、離線開啟，依上游 CAD 顯示 138 個零件、14 顆舵機 ID 與 15 步組裝順序，可爆炸、透視（[pipeline 驗證](docs/validation/viewer-pipeline-2026-11-13.md)、[前端驗證](docs/validation/viewer-web-2026-11-15.md)，層級為單元測試與無頭瀏覽器）。BOM 與其他模組仍是「規劃中」 |
 | 設計 | 行動夥伴需求 [R-001](docs/requirements/R-001-mobile-companion.md)（導航、行動對話、喚醒找人、自動回充）與 ADR-0002～0007（含可開關的隱私設定、鴨子的語音）為草案或部分採用；階段見 [路線圖](docs/roadmap.md) |
 | 設計 | 行動夥伴需求 [R-001](docs/requirements/R-001-mobile-companion.md)（導航、行動對話、喚醒找人、自動回充）與 ADR-0002～0007（含可開關的隱私設定、記憶系統）為草案或部分採用；階段見 [路線圖](docs/roadmap.md) |
+| 軟體 | 組裝檢視器第一版可用（[直接下載 HTML](assembly_viewer/release/duck_viewer.html)）：單一 HTML、離線開啟，依上游 CAD 顯示 138 個零件、14 顆舵機 ID 與 15 步組裝順序，可爆炸、透視（[pipeline 驗證](docs/validation/viewer-pipeline-2026-11-13.md)、[前端驗證](docs/validation/viewer-web-2026-11-15.md)，層級為單元測試與無頭瀏覽器）。V3「說話時看著對方」的頭部控制器完成，單元測試與 MuJoCo 模擬通過（[驗證](docs/validation/look-at-sim-2026-11-16.md)，未實機）。BOM 與其他模組仍是「規劃中」 |
+| 設計 | 行動夥伴需求 [R-001](docs/requirements/R-001-mobile-companion.md)（導航、行動對話、喚醒找人、自動回充）與 ADR-0002～0006（含可開關的隱私設定）為草案或部分採用；階段見 [路線圖](docs/roadmap.md) |
 | 實機驗證 | 無 |
 
 ## 分工
@@ -43,8 +45,9 @@
 | [`assembly_viewer/`](assembly_viewer/README.md) | ① 離線單一 HTML 3D 組裝檢視器（第一個交付） | 第一版可用（pipeline、步驟、前端）；BOM 規劃中 |
 | [`protocol/`](protocol/README.md) | ② duck-link 協定（JSON Schema） | 規劃中 |
 | [`robot/`](robot/README.md) | ③ 機上程式（單板 Pi 4 試用，Python） | 規劃中 |
+| [`robot/`](robot/README.md) | ③ 機上程式（Pi Zero 2 W，Python） | 大部分規劃中；`behaviors/look_at.py` 已有（模擬） |
 | [`nous_adapter/`](nous_adapter/README.md) | ④ 要搬進 AIOS 的 `app.duck.*` adapter 與終端（TypeScript） | 規劃中 |
-| [`sim/`](sim/README.md) | ⑤ MuJoCo 模擬 | 規劃中 |
+| [`sim/`](sim/README.md) | ⑤ MuJoCo 模擬 | 大部分規劃中；`look_at_sim/` 已有 |
 | [`hardware/`](hardware/README.md) | ⑥ 改裝：MG995 頭部原型、表情模組、接線、感測頭、感知板、充電座 | 規劃中；[充電座](hardware/dock/README.md)為設計 v0（STL 已產生，未列印、未實機） |
 | [`tools/`](tools/README.md) | 開發工具（上游未修改檢查、ChatGPT 分享頁轉檔、ChatGPT 版檢視器比對） | 可用 |
 
