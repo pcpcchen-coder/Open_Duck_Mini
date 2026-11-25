@@ -1,0 +1,4 @@
+# duckd 測試依賴（鎖定版本）。numpy 用和 Pi 上 runtime-venv 相同的 1.26.4（眼睛渲染在這個版本測過）。
+-r requirements.txt
+pytest==9.2.0
+numpy==1.26.4
