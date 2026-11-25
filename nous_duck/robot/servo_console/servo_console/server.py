@@ -16,6 +16,7 @@ import logging
 import math
 import threading
 import time
+from collections import deque
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -27,6 +28,7 @@ from .system import Sensors, SoundPlayer, pi_status
 log = logging.getLogger("servo_console")
 MAX_BODY = 16 * 1024
 LOOP_HZ = 50
+HISTORY_S = 900  # 電力歷史：每秒一筆，保留 15 分鐘（只在記憶體，重啟就清空）
 
 
 class ConsoleApp:
@@ -41,11 +43,38 @@ class ConsoleApp:
         self.html_gz = gzip.compress(html, compresslevel=6)
         self._stop = threading.Event()
         self._pi: dict = {}
-        self._pi_at = 0.0
+        self.history: deque = deque(maxlen=HISTORY_S)
 
     # ---- 背景執行緒
     def start(self) -> None:
         threading.Thread(target=self._loop, name="control", daemon=True).start()
+        threading.Thread(target=self._monitor, name="monitor", daemon=True).start()
+
+    def _monitor(self) -> None:
+        """每秒讀一次 Pi 狀態、記一筆電力歷史（vcgencmd 會花幾十毫秒，不放在控制迴圈或 HTTP 請求裡）。"""
+        while not self._stop.is_set():
+            try:
+                self.sample()
+            except Exception:  # noqa: BLE001
+                log.exception("監控執行緒錯誤")
+            self._stop.wait(1.0)
+
+    def sample(self) -> None:
+        self._pi = pi_status()
+        p = self.controller.power_summary()
+        self.history.append(
+            {
+                "t": round(time.time(), 1),
+                "battery_v": p.get("battery_v"),
+                "v_min": p.get("servo_v_min"),
+                "v_max": p.get("servo_v_max"),
+                "current_a": p.get("current_a"),
+                "power_w": p.get("power_w"),
+                "temp_max_c": p.get("temp_max_c"),
+                "cpu_temp_c": self._pi.get("cpu_temp_c"),
+                "throttled": self._pi.get("throttled_value"),
+            }
+        )
 
     def stop(self) -> None:
         self._stop.set()
@@ -66,11 +95,8 @@ class ConsoleApp:
 
     # ---- API
     def state(self) -> dict:
-        now = time.monotonic()
-        if now - self._pi_at > 1.0:
-            self._pi = pi_status()
-            self._pi_at = now
         data = self.controller.snapshot()
+        data["power"] = self.controller.power_summary()
         data.update(self.sensors.snapshot())
         data["pi"] = self._pi
         data["sounds"] = self.sound.names()
@@ -182,6 +208,9 @@ def make_handler(app: ConsoleApp):
             elif path == "/api/state":
                 if self._authorized():
                     self._json(HTTPStatus.OK, {"ok": True, **app.state()})
+            elif path == "/api/history":
+                if self._authorized():
+                    self._json(HTTPStatus.OK, {"ok": True, "period_s": 1, "samples": list(app.history)})
             elif path == "/healthz":
                 self._send(HTTPStatus.OK, b"ok\n", "text/plain")
             else:

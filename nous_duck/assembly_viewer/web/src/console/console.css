@@ -86,6 +86,24 @@ dialog { border: 1px solid var(--line); border-radius: 12px; background: var(--p
 dialog form { display: grid; gap: 10px; }
 dialog input { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); }
 
+.battery { padding: 10px; border-radius: 10px; background: var(--soft); margin-bottom: 8px; }
+.battery .big-num { margin: 2px 0; }
+.vbar { position: relative; height: 12px; border-radius: 6px; margin: 8px 0 18px; background: linear-gradient(90deg, var(--danger) 0%, var(--danger) var(--stop), #e0a100 var(--stop), #e0a100 var(--warn), var(--ok) var(--warn), var(--ok) 100%); }
+.vbar .needle { position: absolute; top: -4px; width: 3px; height: 20px; background: var(--ink); border-radius: 2px; transform: translateX(-50%); }
+.vbar .tick { position: absolute; top: 14px; font-size: 10px; color: var(--muted); transform: translateX(-50%); white-space: nowrap; }
+.chart { width: 100%; height: 120px; display: block; background: var(--panel); border: 1px solid var(--soft); border-radius: 6px; }
+.legend-line { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin: 0 0 4px; }
+.sw { display: inline-block; width: 12px; height: 4px; border-radius: 2px; }
+.sw-accent { background: var(--accent); } .sw-band { background: var(--accent); opacity: 0.25; height: 8px; } .sw-current { background: var(--current); } .sw-ok { background: var(--ok); }
+.table-wrap { overflow-x: auto; }
+.ptable { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+.ptable th, .ptable td { padding: 3px 4px; text-align: right; border-bottom: 1px solid var(--soft); white-space: nowrap; }
+.ptable th:first-child, .ptable td:first-child { text-align: left; }
+.ptable th { color: var(--muted); font-weight: 600; }
+.ptable td.flag { color: var(--danger); font-weight: 700; text-align: left; white-space: normal; }
+.ptable tfoot td { font-weight: 700; border-top: 1px solid var(--line); }
+details ul { padding-left: 18px; margin: 6px 0; }
+
 @media (max-width: 1180px) {
   .console-layout { grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); height: auto; }
   .stage { height: calc(100vh - 190px); min-height: 520px; }

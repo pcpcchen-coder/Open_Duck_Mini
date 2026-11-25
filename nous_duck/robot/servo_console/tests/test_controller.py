@@ -284,3 +284,71 @@ def test_release_keeps_torque_state(setup):
     assert not c.connected and bus.torque[32]
     with pytest.raises(CommandError, match="連線"):
         c.set_targets({"head_yaw": 0.0})
+
+
+# ---------------------------------------------------------------- 電力與匯流排錯誤
+from servo_console.bus import BusError, FeetechBus, decode_current_ma, decode_status  # noqa: E402
+
+
+def test_decode_current_and_status():
+    assert decode_current_ma(2) == 13.0
+    assert decode_current_ma(0x8002) == 13.0  # 位元 15 是方向
+    assert decode_status(0) == []
+    assert decode_status(1 | 4 | 32) == ["電壓", "溫度", "過載"]
+
+
+class _FakeIO:
+    """模擬 pypot：丟出通訊例外或回傳空值。"""
+
+    def __init__(self):
+        self.flushed = 0
+
+    def get_present_position(self, ids):
+        raise RuntimeError("could not parse received data")
+
+    def get_present_voltage(self, ids):
+        return ()
+
+    def flush(self):
+        self.flushed += 1
+
+
+def test_feetech_bus_turns_pypot_errors_into_bus_error():
+    bus = FeetechBus("/dev/null")
+    bus.io = _FakeIO()
+    with pytest.raises(BusError, match="RuntimeError"):
+        bus.read_positions([10, 11])
+    assert bus.io.flushed == 1  # 出錯後清掉緩衝區
+    with pytest.raises(BusError, match="回應 0／2"):
+        bus._get(bus.io.get_present_voltage, [10, 11], "電壓")
+
+
+def test_power_summary(setup):
+    c, bus, clock = setup
+    assert c.power_summary() == {"available": False}
+    c.connect()
+    c.set_torque(list(c.joints), True)
+    bus.voltage = 7.7
+    tick(c, clock, 1, dt=ctl.STATUS_PERIOD_S + 0.01)
+    p = c.power_summary()
+    assert p["available"] and p["battery_v"] == 7.7 and p["cell_v"] == 3.85
+    assert p["torque_on"] == 14
+    assert p["current_a"] == pytest.approx(sum(j.current_ma for j in c.joints.values()) / 1000, abs=1e-3)
+    assert p["power_w"] == pytest.approx(7.7 * p["current_a"], abs=0.01)  # 各自四捨五入
+
+
+def test_servo_status_flags_raise_warning(setup, monkeypatch):
+    c, bus, clock = setup
+    c.connect()
+    orig = bus.read_status
+
+    def flagged(ids):
+        s = orig(ids)
+        s["status"][3] = ["過載"]
+        return s
+
+    monkeypatch.setattr(bus, "read_status", flagged)
+    tick(c, clock, 1, dt=ctl.STATUS_PERIOD_S + 0.01)
+    assert c.alarms["servo_status"][0] == "warn" and "ID 13" in c.alarms["servo_status"][1]
+    assert c.snapshot()["joints"][3]["status"] == ["過載"]
+    assert not c.estop_reason  # 只警告，不自動停止
