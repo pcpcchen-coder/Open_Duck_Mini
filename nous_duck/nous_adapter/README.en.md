@@ -49,6 +49,8 @@ This directory holds code that **will move back into AIOS**: it lets Nous use th
 | `app.duck.cancel_mission` | reversible_write (added by R-001) |
 | `app.duck.announce` | reversible_write (added by R-001; whether it is needed is open) |
 | `app.duck.privacy_tighten` | reversible_write (can only tighten privacy settings; see ADR-0006) |
+| `app.duck.follow_me` | reversible_write (added by R-002, asynchronous mission; `confirmed` means "started looking for you", not "now following"; see ADR-0007) |
+| `app.duck.wait_here` | reversible_write (added by R-002; stops the current mission and waits in place, always accepted; see ADR-0007) |
 
 Parameters, confirmation rules, and the operations deliberately not offered are in [ADR-0001 §4](../docs/adr/ADR-0001-duck-role-in-nous.md#4-appduck-工具清單草案) and [§7.3](../docs/adr/ADR-0001-duck-role-in-nous.md#73-工具清單修訂後草案) (Traditional Chinese only). Navigation tools run as **asynchronous missions**: `confirmed` means "the duck has set off", and completion or failure comes back to Nous as events ([§7.2](../docs/adr/ADR-0001-duck-role-in-nous.md#72-長時間任務mission)).
 

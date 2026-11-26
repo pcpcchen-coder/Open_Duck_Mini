@@ -80,7 +80,9 @@
 
 ### 3.1 為什麼由 Pi 4 驅動
 
-鏡頭是 Pi 4 開的，鏡頭狀態提示要跟著**實際的裝置狀態**走（ADR-0006 §4.2）；由同一片板子畫眼睛，中間就少一跳。上游原本的眼燈接 Pi Zero 的 GPIO 23／24（上游 `docs/assembly_guide.md`），改用螢幕後 Pi Zero 不再管眼睛：我們的設定裡把上游 runtime 的 `expression_features.eyes` 關掉（設定放 `robot/config/`，不改上游 runtime）。
+鏡頭是 Pi 4 開的，鏡頭狀態提示要跟著**實際的裝置狀態**走（ADR-0006 §4.2）；由同一片板子畫眼睛，中間就少一跳。2026-11-22 起鴨子改成**單板 Pi 4**（[ADR-0008](../../docs/adr/ADR-0008-single-board-pi4.md)），上游 runtime 也跑在這片 Pi 4 上，腳位照上游。
+
+上游原本的眼燈接 GPIO 23／24（上游 `docs/assembly_guide.md`、ADR-0008 §2.3）。換成螢幕後這兩支腳空出來，§3.2 拿來當螢幕的 DC 與 RES。所以**一定要在我們的設定裡把上游 runtime 的 `expression_features.eyes` 關掉**（設定放 `robot/config/`，不改上游 runtime），否則上游的眨眼程式會去切 GPIO 23／24，干擾螢幕。
 
 ### 3.2 Pi 4 腳位（草案，到貨後在 `hardware/wiring/` 定案）
 
@@ -94,19 +96,21 @@
 | SDA | GPIO 10（SPI0 MOSI） | 19 | |
 | CS（左眼） | GPIO 8（SPI0 CE0） | 24 | |
 | CS（右眼） | GPIO 7（SPI0 CE1） | 26 | |
-| DC | GPIO 25 | 22 | 兩眼共用 |
-| RES | GPIO 27 | 13 | 兩眼共用 |
-| BLK | GPIO 22（開關）或硬體 PWM（調光） | 15 | 加下拉電阻，**軟體初始化前背光保持關**，開機不會亮白屏；調光方式見下 |
+| DC | GPIO 23 | 16 | 兩眼共用；原版左眼燈的腳（換成螢幕後空出來） |
+| RES | GPIO 24 | 18 | 兩眼共用；原版右眼燈的腳 |
+| BLK | GPIO 6（開關） | 31 | 兩眼共用；加下拉電阻，**軟體初始化前背光保持關**，開機不會亮白屏 |
 
-保留給其他用途、眼睛不要佔用的腳位：GPIO 2／3（I²C）、14／15（UART，可能用於身體板連線，ADR-0005 §2.1）、18～21（I²S，喇叭若走 I²S）、12／13（兩個硬體 PWM 通道之一可能要給紅外線補光燈調光，ADR-0002 §4.1）。
+2026-11-26 修訂：原本的草案用 GPIO 25／27／22，和單板 Pi 4 上的上游腳位撞到（投影燈 25、足底開關 22／27，ADR-0008 §2.3），已改成上表。
 
-調光的限制：Pi 4 只有 2 個硬體 PWM 通道，而且 3.5 mm 耳機孔的類比音訊也用這兩個通道。眼睛背光要不要佔一個 PWM，要等喇叭走哪條路（XVF3800 的輸出、I²S 功放或 3.5 mm）決定後才能定；先用 BLK 開關＋畫面本身調暗（像素值）也能做夜間模式，只是背光殘光比較亮。
+已被佔用、眼睛不要用的腳位（ADR-0008 §2.3）：GPIO 2／3（BNO055 I²C）、12／13（天線舵機 PWM）、18／19／21（MAX98357A I²S 喇叭）、22／27（足底開關）、25（投影燈）。
+
+調光的限制：Pi 4 只有 2 個硬體 PWM 通道，已經給天線舵機用了（GPIO 12／13）。所以眼睛背光只做開關，夜間模式靠畫面本身調暗（像素值），缺點是背光殘光比較亮，暗房要實看（§1.2）。紅外線補光燈的調光也會遇到同樣的限制（不是本文範圍）。
 
 **實體隱私開關不能切到眼睛的電源**：開關關掉時眼睛還要顯示「隱私開關已關」（ADR-0006 §4.1、§4.2）。眼睛接 Pi 4 本身的 3.3 V，不接被切的 USB 5 V。
 
 ### 3.3 SPI 線穿過頸部：先實測，再決定 A 或 B
 
-Pi 4 的位置還沒定，但大概在身體裡（[ADR-0005 §2.1](../../docs/adr/ADR-0005-compute-and-sensor-upgrade.md)）；眼睛的線要穿過 neck_pitch、head_pitch、head_yaw（±160°）、head_roll 4 個關節，估計 30～50 cm（未量）。
+Pi 4 裝在機身（[ADR-0008 §4.1](../../docs/adr/ADR-0008-single-board-pi4.md#41-pi-4-不能裝在頭裡)，確切位置待定）；原本頭裡接 Pi 的天線、投影燈、喇叭線也要一起穿過頸部；眼睛的線要穿過 neck_pitch、head_pitch、head_yaw（±160°）、head_roll 4 個關節，估計 30～50 cm（未量）。
 
 | | A. Pi 4 直接驅動（建議先做） | B. 頭內放小 MCU（例如 RP2040、ESP32-C3） |
 |---|---|---|
@@ -192,5 +196,5 @@ A／B（Pi 4 直接驅動或頭內 MCU）不用現在決定，E1 實測後依 §
 - [Waveshare 1.28inch LCD Module](https://www.waveshare.com/1.28inch-lcd-module.htm)（外框 40.4×37.5 mm、顯示區 Ø32.4 mm、腳位）
 - [1.28 inch TFT datasheet（Ø32.4 mm 有效區、3.3 V、4 線 SPI）](https://cdn.shopify.com/s/files/1/1509/1638/files/1_28inchTFT_datasheet.pdf)
 - [JESSINIE GC9A01 1.28 Inch TFT LCD Display Module 說明書（外框 36×39 mm、腳位）](https://manuals.plus/asin/B0CB3V1366)
-- 上游 `docs/assembly_guide.md`：原版眼燈接 Pi Zero GPIO 23／24
+- 上游 `docs/assembly_guide.md`：原版眼燈接 Pi Zero GPIO 23／24（單板 Pi 4 照用同樣腳位，ADR-0008 §2.3）
 - 777 微電子的商品頁沒有在網路搜尋找到，規格以到貨實物為準。
