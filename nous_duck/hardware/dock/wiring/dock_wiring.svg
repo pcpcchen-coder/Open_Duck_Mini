@@ -1,0 +1,627 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="963pt" height="651.96pt" viewBox="0 0 963 651.96" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-11-26T02:35:52.578927</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 651.96 
+L 963 651.96 
+L 963 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 18.36 628.128 
+L 609.84 628.128 
+L 609.84 79.272 
+L 18.36 79.272 
+z
+" clip-path="url(#pce4774532a)" style="fill: #eef4fa"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 637.74 345.384 
+L 944.64 345.384 
+L 944.64 79.272 
+L 637.74 79.272 
+z
+" clip-path="url(#pce4774532a)" style="fill: #fbf3e2"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 637.74 628.128 
+L 944.64 628.128 
+L 944.64 373.104 
+L 637.74 373.104 
+z
+" clip-path="url(#pce4774532a)" style="fill: #f8e9e9"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 38.448 352.0368 
+L 132.192 352.0368 
+Q 136.656 352.0368 136.656 347.6016 
+L 136.656 237.8304 
+Q 136.656 233.3952 132.192 233.3952 
+L 38.448 233.3952 
+Q 33.984 233.3952 33.984 237.8304 
+L 33.984 347.6016 
+Q 33.984 352.0368 38.448 352.0368 
+z
+" clip-path="url(#pce4774532a)" style="fill: #f7f7f7; stroke: #222222; stroke-width: 1.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 267.228 185.7168 
+L 494.892 185.7168 
+Q 499.356 185.7168 499.356 181.2816 
+L 499.356 115.8624 
+Q 499.356 111.4272 494.892 111.4272 
+L 267.228 111.4272 
+Q 262.764 111.4272 262.764 115.8624 
+L 262.764 181.2816 
+Q 262.764 185.7168 267.228 185.7168 
+z
+" clip-path="url(#pce4774532a)" style="fill: #eef0ff; stroke: #222222; stroke-width: 1.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 189.108 607.0608 
+L 584.172 607.0608 
+Q 588.636 607.0608 588.636 602.6256 
+L 588.636 221.1984 
+Q 588.636 216.7632 584.172 216.7632 
+L 189.108 216.7632 
+Q 184.644 216.7632 184.644 221.1984 
+L 184.644 602.6256 
+Q 184.644 607.0608 189.108 607.0608 
+z
+" clip-path="url(#pce4774532a)" style="fill: #ffffff; stroke: #222222; stroke-width: 1.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 256.068 557.1648 
+L 360.972 557.1648 
+Q 365.436 557.1648 365.436 552.7296 
+L 365.436 337.6224 
+Q 365.436 333.1872 360.972 333.1872 
+L 256.068 333.1872 
+Q 251.604 333.1872 251.604 337.6224 
+L 251.604 552.7296 
+Q 251.604 557.1648 256.068 557.1648 
+z
+" clip-path="url(#pce4774532a)" style="fill: #e8f5e9; stroke: #222222; stroke-width: 1.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 423.468 457.3728 
+L 561.852 457.3728 
+Q 566.316 457.3728 566.316 452.9376 
+L 566.316 248.9184 
+Q 566.316 244.4832 561.852 244.4832 
+L 423.468 244.4832 
+Q 419.004 244.4832 419.004 248.9184 
+L 419.004 452.9376 
+Q 419.004 457.3728 423.468 457.3728 
+z
+" clip-path="url(#pce4774532a)" style="fill: #fff8e6; stroke: #222222; stroke-width: 1.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 423.468 571.0248 
+L 561.852 571.0248 
+Q 566.316 571.0248 566.316 566.5896 
+L 566.316 487.3104 
+Q 566.316 482.8752 561.852 482.8752 
+L 423.468 482.8752 
+Q 419.004 482.8752 419.004 487.3104 
+L 419.004 566.5896 
+Q 419.004 571.0248 423.468 571.0248 
+z
+" clip-path="url(#pce4774532a)" style="fill: #fff8e6; stroke: #222222; stroke-width: 1.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_11">
+    <path d="M 702.468 324.3168 
+L 818.532 324.3168 
+Q 822.996 324.3168 822.996 319.8816 
+L 822.996 176.8464 
+Q 822.996 172.4112 818.532 172.4112 
+L 702.468 172.4112 
+Q 698.004 172.4112 698.004 176.8464 
+L 698.004 319.8816 
+Q 698.004 324.3168 702.468 324.3168 
+z
+" clip-path="url(#pce4774532a)" style="fill: #ffffff; stroke: #222222; stroke-width: 1.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_12">
+    <path d="M 702.468 601.5168 
+L 818.532 601.5168 
+Q 822.996 601.5168 822.996 597.0816 
+L 822.996 459.5904 
+Q 822.996 455.1552 818.532 455.1552 
+L 702.468 455.1552 
+Q 698.004 455.1552 698.004 459.5904 
+L 698.004 597.0816 
+Q 698.004 601.5168 702.468 601.5168 
+z
+" clip-path="url(#pce4774532a)" style="fill: #ffffff; stroke: #222222; stroke-width: 1.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="text_1">
+    <text style="font-weight: 700; font-size: 12.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: start; fill: #3c6e91" x="26.73" y="98.183703" transform="rotate(-0 26.73 98.183703)">底座（電子艙）dock_plinth</text>
+   </g>
+   <g id="text_2">
+    <text style="font-weight: 700; font-size: 12.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: start; fill: #9a6a00" x="646.11" y="98.183703" transform="rotate(-0 646.11 98.183703)">中椅背 → V 形導引座</text>
+   </g>
+   <g id="text_3">
+    <text style="font-weight: 700; font-size: 12.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: start; fill: #a03a3a" x="646.11" y="392.041094" transform="rotate(-0 646.11 392.041094)">屋頂山牆（圓窗後面）</text>
+   </g>
+   <g id="text_4">
+    <text style="font-weight: 700; font-size: 12px; font-family: 'WenQuanYi Zen Hei'" transform="translate(60.743438 251.293519)">J1 USB-C</text>
+    <text style="font-weight: 700; font-size: 12px; font-family: 'WenQuanYi Zen Hei'" transform="translate(67.32 264.945863)">母座板</text>
+   </g>
+   <g id="text_5">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'" transform="translate(52.07 375.836133)">從後蓋下緣缺口</text>
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'" transform="translate(49.610391 386.53291)">接 5 V／3 A 電源</text>
+   </g>
+   <g id="text_6">
+    <text style="font-weight: 700; font-size: 10.5px; font-family: 'WenQuanYi Zen Hei'" transform="translate(351.778125 128.232745)">INA219 模組</text>
+    <text style="font-weight: 700; font-size: 10.5px; font-family: 'WenQuanYi Zen Hei'" transform="translate(320.847422 140.178546)">（分流電阻換成 0.01 Ω）</text>
+   </g>
+   <g id="text_7">
+    <text style="font-weight: 700; font-size: 11px; font-family: 'WenQuanYi Zen Hei'; text-anchor: middle" x="386.64" y="597.097052" transform="rotate(-0 386.64 597.097052)">主板：40 × 90 mm 洞洞板（平放，用雙面泡棉膠黏在底座中間）</text>
+   </g>
+   <g id="text_8">
+    <text style="font-weight: 700; font-size: 11px; font-family: 'WenQuanYi Zen Hei'" transform="translate(297.422891 350.240792)">XIAO</text>
+    <text style="font-weight: 700; font-size: 11px; font-family: 'WenQuanYi Zen Hei'" transform="translate(288.84375 362.229073)">RP2040</text>
+    <text style="font-weight: 700; font-size: 11px; font-family: 'WenQuanYi Zen Hei'" transform="translate(281.02 374.399972)">（插排母）</text>
+   </g>
+   <g id="text_9">
+    <text style="font-size: 10px; font-family: 'WenQuanYi Zen Hei'" transform="translate(457.66 326.636008)">電源開關＋偵測</text>
+    <text style="font-size: 10px; font-family: 'WenQuanYi Zen Hei'" transform="translate(444.670156 337.534445)">（原理圖的 F1、C1、</text>
+    <text style="font-size: 10px; font-family: 'WenQuanYi Zen Hei'" transform="translate(450.10375 348.432883)">Q1、Q2、R1–R7、</text>
+    <text style="font-size: 10px; font-family: 'WenQuanYi Zen Hei'" transform="translate(470.270937 359.33132)">C2、D3，</text>
+    <text style="font-size: 10px; font-family: 'WenQuanYi Zen Hei'" transform="translate(455.07875 370.464523)">加上 D1 1N5819</text>
+    <text style="font-size: 10px; font-family: 'WenQuanYi Zen Hei'" transform="translate(463.777187 381.372727)">給 XIAO 5V）</text>
+   </g>
+   <g id="text_10">
+    <text style="font-size: 10px; font-family: 'WenQuanYi Zen Hei'" transform="translate(467.66 519.196289)">狀態燈零件</text>
+    <text style="font-size: 10px; font-family: 'WenQuanYi Zen Hei'" transform="translate(442.690469 530.113867)">D2 1N4148 → 燈 VDD</text>
+    <text style="font-size: 10px; font-family: 'WenQuanYi Zen Hei'" transform="translate(448.330312 541.031445)">R8 330 Ω → 燈 DIN</text>
+   </g>
+   <g id="line2d_1">
+    <path d="M 135.54 267.768 
+L 420.12 267.768 
+" clip-path="url(#pce4774532a)" style="fill: none; stroke: #d62728; stroke-width: 2.6; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_2">
+    <path d="M 135.54 317.664 
+L 420.12 317.664 
+" clip-path="url(#pce4774532a)" style="fill: none; stroke: #222222; stroke-width: 2.6; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_3">
+    <path d="M 520.56 245.592 
+L 520.56 131.94 
+L 498.24 131.94 
+" clip-path="url(#pce4774532a)" style="fill: none; stroke: #d62728; stroke-width: 2.6; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_4">
+    <path d="M 498.24 162.432 
+L 542.88 162.432 
+L 542.88 245.592 
+" clip-path="url(#pce4774532a)" style="fill: none; stroke: #d62728; stroke-width: 2.6; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_5">
+    <path d="M 565.2 267.768 
+L 621 267.768 
+L 621 223.416 
+L 699.12 223.416 
+" clip-path="url(#pce4774532a)" style="fill: none; stroke: #d62728; stroke-width: 2.6; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_6">
+    <path d="M 565.2 317.664 
+L 654.48 317.664 
+L 654.48 284.4 
+L 699.12 284.4 
+" clip-path="url(#pce4774532a)" style="fill: none; stroke: #222222; stroke-width: 2.6; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_7">
+    <path d="M 364.32 367.56 
+L 420.12 367.56 
+" clip-path="url(#pce4774532a)" style="fill: none; stroke: #d62728; stroke-width: 1.6; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_8">
+    <path d="M 364.32 389.736 
+L 420.12 389.736 
+" clip-path="url(#pce4774532a)" style="fill: none; stroke: #222222; stroke-width: 1.6; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_9">
+    <path d="M 364.32 411.912 
+L 420.12 411.912 
+" clip-path="url(#pce4774532a)" style="fill: none; stroke: #c9a000; stroke-width: 1.6; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_10">
+    <path d="M 364.32 434.088 
+L 420.12 434.088 
+" clip-path="url(#pce4774532a)" style="fill: none; stroke-dasharray: 5.92,2.56; stroke-dashoffset: 0; stroke: #1f77b4; stroke-width: 1.6"/>
+   </g>
+   <g id="text_11">
+    <text style="font-size: 8.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: middle; fill: #d62728" x="392.22" y="358.65114" transform="rotate(-0 392.22 358.65114)">5V</text>
+   </g>
+   <g id="text_12">
+    <text style="font-size: 8.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: middle; fill: #8a6d00" x="392.22" y="403.00314" transform="rotate(-0 392.22 403.00314)">EN</text>
+   </g>
+   <g id="text_13">
+    <text style="font-size: 8.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: middle; fill: #1f77b4" x="392.22" y="425.17914" transform="rotate(-0 392.22 425.17914)">SENSE</text>
+   </g>
+   <g id="line2d_11">
+    <path d="M 364.32 522.792 
+L 420.12 522.792 
+" clip-path="url(#pce4774532a)" style="fill: none; stroke-dasharray: 5.92,2.56; stroke-dashoffset: 0; stroke: #888888; stroke-width: 1.6"/>
+   </g>
+   <g id="text_14">
+    <text style="font-size: 8.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: middle; fill: #888888" x="392.22" y="513.88314" transform="rotate(-0 392.22 513.88314)">DIN</text>
+   </g>
+   <g id="line2d_12">
+    <path d="M 252.72 450.72 
+L 205.29 450.72 
+L 205.29 190.152 
+L 286.2 190.152 
+L 286.2 184.608 
+" clip-path="url(#pce4774532a)" style="fill: none; stroke: #2ca02c; stroke-width: 1.6; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_13">
+    <path d="M 252.72 423 
+L 213.66 423 
+L 213.66 198.468 
+L 319.68 198.468 
+L 319.68 184.608 
+" clip-path="url(#pce4774532a)" style="fill: none; stroke: #1f77b4; stroke-width: 1.6; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_14">
+    <path d="M 252.72 395.28 
+L 222.03 395.28 
+L 222.03 206.784 
+L 353.16 206.784 
+L 353.16 184.608 
+" clip-path="url(#pce4774532a)" style="fill: none; stroke: #222222; stroke-width: 1.6; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_15">
+    <path d="M 252.72 367.56 
+L 230.4 367.56 
+L 230.4 215.1 
+L 386.64 215.1 
+L 386.64 184.608 
+" clip-path="url(#pce4774532a)" style="fill: none; stroke: #ff7f0e; stroke-width: 1.6; stroke-linecap: round"/>
+   </g>
+   <g id="text_15">
+    <text style="font-weight: 700; font-size: 10.5px; font-family: 'WenQuanYi Zen Hei'" transform="translate(742.129102 189.042429)">頂針 ×4</text>
+    <text style="font-weight: 700; font-size: 10.5px; font-family: 'WenQuanYi Zen Hei'" transform="translate(713.988281 200.98823)">（V 形導引座背面）</text>
+   </g>
+   <g id="text_16">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'" transform="translate(830.25 230.165563)">穿過：底座頂板孔 →</text>
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'" transform="translate(830.25 240.964762)">中椅背底板孔 →</text>
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'" transform="translate(830.25 251.792164)">中椅背正面的頂針窗</text>
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'" transform="translate(830.25 262.14568)">約 30 cm</text>
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'" transform="translate(830.25 272.713316)">兩支 + 並聯、兩支 - 並聯</text>
+   </g>
+   <g id="text_17">
+    <text style="font-weight: 700; font-size: 10.5px; font-family: 'WenQuanYi Zen Hei'" transform="translate(729.232148 471.786429)">WS2812B ×1</text>
+    <text style="font-weight: 700; font-size: 10.5px; font-family: 'WenQuanYi Zen Hei'" transform="translate(730.909688 483.229788)">＋C3 100 nF</text>
+   </g>
+   <g id="line2d_16">
+    <path d="M 565.2 506.16 
+L 643.32 506.16 
+L 643.32 495.072 
+L 699.12 495.072 
+" clip-path="url(#pce4774532a)" style="fill: none; stroke: #d62728; stroke-width: 1.8; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_17">
+    <path d="M 565.2 528.336 
+L 699.12 528.336 
+" clip-path="url(#pce4774532a)" style="fill: none; stroke: #c9a000; stroke-width: 1.8; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_18">
+    <path d="M 565.2 561.6 
+L 699.12 561.6 
+" clip-path="url(#pce4774532a)" style="fill: none; stroke: #222222; stroke-width: 1.8; stroke-linecap: round"/>
+   </g>
+   <g id="text_18">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'" transform="translate(830.25 515.616576)">穿過：底座頂板孔 →</text>
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'" transform="translate(830.25 526.28515)">中椅背 → 上椅背 →</text>
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'" transform="translate(830.25 536.852787)">屋頂的中央走線孔</text>
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'" transform="translate(830.25 547.206303)">約 60 cm</text>
+   </g>
+   <g id="text_19">
+    <text style="font-weight: 700; font-size: 17px; font-family: 'WenQuanYi Zen Hei'; text-anchor: start" x="18.36" y="27.188688" transform="rotate(-0 18.36 27.188688)">鴨子的家 充電座 實體接線圖（設計 v0：未實作、未實測）</text>
+   </g>
+   <g id="text_20">
+    <text style="font-size: 11px; font-family: 'WenQuanYi Zen Hei'; text-anchor: start" x="18.36" y="55.375188" transform="rotate(-0 18.36 55.375188)">主電流路徑（≥ 2 A）用 20 AWG；控制與燈用 26 AWG。電路細節看原理圖 dock_schematic。</text>
+   </g>
+   <g id="text_21">
+    <g id="patch_13">
+     <path d="M 142.493359 255.5372 
+L 189.966641 255.5372 
+L 189.966641 244.5172 
+L 142.493359 244.5172 
+z
+" style="fill: #ffffff"/>
+    </g>
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: middle; fill: #d62728" x="166.23" y="252.875345" transform="rotate(-0 166.23 252.875345)">20 AWG 紅</text>
+   </g>
+   <g id="text_22">
+    <g id="patch_14">
+     <path d="M 142.493359 339.806 
+L 189.966641 339.806 
+L 189.966641 328.786 
+L 142.493359 328.786 
+z
+" style="fill: #ffffff"/>
+    </g>
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: middle; fill: #222222" x="166.23" y="337.144145" transform="rotate(-0 166.23 337.144145)">20 AWG 黑</text>
+   </g>
+   <g id="text_23">
+    <g id="patch_15">
+     <path d="M 459.145273 112.580857 
+L 643.354727 112.580857 
+L 643.354727 101.403143 
+L 459.145273 101.403143 
+z
+" style="fill: #ffffff"/>
+    </g>
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: middle; fill: #d62728" x="551.25" y="109.919002" transform="rotate(-0 551.25 109.919002)">Q1 汲極 → VIN+；VIN- → PIN+（20 AWG）</text>
+   </g>
+   <g id="text_24">
+    <g id="patch_16">
+     <path d="M 627.817266 209.522 
+L 697.882734 209.522 
+L 697.882734 198.502 
+L 627.817266 198.502 
+z
+" style="fill: #ffffff"/>
+    </g>
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: middle; fill: #d62728" x="662.85" y="206.860145" transform="rotate(-0 662.85 206.860145)">PIN+ 20 AWG 紅</text>
+   </g>
+   <g id="text_25">
+    <g id="patch_17">
+     <path d="M 611.555234 339.806 
+L 680.664766 339.806 
+L 680.664766 328.786 
+L 611.555234 328.786 
+z
+" style="fill: #ffffff"/>
+    </g>
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: middle; fill: #222222" x="646.11" y="337.144145" transform="rotate(-0 646.11 337.144145)">GND 20 AWG 黑</text>
+   </g>
+   <g id="text_26">
+    <g id="patch_18">
+     <path d="M 51.480781 466.973119 
+L 158.219219 466.973119 
+L 158.219219 423.378881 
+L 51.480781 423.378881 
+z
+" style="fill: #ffffff"/>
+    </g>
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; fill: #222222" transform="translate(52.240781 432.377904)">I²C 與電源（26 AWG）：</text>
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; fill: #222222" transform="translate(70.856328 442.889135)">橘＝3V3 → VCC</text>
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; fill: #222222" transform="translate(85.956133 453.24265)">黑＝GND</text>
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; fill: #222222" transform="translate(64.11207 463.884506)">藍＝SDA，綠＝SCL</text>
+   </g>
+   <g id="text_27">
+    <g id="patch_19">
+     <path d="M 588.642188 619.674504 
+L 753.797813 619.674504 
+L 753.797813 608.861496 
+L 588.642188 608.861496 
+z
+" style="fill: #ffffff"/>
+    </g>
+    <text style="font-size: 9px; font-family: 'WenQuanYi Zen Hei'; text-anchor: middle; fill: #222222" x="671.22" y="617.062746" transform="rotate(-0 671.22 617.062746)">26 AWG 三芯：紅 VDD／黃 DIN／黑 GND</text>
+   </g>
+   <g id="line2d_19">
+    <defs>
+     <path id="m7918148a04" d="M 0 3 
+C 0.795609 3 1.55874 2.683901 2.12132 2.12132 
+C 2.683901 1.55874 3 0.795609 3 0 
+C 3 -0.795609 2.683901 -1.55874 2.12132 -2.12132 
+C 1.55874 -2.683901 0.795609 -3 0 -3 
+C -0.795609 -3 -1.55874 -2.683901 -2.12132 -2.12132 
+C -2.683901 -1.55874 -3 -0.795609 -3 0 
+C -3 0.795609 -2.683901 1.55874 -2.12132 2.12132 
+C -1.55874 2.683901 -0.795609 3 0 3 
+z
+" style="stroke: #222222"/>
+    </defs>
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="135.54" y="267.768" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_20">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="135.54" y="317.664" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_21">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="286.2" y="184.608" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_22">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="319.68" y="184.608" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_23">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="353.16" y="184.608" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_24">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="386.64" y="184.608" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_25">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="498.24" y="131.94" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_26">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="498.24" y="162.432" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_27">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="252.72" y="367.56" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_28">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="252.72" y="395.28" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_29">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="252.72" y="423" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_30">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="252.72" y="450.72" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_31">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="364.32" y="367.56" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_32">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="364.32" y="389.736" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_33">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="364.32" y="411.912" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_34">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="364.32" y="434.088" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_35">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="364.32" y="522.792" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_36">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="699.12" y="223.416" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_37">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="699.12" y="284.4" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_38">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="699.12" y="495.072" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_39">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="699.12" y="528.336" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="line2d_40">
+    <g clip-path="url(#pce4774532a)">
+     <use xlink:href="#m7918148a04" x="699.12" y="561.6" style="fill: #ffffff; stroke: #222222"/>
+    </g>
+   </g>
+   <g id="text_28">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: end" x="129.96" y="270.616145" transform="rotate(-0 129.96 270.616145)">VBUS</text>
+   </g>
+   <g id="text_29">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: end" x="129.96" y="320.512145" transform="rotate(-0 129.96 320.512145)">GND</text>
+   </g>
+   <g id="text_30">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: middle" x="286.2" y="198.858945" transform="rotate(-0 286.2 198.858945)">SCL</text>
+   </g>
+   <g id="text_31">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: middle" x="319.68" y="198.858945" transform="rotate(-0 319.68 198.858945)">SDA</text>
+   </g>
+   <g id="text_32">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: middle" x="353.16" y="198.858945" transform="rotate(-0 353.16 198.858945)">GND</text>
+   </g>
+   <g id="text_33">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: middle" x="386.64" y="198.858945" transform="rotate(-0 386.64 198.858945)">VCC</text>
+   </g>
+   <g id="text_34">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: end" x="492.66" y="134.788145" transform="rotate(-0 492.66 134.788145)">VIN+</text>
+   </g>
+   <g id="text_35">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: end" x="492.66" y="165.280145" transform="rotate(-0 492.66 165.280145)">VIN-</text>
+   </g>
+   <g id="text_36">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: start" x="258.3" y="370.408145" transform="rotate(-0 258.3 370.408145)">3V3</text>
+   </g>
+   <g id="text_37">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: start" x="258.3" y="398.128145" transform="rotate(-0 258.3 398.128145)">GND</text>
+   </g>
+   <g id="text_38">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: start" x="258.3" y="425.848145" transform="rotate(-0 258.3 425.848145)">D4/SDA</text>
+   </g>
+   <g id="text_39">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: start" x="258.3" y="453.568145" transform="rotate(-0 258.3 453.568145)">D5/SCL</text>
+   </g>
+   <g id="text_40">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: end" x="358.74" y="370.408145" transform="rotate(-0 358.74 370.408145)">5V</text>
+   </g>
+   <g id="text_41">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: end" x="358.74" y="392.584145" transform="rotate(-0 358.74 392.584145)">GND</text>
+   </g>
+   <g id="text_42">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: end" x="358.74" y="414.760145" transform="rotate(-0 358.74 414.760145)">D7</text>
+   </g>
+   <g id="text_43">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: end" x="358.74" y="436.936145" transform="rotate(-0 358.74 436.936145)">A0</text>
+   </g>
+   <g id="text_44">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: end" x="358.74" y="525.640145" transform="rotate(-0 358.74 525.640145)">D6</text>
+   </g>
+   <g id="text_45">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: start" x="704.7" y="226.334096" transform="rotate(-0 704.7 226.334096)">+ ×2（右邊）</text>
+   </g>
+   <g id="text_46">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: start" x="704.7" y="287.318096" transform="rotate(-0 704.7 287.318096)">- ×2（左邊）</text>
+   </g>
+   <g id="text_47">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: start" x="704.7" y="497.920145" transform="rotate(-0 704.7 497.920145)">VDD</text>
+   </g>
+   <g id="text_48">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: start" x="704.7" y="531.184145" transform="rotate(-0 704.7 531.184145)">DIN</text>
+   </g>
+   <g id="text_49">
+    <text style="font-size: 9.5px; font-family: 'WenQuanYi Zen Hei'; text-anchor: start" x="704.7" y="564.448145" transform="rotate(-0 704.7 564.448145)">GND</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pce4774532a">
+   <rect x="7.2" y="7.2" width="948.6" height="637.56"/>
+  </clipPath>
+ </defs>
+</svg>
