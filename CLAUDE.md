@@ -25,7 +25,7 @@
 |---|---|---|
 | `nous_duck/assembly_viewer/` | ① 離線單一 HTML 3D 組裝檢視器（第一個交付） | Python pipeline＋TypeScript/three.js |
 | `nous_duck/protocol/` | ② duck-link：鴨子與 Nous 之間唯一的介面（版本化 JSON Schema） | JSON Schema |
-| `nous_duck/robot/` | ③ 機上程式（身體板 Pi Zero 2 W：連線、行為、安全；感知板 Pi 4：定位導航、感知、音訊） | Python |
+| `nous_duck/robot/` | ③ 機上程式（目前單板試用：全部跑在一片 Pi 4 上，步態＋安全與感知分成獨立服務；不行再拆回 Pi Zero 2 W＋Pi 4，見 ADR-0008） | Python |
 | `nous_duck/nous_adapter/` | ④ 之後要搬回 AIOS 的 `app.duck.*` adapter 與終端 | TypeScript |
 | `nous_duck/sim/` | ⑤ MuJoCo 模擬 | Python |
 | `nous_duck/hardware/` | ⑥ 硬體改裝（MG995 頭部原型、表情模組、接線、感測頭、感知板、充電座） | 文件、CAD、STL |
@@ -35,7 +35,7 @@
 系統分工（詳見 [ADR-0001](nous_duck/docs/adr/ADR-0001-duck-role-in-nous.md)）：
 
 - **Nous（Mac mini）** 負責語音、視覺、記憶與決策。
-- **鴨子** 負責步態、動作與安全（身體板 Pi Zero 2 W），以及定位導航、收音播放、喚醒詞、人臉偵測（感知板 Pi 4，見 ADR-0005）。安全判斷（跌倒、過熱、低電壓、通訊中斷、禁區）一律在鴨子本機完成，不依賴 Nous 或網路。
+- **鴨子** 負責步態、動作與安全，以及定位導航、收音播放、喚醒詞、人臉偵測。目前全部在一片 Pi 4 上試用（ADR-0008）；文件裡的「身體板」「感知板」在試用期間指這片 Pi 4 上的兩組服務，達不到 ADR-0008 §2.5 的門檻再拆回 Pi Zero 2 W＋Pi 4（ADR-0005）。安全判斷（跌倒、過熱、低電壓、通訊中斷、禁區）一律在鴨子本機完成，不依賴 Nous 或網路。
 - 兩邊**只**透過 `nous_duck/protocol/` 的版本化 JSON Schema 溝通。不共用程式碼、不直接呼叫對方內部函式。改協定先改 schema 並升版，再改兩端。
 
 ## 3. AIOS 整合規則
@@ -80,5 +80,6 @@
 - TypeScript：沿用 AIOS 的無框架 TypeScript 風格；前端用 three.js（鎖版本）。
 - 組裝檢視器輸出是**單一 HTML、可離線開啟**，所有資源內嵌，不從網路載入。
 - 建置輸出（`nous_duck/assembly_viewer/dist/`）不進版控。忽略規則寫在 `nous_duck/.gitignore`，不改上游的 `.gitignore`。
+- 例外：給人直接下載的組裝檢視器成品放 `nous_duck/assembly_viewer/release/duck_viewer.html`，進版控。不要手改，改了原始碼後用 `npm run release` 重新產生；CI 會檢查它和原始碼一致。
 - 上游 `.gitignore` 忽略所有 `*.txt`；`nous_duck/.gitignore` 已用 `!*.txt` 重新納入，`requirements.txt` 等檔案才會進版控。
 - 雲端環境注意：`codeload.github.com` 與 GitHub 附件圖片會回 403；`raw.githubusercontent.com`、`git clone`、jsDelivr 可用。Playwright Chromium 可跑 WebGL 2.0（SwiftShader）做截圖驗證。

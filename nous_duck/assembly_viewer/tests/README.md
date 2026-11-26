@@ -10,6 +10,7 @@
 | 步驟資料（`test_steps.py`） | pytest | 每個零件剛好裝一次、各步裝的舵機、來源連結與錨點存在、8 種資料錯誤會讓建置失敗、步驟警語引用的幾何事實（膝踝舵機左外右內、右腿側板轉 180°、頸部舵盤偏 16.6 mm） |
 | 無頭瀏覽器檢查（`web/check_viewer.cjs`） | Playwright（Chromium＋SwiftShader WebGL 2.0） | 斷網開啟、沒有錯誤、15 步都有畫面、整機＋爆炸＋透視、搜尋 `ID 24` 與資訊卡、點模型選取、進度重新整理後仍在、手機寬度沒有水平捲動；截圖存到 `dist/screens/` |
 | 輸出檢查（`../web/check_output.mjs`） | Node.js | `dist/duck_viewer.html` 是單一檔、沒有外部資源、大小在 16 MB 內 |
+| release 一致性（`../web/check_release.mjs`） | Node.js | 進版控的 `release/duck_viewer.html` 和目前原始碼建置的結果相同（忽略建置日期與 commit） |
 
 截圖驗證只能證明「畫面畫得出來」，不能代表實機瀏覽器效能；結果寫進 [`../../docs/validation/`](../../docs/validation/README.md) 時要標明驗證層級。
 

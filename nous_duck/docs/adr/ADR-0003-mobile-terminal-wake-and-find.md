@@ -2,7 +2,7 @@
 
 - 狀態：**草案（Proposed）**
 - 日期：2026-11-12
-- 相關：[R-001](../requirements/R-001-mobile-companion.md)、[ADR-0001](ADR-0001-duck-role-in-nous.md)、[ADR-0002](ADR-0002-indoor-localization-and-navigation.md)、[ADR-0005](ADR-0005-compute-and-sensor-upgrade.md)、[ADR-0007](ADR-0007-duck-voice.md)（語音鏈、變聲、本機音效）
+- 相關：[R-001](../requirements/R-001-mobile-companion.md)、[ADR-0001](ADR-0001-duck-role-in-nous.md)、[ADR-0002](ADR-0002-indoor-localization-and-navigation.md)、[ADR-0005](ADR-0005-compute-and-sensor-upgrade.md)、[ADR-0009](ADR-0009-duck-voice.md)（語音鏈、變聲、本機音效）
 - AIOS 參考（唯讀，main `7b0257d`）：`terminals/rpi4/`、`docs/adr/ADR-0001-local-family-recognition.md`（本機家人辨識）、`docs/adr/ADR-0003-local-wake-and-voice-recognition.md`（本機喚醒與聲音辨識）、`docs/Current_Implementation_Status.md`
 
 ## 1. 背景
@@ -115,7 +115,7 @@
 
 ## 8. 待決
 
-1. 鴨子的喚醒詞（使用者 2026-11-12 表示名字晚一點再取）。
+1. 鴨子的喚醒詞（使用者 2026-11-12 表示名字晚一點再取）。2026-11-19 的 [R-002](../requirements/R-002-follow-me.md) 用了「Hey 鴨子」，是否就定為喚醒詞待確認（[ADR-0007 §13](ADR-0007-follow-me-and-wait-here.md#13-待決需要使用者決定)）。
 2. 終端路線 A 或 B（spike 後決定）。
 3. 「Hey Nous」被鴨子聽到時要不要也回應。
 4. ~~臥室的隱私規則~~：改為可開關設定，見 ADR-0006；帶看影像的保留期限仍待決。
