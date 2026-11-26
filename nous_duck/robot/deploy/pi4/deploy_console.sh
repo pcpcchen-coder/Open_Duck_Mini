@@ -8,6 +8,8 @@
 # 前提：Pi 上已經跑過 setup_runtime.sh（~/duck/runtime-venv 有 pypot、Blinka、adafruit_bno055）。
 # Mac 上要有 Node.js 22 與 uv（或已經裝好 numpy、PyYAML 的 Python 3.10+）。
 #
+# 預設**不需要 token**（家裡區網使用）：同一個網路裡任何人都能操作。要開：CONSOLE_REQUIRE_TOKEN=1 bash deploy_console.sh
+#
 # 服務開機自動啟動，但**啟動時不碰硬體**：要在頁面上按「連線匯流排」才會打開序列埠、I2C、GPIO。
 # 要跑上游的腳本（例如走路）前，先在頁面按「釋放硬體」，或 sudo systemctl stop duck-console。
 set -euo pipefail
@@ -19,6 +21,8 @@ if [ "${1:-}" = "--uninstall" ]; then
 fi
 HOST="${1:-duck-pi4}"
 PORT="${CONSOLE_PORT:-8080}"
+AUTH_ARG=""
+[ "${CONSOLE_REQUIRE_TOKEN:-0}" = 1 ] && AUTH_ARG=" --require-token"
 REPO="$(cd "$(dirname "$0")/../../../.." && pwd)"
 AV="$REPO/nous_duck/assembly_viewer"
 SC="$REPO/nous_duck/robot/servo_console"
@@ -65,7 +69,7 @@ Wants=network-online.target
 [Service]
 User=$PI_USER
 WorkingDirectory=$PI_HOME/duck/console
-ExecStart=$PI_HOME/duck/runtime-venv/bin/python -m servo_console --html duck_console.html --joints console_joints.json --port $PORT
+ExecStart=$PI_HOME/duck/runtime-venv/bin/python -m servo_console --html duck_console.html --joints console_joints.json --port $PORT$AUTH_ARG
 Restart=on-failure
 RestartSec=3
 # 結束時只釋放硬體，不改扭力狀態（避免懸空時摔下來）
@@ -83,8 +87,13 @@ for _ in $(seq 20); do
 done
 ssh "$HOST" "systemctl is-active --quiet $UNIT" || { ssh "$HOST" "journalctl -u $UNIT -n 30 --no-pager"; exit 1; }
 
-TOKEN="$(ssh "$HOST" 'cat ~/.config/nous-duck/console_token')"
 case "$HOST" in *.*) WEB_HOST="$HOST" ;; *) WEB_HOST="$HOST.local" ;; esac
 echo
-echo "部署完成。用瀏覽器開（網址含 token，不要貼到公開的地方）："
-echo "  http://$WEB_HOST:$PORT/#t=$TOKEN"
+if [ -n "$AUTH_ARG" ]; then
+  TOKEN="$(ssh "$HOST" 'cat ~/.config/nous-duck/console_token')"
+  echo "部署完成。用瀏覽器開（網址含 token，不要貼到公開的地方）："
+  echo "  http://$WEB_HOST:$PORT/#t=$TOKEN"
+else
+  echo "部署完成（不需要 token：同一個網路裡任何人都能操作）。用瀏覽器開："
+  echo "  http://$WEB_HOST:$PORT/"
+fi

@@ -2,7 +2,7 @@
 
 狀態：**可用（單元測試＋預覽圖）**；**未上螢幕、未實機**。GC9A01 的 SPI 驅動還沒寫（等螢幕到貨、E1 實測），這裡不放假的驅動程式。
 
-在感知板 **Raspberry Pi 4** 上執行（[眼睛硬體設計 §3.1](../../hardware/expression_mods/gc9a01_eyes.md#31-為什麼由-pi-4-驅動)）。表情、使用情境、音效規格見 [`docs/eye_expressions.md`](../../docs/eye_expressions.md)。
+在 **Raspberry Pi 4** 上執行（目前單板，[ADR-0008](../../docs/adr/ADR-0008-single-board-pi4.md)；畫眼睛屬於感知那一組服務）（[眼睛硬體設計 §3.1](../../hardware/expression_mods/gc9a01_eyes.md#31-為什麼由-pi-4-驅動)）。表情、使用情境、音效規格見 [`docs/eye_expressions.md`](../../docs/eye_expressions.md)。
 
 ## 職責
 

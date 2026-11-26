@@ -45,7 +45,7 @@ class Limits:
     """仲裁器用的上限。初始值、待實機修訂。"""
 
     head_range: dict[str, tuple[float, float]] = field(default_factory=default_head_range)
-    #: 頭部角速度上限（rad/s）。30°/s 是 2026-11-25 夜間無人看顧的規定；ADR-0011 §2.3 要求的模擬量測還沒做。
+    #: 頭部角速度上限（rad/s）。30°/s 是 2026-11-25 夜間無人看顧的規定；ADR-0015 §2.3 要求的模擬量測還沒做。
     head_max_speed: float = math.radians(30.0)
     #: 頭部角速度的硬上限：設定檔或命令列不能超過（舵機控制台的最高檔）。
     head_speed_hard_cap: float = math.radians(90.0)

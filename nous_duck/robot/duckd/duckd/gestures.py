@@ -1,11 +1,11 @@
-"""動作庫（ADR-0011 的 A 類）：具名動作的定義檔、載入時檢查、關鍵格播放。
+"""動作庫（ADR-0015 的 A 類）：具名動作的定義檔、載入時檢查、關鍵格播放。
 
 - 定義檔：`duckd/library/<id>.json`，鴨子本機的格式，不屬於 duck-link；Nous 只看得到名稱。
 - **載入時檢查，不偷偷夾限**：任何關鍵格超出允許範圍、插值後超過角速度上限、結尾沒回到中立，
   整個動作拒絕載入。仲裁器在執行時仍會夾限，那是最後一關。
 - 目前只有 `head` 軌。`vel`、`antennas`、`cues` 軌還沒實作：定義檔出現就拒絕載入，不假裝會做。
 - 驗證等級（`verification.level`）：`none`／`sim`／`real`。只有 `real` 且 `hardware_profile` 符合
-  目前機身設定的動作才列給 Nous（ADR-0011 §2.6）；其餘要加開發旗標才會列出。
+  目前機身設定的動作才列給 Nous（ADR-0015 §2.6）；其餘要加開發旗標才會列出。
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ ID_RE = re.compile(r"^[a-z0-9_]{1,48}$")
 MAX_DURATION_S = 10.0
 SAMPLE_DT = 0.02
 
-# ADR-0011 §2.3 的初版允許範圍（訓練範圍與上游手把範圍的交集；neck_pitch 固定 0）
+# ADR-0015 §2.3 的初版允許範圍（訓練範圍與上游手把範圍的交集；neck_pitch 固定 0）
 GESTURE_HEAD_RANGE: dict[str, tuple[float, float]] = {
     "neck_pitch": (0.0, 0.0),
     "head_pitch": (-0.78, 0.3),

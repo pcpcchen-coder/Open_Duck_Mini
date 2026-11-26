@@ -53,11 +53,30 @@ def test_page_without_token(server):
         assert r.status == 200 and b"<title>" in r.read()
 
 
-def test_api_requires_token(server):
+def test_api_requires_token_when_enabled(server):
     base, *_ = server
     assert call(base, "/api/state", token=None)[0] == 401
     assert call(base, "/api/state", token="wrong")[0] == 401
     assert call(base, "/api/estop", {}, token=None)[0] == 401
+    assert call(base, "/api/state")[1]["auth"] is True
+
+
+def test_no_token_by_default(joints_file, config_file, tmp_path):  # noqa: F811
+    """預設（沒有 --require-token）不檢查 token。"""
+    joints = load_joints(joints_file)
+    bus = MockBus([j.servo_id for j in joints])
+    c = Controller(joints, lambda: bus, config_file, tmp_path / "poses.json", mock=True)
+    app = ConsoleApp(c, Sensors(mock=True), SoundPlayer(None, mock=True), None, b"<!doctype html>")
+    httpd = serve(app, "127.0.0.1", 0)
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{httpd.server_address[1]}"
+    try:
+        status, state = call(base, "/api/state", token=None)
+        assert status == 200 and state["auth"] is False
+        assert call(base, "/api/connect", {}, token=None)[0] == 200
+    finally:
+        httpd.shutdown()
+        app.sensors.close()
 
 
 def test_state_and_commands(server):

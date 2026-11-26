@@ -445,6 +445,7 @@ function renderTop(s: ConsoleState): void {
   chip.textContent = s.connected ? "已連線匯流排" : "未連線（不碰硬體）";
   chip.className = "chip " + (s.connected ? "ok" : "warn");
   $("#mode-chip").hidden = !s.mock;
+  $("#auth-chip").hidden = s.auth;
   const btn = $<HTMLButtonElement>("#btn-connect");
   btn.textContent = s.connected ? "釋放硬體" : "連線匯流排";
   for (const id of ["#btn-torque-on", "#btn-torque-off", "#btn-hold", "#kp-all"]) $<HTMLButtonElement>(id).disabled = !s.connected;
@@ -561,7 +562,6 @@ async function main(): Promise<void> {
   bindControls();
   const bundle = readBundle();
   $("#build-info").textContent = `控制台建置 ${bundle.build.built_at} · commit ${bundle.build.git_commit} · three.js ${bundle.build.three_version}`;
-  if (!token) askToken();
   void poll();
   window.setInterval(() => void poll(), POLL_MS);
   try {

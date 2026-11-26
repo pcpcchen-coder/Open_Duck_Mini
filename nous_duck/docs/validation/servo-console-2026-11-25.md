@@ -54,3 +54,12 @@ Mac 上 `python -m servo_console --mock`，用 Claude 的內建瀏覽器操作�
 - 控制迴圈實際頻率沒有量（設計 50 Hz；14 顆位置讀取約 1.9 ms，見 [runtime 紀錄 §4.4](pi4-runtime-2026-11-22.md#44-舵機匯流排唯讀掃描2026-11-25)）。
 - 偏移存檔、姿勢存檔在實機上沒有操作（單元測試有）。
 - 手機實際連 Pi 操作沒有測。
+
+## 5. 拿掉 token（同日後續）
+
+使用者要求：在家裡區網使用，先不要 token。改成**預設不檢查 token**（`--require-token` 才檢查，部署時 `CONSOLE_REQUIRE_TOKEN=1`），頁面上方標「不需 token（區網內都能操作）」。影響：同一個網路裡任何人只要知道網址，都能讓舵機動、改偏移設定。
+
+| 項目 | 結果 |
+|---|---|
+| 單元測試 | 20 項通過（新增：沒開 token 時不帶標頭也能讀狀態與連線；開了 token 時 401 照舊） |
+| 實機（重新部署後） | 腳本印出 `http://duck-pi4.local:8080/`；不帶 token 讀頁面 200、`/api/state` 回應 `auth: false`；服務的 ExecStart 沒有 `--require-token`，journal 顯示「不需要 token」；重新部署後 14 顆仍出力 |

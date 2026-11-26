@@ -131,7 +131,7 @@ ssh -t duck-pi4 'cd ~/duck/Open_Duck_Mini_Runtime/scripts && ~/duck/runtime-venv
 
 ## 舵機控制台（網頁）
 
-[`deploy_console.sh`](deploy_console.sh) 把 [舵機控制台](../../servo_console/README.md) 裝成 Pi 上的 systemd 服務 `duck-console`（開機自動啟動、啟動時不碰硬體），印出 `http://duck-pi4.local:8080/#t=<token>`：
+[`deploy_console.sh`](deploy_console.sh) 把 [舵機控制台](../../servo_console/README.md) 裝成 Pi 上的 systemd 服務 `duck-console`（開機自動啟動、啟動時不碰硬體），印出 `http://duck-pi4.local:8080/`。預設不需要 token（區網內任何人都能操作）；要開 token 檢查用 `CONSOLE_REQUIRE_TOKEN=1`：
 
 ```bash
 bash nous_duck/robot/deploy/pi4/deploy_console.sh
