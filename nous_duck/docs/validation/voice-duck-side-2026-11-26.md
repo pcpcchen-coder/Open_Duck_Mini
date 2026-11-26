@@ -13,7 +13,7 @@ cd nous_duck/robot/audio && python -m pytest tests -q        # 129 passed, 2 ski
 cd nous_duck/robot/settings && python -m pytest tests -q     # 36 passed
 ```
 
-（Mac，Python 3.13.16；需要 numpy、pytest、websockets，KWS 煙霧測試另需 sherpa-onnx 與模型。）這一批新增：`test_session.py`（14 項，實驗的原生通道狀態機）、`test_voice_service.py`（9 項：路線 2 的喚醒流程、串流播放、設定關掉不開麥克風、原始碼沒有寫檔呼叫）、`test_kws.py` 新增 4 項（喚醒詞組合、門檻倍數、與設定頁選項一致）。
+（Mac，Python 3.13.16；需要 numpy、pytest、websockets，KWS 煙霧測試另需 sherpa-onnx 與模型。）這一批新增：`test_session.py`（15 項，實驗的原生通道狀態機）、`test_voice_service.py`（9 項：路線 2 的喚醒流程、串流播放、設定關掉不開麥克風、原始碼沒有寫檔呼叫）、`test_kws.py` 新增 4 項（喚醒詞組合、門檻倍數、與設定頁選項一致）。
 
 ## 2. 麥克風與喇叭（Pi 實機，20:09～20:11）
 
@@ -75,7 +75,7 @@ cd nous_duck/robot/settings && python -m pytest tests -q     # 36 passed
 | 時間 | 啟用的喚醒詞 | 長度 | 觸發 | 當時 ch0 音量（p10／p50／p90） |
 |---|---|---:|---:|---|
 | 20:35～20:50 | 7 個候選全開（Hey 鴨子、嘿鴨子、Hey Duck、Hello Duck、Hey Nous、Hello Nous、小鴨小鴨） | 15 分鐘 | **0** | −47／−39／−28 dBFS（房間裡有環境聲） |
-| 23:48～00:03 | Hello 鴨子＋Hey 鴨子（共用裝置 `duck_mic`） | 15 分鐘 | AMBIENT_YAZI_RESULT | AMBIENT_YAZI_LEVEL |
+| 23:47～00:02 | Hello 鴨子＋Hey 鴨子（共用裝置 `duck_mic`） | 15 分鐘 | **0** | −50／−48／−43 dBFS（深夜，房間安靜） |
 
 樣本只有各 15 分鐘、不知道期間有沒有人說話或開電視，**不能換算成每小時誤喚醒率**；要長時間（至少幾小時、含電視聲與日常對話）再量。
 
