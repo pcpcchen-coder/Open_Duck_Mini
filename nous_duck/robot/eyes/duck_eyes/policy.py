@@ -37,7 +37,7 @@ def nous_can_request(expression: str) -> bool:
 def resting_expression(device: DeviceState, charging: bool) -> str:
     """休息時（待在充電座、夜間）的表情。
 
-    鏡頭在串流時**不顯示閉眼睡著**：閉眼會讓人以為鴨子沒在看，但鏡頭其實開著（ADR-0007 §2.2）。
+    鏡頭在串流時**不顯示閉眼睡著**：閉眼會讓人以為鴨子沒在看，但鏡頭其實開著（ADR-0013 §2.2）。
     """
     if device.camera_streaming:
         return "sleepy" if device.night else ("charging" if charging else "neutral")
