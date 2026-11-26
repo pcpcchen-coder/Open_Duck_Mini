@@ -9,11 +9,13 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 
 import numpy as np
 
-MIC_DEVICE = "plughw:CARD=Array,DEV=0"
+#: 預設直接開硬體；要和 Chromium 共用麥克風時用 `duck_mic`（`alsa/duck-audio.conf` 的 dsnoop），由環境變數指定。
+MIC_DEVICE = os.environ.get("DUCK_MIC_DEVICE", "plughw:CARD=Array,DEV=0")
 MIC_RATE = 16000
 MIC_CHANNELS = 2
 

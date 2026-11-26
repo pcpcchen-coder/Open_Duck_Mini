@@ -1,9 +1,8 @@
 # robot/audio：喇叭、本機音效、變聲、喚醒詞
 
-狀態（2026-11-26）：**語音服務 `duck-voice` 在 Pi 上對「模擬的 Nous」跑通**（手動喚醒 → 收音上行 → 回話變聲後從喇叭播出）；**真的 Nous 端還沒有對應的端點**（B 線）；**喚醒詞還沒有用真人聲音測過**。D5 播放路徑與音效、D6 變聲、D7 喚醒詞引擎見下面各節。
-驗證層級：單元測試（129 項，其中 2 項需要 `aplay`）＋對模擬 Nous 的端到端（合成音訊）＋ Pi 4 實機：麥克風底噪與喇叭回授量測、合成語音經喇叭的聲學測試、對模擬 Nous 的實機端到端。
-**喚醒率與誤喚醒率沒有用真人聲音量過；回話的聽感（變聲、音量）沒有人確認過。**
-紀錄：[`voice-duck-side-2026-11-26.md`](../../docs/validation/voice-duck-side-2026-11-26.md)（語音服務）、[`audio-2026-11-25.md`](../../docs/validation/audio-2026-11-25.md)（音效、變聲、喚醒引擎的運算量測）；設計：[ADR-0010](../../docs/adr/ADR-0010-duck-voice.md)、[ADR-0017](../../docs/adr/ADR-0017-audio-playback-path-v1.md)；介面：[duck-voice v0](../../protocol/proposals/d-duck-voice-media-channel.md)（草案）。
+狀態（2026-11-26）：**喚醒服務 `duck-voice` 在 Pi 上可以跑**（XVF3800 收音 → 本機喚醒詞 → 提示音＋送出 `wake_word`）；**喚醒詞「Hello 鴨子／Hey 鴨子」還沒有用真人聲音測過**；`wake_word` 要 duckd 轉成 duck-link 事件（A 線還沒接）。語音對話走路線 2（Pi 上的 Chromium，B 線）：對話的聲音不經過這個模組。
+驗證層級：單元測試（131 項，其中 2 項需要 `aplay`）＋ Pi 4 實機：麥克風底噪與喇叭回授量測、和無螢幕 Chromium 共用麥克風、環境誤喚醒計數、喚醒服務的無聲端到端。合成語音的喚醒數字**不是喚醒率**。
+紀錄：[`voice-duck-side-2026-11-26.md`](../../docs/validation/voice-duck-side-2026-11-26.md)（喚醒服務、麥克風、Chromium 共用）、[`audio-2026-11-25.md`](../../docs/validation/audio-2026-11-25.md)（音效、變聲、喚醒引擎的運算量測）；設計：[ADR-0003](../../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md)、[ADR-0010](../../docs/adr/ADR-0010-duck-voice.md)、[ADR-0017](../../docs/adr/ADR-0017-audio-playback-path-v1.md)。
 
 ## 職責
 
@@ -65,54 +64,56 @@ ssh duck-pi4 'cd ~/duck/d-line/audio && ~/duck/audio-venv/bin/python -m duck_aud
 
 `--volume` 是要求的音量（0～1），會被夾到本機上限（白天 0.5）。先從 0.1 開始；硬體混音器目前是 75%。
 
-## 語音服務 duck-voice（喚醒詞、收音、喇叭回話）
+## 喚醒服務 duck-voice（路線 2）
+
+使用者 2026-11-26 的決定：語音對話由鴨子 Pi 上的 Chromium 開 Nous 頁面來做（路線 2）；喚醒詞先用「**Hello 鴨子**」與「**Hey 鴨子**」。所以這個服務只做一件事：
 
 ```text
-XVF3800 ch0（處理後）─► 喚醒引擎（本機，音訊不離開記憶體）
-        │                    └─ 喚醒 ─► 提示音 listen_on ─► 開上行
-        └─ 只有「聽」的狀態 ─► 16 kHz PCM ─► ws://127.0.0.1:8791/duck-voice ─►（SSH 通道）─► Nous 端
-Nous 的回話（24 kHz PCM）◄───────────────────────────────────────────────────────┘
-        └─► 閘門 ─► 變聲 ─► 增益（≤ 上限）─► 限幅 ─► 喇叭 CD002
-                                                └─► 同一段聲音送 XVF3800 的 USB 播放端（回音消除的參考）
+XVF3800（共用裝置 duck_mic，ch0）─► 喚醒引擎（本機；音訊不離開這個行程）
+        └─ 聽到喚醒詞 ─► 播本機提示音 listen_on（喇叭 CD002）
+                      └► UDP 127.0.0.1:8793  {"v":1,"kind":"wake_word","keyword_id":"HELLO_YAZI","doa_deg":null,"t_ms":…,"mock":false}
+                               └─ duckd 轉成 duck-link 的 wake_word 事件（**A 線還沒接**）─► Nous ─► Pi 上的 Nous 頁面開始對話
+Chromium 語音終端（B 線）同時讀 duck_mic、直接播到 CD002；對話期間這個服務不偵測喚醒詞
 ```
 
 | 檔案 | 內容 |
 |---|---|
-| `duck_audio/voice_service.py` | 常駐服務：麥克風執行緒、喚醒、連線、設定、播放 |
-| `duck_audio/session.py` | 對話狀態機（純邏輯）：待命／聽／等回話／說；所有逾時；什麼時候音訊可以上行 |
+| `duck_audio/voice_service.py` | 常駐服務。`--mode wake`（預設）＝上面這條；`--mode native`＝實驗的原生上下行通道（未採用，見下） |
 | `duck_audio/capture.py` | `arecord` 收音（只經管線進記憶體） |
-| `duck_audio/playback.py` 的 `StreamPlayer`、`RefSink`、`TeeSink` | 串流播放、回音消除參考 |
-| `duck_audio/mock_nous.py` | **模擬的 Nous 端（mock）**：回一句固定的合成語音，測試用 |
-| `config/wake_keywords.json` | 喚醒詞清單（Hey 鴨子、嘿鴨子、Hey Duck、Hey Nous…）；用哪一句由設定頁決定 |
-| `tools/measure_mic.py`、`tools/acoustic_wake_test.py` | 實機量測（底噪、回授、合成語音經喇叭的喚醒測試、環境誤觸發） |
+| `alsa/duck-audio.conf` | ALSA dsnoop 的共用麥克風 `duck_mic`：喚醒服務與 Chromium 同時讀 |
+| `config/wake_keywords.json` | 喚醒詞清單與組合（`YAZI_EN`＝Hello 鴨子＋Hey 鴨子）；用哪一組由設定頁決定 |
+| `tools/measure_mic.py`、`tools/acoustic_wake_test.py` | 實機量測（底噪、回授、合成語音經喇叭、環境誤觸發） |
 | [`../deploy/pi4/deploy_voice.sh`](../deploy/pi4/deploy_voice.sh) | 部署到 Pi、裝 systemd 服務 `duck-voice`（不 enable、不啟動） |
 
-規則（細節在 `session.py` 與介面文件）：
+規則：
 
-- **喚醒前的音訊不離開記憶體**：只經過喚醒引擎；沒有 pre-roll、不寫檔、不進 log。只有「聽」的狀態會上行，而且只送到 loopback。
+- **音訊不離開這個行程**：喚醒前後的音訊都只經過喚醒引擎，不寫檔、不進 log、不上網。送出去的只有「哪一句、什麼時候」。
 - **`privacy.wake_listening` 或 `features.wake_word` 關掉時不開麥克風。**
-- 逾時都在鴨子本機：沒人說話 8 秒、說完安靜 1.5 秒、單輪最長 30 秒、等回話 15 秒（都在設定頁）。
-- 半雙工：鴨子說話時不上行、不聽喚醒詞（`audio.barge_in` 可開，預設關）。
-- 沒連上 Nous 時被叫醒：只播一聲提示音，不收音。
+- 叫醒一次後先不偵測：有人把對話狀態送到 `127.0.0.1:8794`（`{"v":1,"kind":"presence","state":"speaking"}`）時，非 `idle` 就不偵測；沒人送就固定 8 秒（`audio.wake_holdoff_s`）。
 - systemd 單元另外限制：整個檔案系統唯讀（只有 `~/duck/settings/applied` 可寫）、網路只允許 loopback。
-- 測試用的手動喚醒：`sudo systemctl kill -s USR1 duck-voice`（等於在鴨子上按一下「開始聽」）。
-- 設定全部在「鴨子設定」（`robot/settings`）：`audio.*`、`features.wake_word`、`features.sound_effects`、`privacy.wake_listening`。
+- 手動觸發（測事件有沒有送出）：`sudo systemctl kill -s USR1 duck-voice`。
+- 設定都在「鴨子設定」：`audio.wake_keyword`、`audio.wake_sensitivity`、`audio.wake_holdoff_s`、`audio.volume`／`volume_cap_day`／`mute`（**只管本機提示音**，管不到 Chromium 播的對話聲音）、`features.wake_word`、`features.sound_effects`、`privacy.wake_listening`。變聲的三項標成「路線 2 不適用」。
 
-怎麼在 Pi 上試（先不接 Nous）：
+在 Pi 上試：
 
 ```bash
 bash nous_duck/robot/deploy/pi4/deploy_voice.sh
-ssh duck-pi4 'cd ~/duck/voice && ~/duck/audio-venv/bin/python -m duck_audio.mock_nous --port 8791 --listen-s 4'   # 分頁 1：模擬的 Nous
-ssh duck-pi4 'sudo systemctl start duck-voice && journalctl -u duck-voice -f'                                       # 分頁 2
+ssh duck-pi4 'sudo systemctl start duck-voice && journalctl -u duck-voice -f'
 ```
 
-然後對鴨子說喚醒詞（預設「Hey 鴨子」）：應該聽到「嘟嘟」（往上），說一句話，約 4 秒後鴨子用變聲後的合成語音回一句固定的話。那句話是 mock 的，不是 Nous 的回答。
+對鴨子說「Hello 鴨子」或「Hey 鴨子」：應該聽到往上的「嘟嘟」，log 出現「喚醒詞 HELLO_YAZI（第 n 次）」。
+
+Chromium 語音終端要共用麥克風：啟動時設 `ALSA_CONFIG_PATH=/usr/share/alsa/alsa.conf:$HOME/duck/voice/alsa/duck-audio.conf`，加 `--alsa-input-device=duck_mic --alsa-output-device=plughw:CARD=CD002,DEV=0`。
 
 還沒做、要別的線配合的：
 
-- **Nous 端的 `duck-voice` 端點**（B 線）：沒有它就只能對 mock。
-- **duckd 的動作**（A 線）：服務可以用 `--notify-duckd 127.0.0.1:8793` 把 `{"v":1,"kind":"voice_state","state":"listening"|"waiting"|"speaking"|"idle"|"error","turn_id":…,"t_ms":…}` 丟給 duckd，但 duckd 還不認得這個 `kind`，所以預設關。喚醒時轉向聲源、說話時點頭都要 duckd 那邊接。
-- 喚醒當下的聲源方向（`doa_deg`）：duck-doa 與這個服務同時讀 XVF3800 的 USB 控制介面會互相重試，先不帶。
+- **duckd（A 線）**：感知埠收到 `kind:"wake_word"` 時發 duck-link 的 `wake_word` 事件（`data` 帶 `keyword_id`、`doa_deg`；`doa_deg` 可由 duckd 用自己最新的聲音方位補）；把 presence 轉送到 `127.0.0.1:8794`；喚醒時轉向聲源。duckd 現在會靜靜忽略這個 `kind`。
+- **Chromium 語音終端的啟動與服務化、真的連 Nous 出聲**（B 線＋使用者在場）。
+- **回音消除的參考訊號**：Chromium 直接播到 CD002 時，XVF3800 拿不到參考；第一版靠 Chromium 的 `echoCancellation`。
+
+### 實驗：原生上下行通道（未採用）
+
+路線 2 定案前寫的：`--mode native` 會在喚醒後把語音送到 Nous 端的 `/duck-voice`，把回話變聲後播出（`session.py`、`playback.StreamPlayer`／`RefSink`、`mock_nous.py`，介面 [duck-voice v0](../../protocol/proposals/d-duck-voice-media-channel.md)）。對模擬的 Nous 在 Pi 上跑通過，測試也還在跑，但**Nous 端沒有採用、不是鴨子現有的能力**；systemd 服務不用這個模式。留著的理由：之後若要讓對話的聲音經過變聲或鴨子的音量閘門，這是現成的起點。
 
 ## 播放路徑（D5）
 

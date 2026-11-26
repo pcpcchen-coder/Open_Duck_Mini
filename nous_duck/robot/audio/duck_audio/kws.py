@@ -50,7 +50,8 @@ class WakeConfig:
         d = json.loads(Path(path).read_text(encoding="utf-8"))
         entries = tuple(d["entries"])
         if only_group is not None:
-            entries = tuple(e for e in entries if e.get("group", e["id"]) == only_group)
+            wanted = set(d.get("presets", {}).get(only_group, [only_group]))  # 一組可以同時啟用好幾句
+            entries = tuple(e for e in entries if e.get("group", e["id"]) in wanted)
             if not entries:
                 raise ValueError(f"設定檔裡沒有這個喚醒詞：{only_group}")
         if threshold_scale != 1.0:

@@ -194,13 +194,13 @@ def test_product_keyword_list_groups_and_sensitivity():
     """鴨子實際用的喚醒詞清單：依 group 選一句；Hey Nous 有三種念法；門檻倍數只影響門檻。"""
     full = WakeConfig.load(WAKE)
     groups = {e.get("group", e["id"]) for e in full.entries}
-    assert {"HEY_YAZI", "HEY_NOUS", "HELLO_NOUS", "HEI_YAZI", "HEY_DUCK"} <= groups
+    assert {"HEY_YAZI", "HELLO_YAZI", "HEY_NOUS", "HELLO_NOUS", "HEY_DUCK"} <= groups
     nous = WakeConfig.load(WAKE, only_group="HEY_NOUS")
     assert len(nous.entries) == 3 and nous.keywords_text().count(":1.0 #0.25 @HEY_NOUS_") == 3  # 與 AIOS 相同的提升分數與門檻
-    yazi = WakeConfig.load(WAKE, only_group="HEY_YAZI")
-    assert yazi.keywords_text() == "HH EY1 y ā z i @HEY_YAZI\n"
-    strict = WakeConfig.load(WAKE, only_group="HEY_YAZI", threshold_scale=2.0)
-    assert strict.keywords_text() == "HH EY1 y ā z i #0.3 @HEY_YAZI\n"
+    yazi = WakeConfig.load(WAKE, only_group="HELLO_YAZI")
+    assert yazi.keywords_text() == "HH AH0 L OW1 y ā z i @HELLO_YAZI\n"
+    strict = WakeConfig.load(WAKE, only_group="HELLO_YAZI", threshold_scale=2.0)
+    assert strict.keywords_text() == "HH AH0 L OW1 y ā z i #0.3 @HELLO_YAZI\n"
     assert WakeConfig.load(WAKE, only_group="HEY_NOUS", threshold_scale=2.0).keywords_text().count("#0.5 ") == 3
     with pytest.raises(ValueError):
         WakeConfig.load(WAKE, only_group="NOPE")
@@ -215,7 +215,17 @@ def test_settings_choices_match_keyword_file():
 
     groups = {e.get("group", e["id"]) for e in WakeConfig.load(WAKE).entries}
     s = BY_KEY["audio.wake_keyword"]
-    assert {c[0] for c in s.choices} <= groups and s.default in groups and s.default == "HEY_YAZI"
+    presets = set(json.loads(WAKE.read_text(encoding="utf-8"))["presets"])
+    assert {c[0] for c in s.choices} <= groups | presets and s.default == "YAZI_EN"
+
+
+def test_default_preset_enables_hello_and_hey_yazi():
+    """使用者 2026-11-26 的決定：先用「Hello 鴨子」與「Hey 鴨子」，兩句同時有效；英文用 ARPAbet、鴨子用拼音。"""
+    c = WakeConfig.load(WAKE, only_group="YAZI_EN")
+    assert c.keywords_text() == "HH AH0 L OW1 y ā z i @HELLO_YAZI\nHH EY1 y ā z i @HEY_YAZI_EN\nh ēi y ā z i @HEY_YAZI_ZH\n"
+    from duck_audio.kws import WakeEngine as _E
+
+    assert _E(c, FakeSpotter({})).group_of("HEY_YAZI_ZH") == "HEY_YAZI"  # 回報的是哪一句，不是哪種寫法
 
 
 def test_engine_group_and_external_quiet_flag():

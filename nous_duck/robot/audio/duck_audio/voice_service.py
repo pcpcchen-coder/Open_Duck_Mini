@@ -1,6 +1,15 @@
-"""duck-voice：鴨子端的語音服務。麥克風 → 本機喚醒詞 → 喚醒後把語音送給 Nous → 把 Nous 的回話變聲後從喇叭播出。
+"""duck-voice：鴨子端的語音服務。
 
-    python -m duck_audio.voice_service --url ws://127.0.0.1:8791/duck-voice --settings-dir ~/duck/settings
+**預設模式 `wake`（路線 2，使用者 2026-11-26 決定）**：只做本機喚醒詞偵測。聽到喚醒詞 → 播本機提示音 →
+把 `wake_word` 用 UDP 丟給 duckd（由它轉成 duck-link 的 `wake_word` 事件，叫 Pi 上 Chromium 的 Nous 頁面開始對話）。
+對話的收音與播放由 Chromium 做，**不經過這個服務**，也不經過變聲。這個模式下音訊完全不離開這個行程。
+
+    python -m duck_audio.voice_service --settings-dir ~/duck/settings
+
+**`--mode native`（實驗，未採用）**：原生上下行通道——喚醒後把語音送到 Nous 端的 `/duck-voice`、把回話變聲後播出。
+路線 2 定案前寫的，對模擬的 Nous 跑通過；Nous 端沒有採用，留著當實驗，不是鴨子現有的能力。
+
+    python -m duck_audio.voice_service --mode native --url ws://127.0.0.1:8791/duck-voice --settings-dir ~/duck/settings
 
 - 介面：`protocol/proposals/d-duck-voice-media-channel.md`（duck-voice v0）。規則在 `session.py`。
 - 麥克風：XVF3800 的處理後聲道（ch0）；喇叭：CD002，同時把播出的聲音送給 XVF3800 當回音消除的參考。
@@ -46,12 +55,19 @@ WAKE_CONFIG = AUDIO_ROOT / "config" / "wake_keywords.json"
 
 #: 設定鍵 → 這個服務用到的值（登記在 robot/settings/duck_settings/schema.py）。
 KEYS = (
-    "features.wake_word", "privacy.wake_listening", "audio.wake_keyword", "audio.wake_sensitivity",
-    "audio.volume", "audio.volume_cap_day", "audio.volume_cap_night", "audio.mute",
-    "audio.voice_changer", "audio.voice_semitones", "audio.voice_formant_ratio",
-    "audio.listen_no_speech_s", "audio.listen_end_silence_s", "audio.listen_max_s", "audio.reply_timeout_s",
-    "audio.aec_reference", "audio.barge_in", "features.sound_effects",
+    "features.wake_word", "privacy.wake_listening", "audio.wake_keyword", "audio.wake_sensitivity", "audio.wake_holdoff_s",
+    "audio.volume", "audio.volume_cap_day", "audio.volume_cap_night", "audio.mute", "features.sound_effects",
 )
+#: 只有實驗的 native 模式用得到、設定頁上沒有的值（路線 2 不適用，所以不做成看起來有效的開關）。
+NATIVE_DEFAULTS = {
+    "audio.voice_changer": "phase_vocoder", "audio.voice_semitones": 5.0, "audio.voice_formant_ratio": 1.12,
+    "audio.listen_no_speech_s": 8.0, "audio.listen_end_silence_s": 1.5, "audio.listen_max_s": 30.0, "audio.reply_timeout_s": 15.0,
+    "audio.aec_reference": True, "audio.barge_in": False,
+}
+WAKE_UDP = ("127.0.0.1", 8793)  # duckd 的感知輸入埠
+CONTROL_UDP = ("127.0.0.1", 8794)  # 這個服務收「現在的對話狀態」的埠（duckd 或終端送）
+#: 這些狀態下不聽喚醒詞（對話進行中；Chromium 在用麥克風與喇叭）。
+BUSY_STATES = ("wake", "listening", "thinking", "speaking", "working")
 
 
 class EnergyVad:
@@ -90,7 +106,16 @@ def loopback_url(url: str) -> str:
 
 class VoiceService:
     def __init__(self, url: str, settings_dir: Path | None, mic_device: str | None = None, speaker: str = SPEAKER,
-                 notify_duckd: tuple[str, int] | None = None, models_dir: Path | None = None) -> None:
+                 notify_duckd: tuple[str, int] | None = None, models_dir: Path | None = None, mode: str = "wake",
+                 wake_udp: tuple[str, int] | None = WAKE_UDP, control_udp: tuple[str, int] | None = CONTROL_UDP) -> None:
+        if mode not in ("wake", "native"):
+            raise ValueError("mode 必須是 wake 或 native")
+        self.mode = mode
+        self.wake_udp, self.control_udp = wake_udp, control_udp
+        self._wake_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._holdoff_until = 0.0
+        self._busy_until = 0.0
+        self.wake_sent = 0
         self.url = loopback_url(url)
         self.mic_device, self.speaker = mic_device, speaker
         self.models_dir = models_dir
@@ -128,7 +153,7 @@ class VoiceService:
         return w
 
     def apply_settings(self, t: float) -> list[Action]:
-        v = {k: self.watcher.view.values[k] for k in KEYS}
+        v = {**NATIVE_DEFAULTS, **{k: self.watcher.view.values[k] for k in KEYS}}
         old, self.values = self.values, v
         self.gate.cfg = GateConfig(volume_cap_day=v["audio.volume_cap_day"], volume_cap_night=v["audio.volume_cap_night"])
         self.gate.state.hard_mute = bool(v["audio.mute"])
@@ -140,7 +165,7 @@ class VoiceService:
             self.kws_reload.set()
         enabled = bool(v["features.wake_word"]) and bool(v["privacy.wake_listening"])
         (self.mic_wanted.set if enabled else self.mic_wanted.clear)()
-        self.watcher.report({**v, "privacy.wake_listening": enabled and bool(v["privacy.wake_listening"])})
+        self.watcher.report({k: v[k] for k in KEYS})
         return self.session.set_enabled(enabled, t)
 
     def _sink(self):
@@ -229,7 +254,48 @@ class VoiceService:
     def _on_wake(self, keyword: str) -> None:
         self.wakes += 1
         log.info("喚醒詞 %s（第 %d 次）", keyword, self.wakes)
-        self.perform(self.session.on_wake(self._now(), keyword))
+        if self.mode == "native":
+            self.perform(self.session.on_wake(self._now(), keyword))
+            return
+        # ---- 路線 2：播提示音、送 wake_word，然後先不聽（對話由 Chromium 接手）----
+        now = self._now()
+        if self.session.state is not State.IDLE or now < self._holdoff_until or now < self._busy_until:
+            return
+        self._holdoff_until = now + float(self.values["audio.wake_holdoff_s"])
+        self.kws_on.clear()
+        self.perform([Action("sfx", {"name": "listen_on"})])
+        self.send_wake(keyword)
+
+    def send_wake(self, keyword: str) -> bool:
+        """把喚醒事件丟給 duckd（UDP、只到 loopback）。只有關鍵詞代號與時間，沒有任何音訊。"""
+        if self.wake_udp is None:
+            return False
+        msg = {"v": 1, "kind": "wake_word", "keyword_id": keyword, "doa_deg": None, "t_ms": int(self._now() * 1000), "mock": False}
+        try:
+            self._wake_sock.sendto(json.dumps(msg, separators=(",", ":")).encode(), self.wake_udp)
+        except OSError:
+            return False
+        self.wake_sent += 1
+        return True
+
+    def on_control(self, data: bytes) -> None:
+        """對話狀態（`{"v":1,"kind":"presence","state":"speaking"}`）：對話進行中不聽喚醒詞。狀態 30 秒沒更新就當作結束。"""
+        try:
+            m = json.loads(data.decode("utf-8"))
+        except (ValueError, UnicodeDecodeError):
+            return
+        if not isinstance(m, dict) or m.get("v") != 1 or m.get("kind") != "presence":
+            return
+        self._busy_until = self._now() + 30.0 if m.get("state") in BUSY_STATES else 0.0
+        if self._busy_until == 0.0:
+            self._holdoff_until = min(self._holdoff_until, self._now() + 1.0)  # 對話結束：1 秒後就可以再叫
+
+    def wake_tick(self) -> None:
+        """路線 2：決定現在聽不聽喚醒詞。"""
+        now = self._now()
+        want = self.session.state is State.IDLE and now >= self._holdoff_until and now >= self._busy_until and not self.sfx.is_playing
+        if want != self.kws_on.is_set():
+            (self.kws_on.set if want else self.kws_on.clear)()
 
     def _on_play_started(self) -> None:
         self.perform(self.session.on_playback_started())
@@ -257,7 +323,8 @@ class VoiceService:
             elif a.kind == "flush_playback":
                 self.loop.run_in_executor(None, self.player.flush)  # type: ignore[union-attr]
             elif a.kind == "kws":
-                (self.kws_on.set if a.data["on"] else self.kws_on.clear)()
+                if self.mode == "native" or not a.data["on"]:  # 路線 2 由 wake_tick 決定什麼時候再聽
+                    (self.kws_on.set if a.data["on"] else self.kws_on.clear)()
             elif a.kind == "notify":
                 log.info("狀態 → %s（第 %s 輪）%s", a.data.get("state"), a.data.get("turn_id"), a.data.get("reason", ""))
                 if self._notify_sock is not None:
@@ -336,7 +403,10 @@ class VoiceService:
         n = 0
         while not self.stop.is_set():
             await asyncio.sleep(0.1)
-            self.perform(self.session.tick(self._now()))
+            if self.mode == "wake":
+                self.wake_tick()
+            else:
+                self.perform(self.session.tick(self._now()))
             n += 1
             if n % 10 == 0 and self.watcher.poll() is not None:
                 self.perform(self.apply_settings(self._now()))
@@ -351,16 +421,34 @@ class VoiceService:
         if self.session.state is State.IDLE:
             self.kws_on.set()
         threading.Thread(target=self.mic_thread, name="duck-voice-mic", daemon=True).start()
+        transport = None
+        if self.mode == "wake" and self.control_udp is not None:
+            svc = self
+
+            class _Control(asyncio.DatagramProtocol):
+                def datagram_received(self, data, addr):  # noqa: ANN001
+                    svc.on_control(data)
+
+            transport, _ = await self.loop.create_datagram_endpoint(_Control, local_addr=self.control_udp)
         try:
-            await asyncio.gather(self.link_loop(), self.tick_loop())
+            if self.mode == "native":
+                await asyncio.gather(self.link_loop(), self.tick_loop())
+            else:
+                log.info("模式 wake：喚醒事件送 %s；不連 Nous、音訊不離開這個行程", self.wake_udp)
+                await self.tick_loop()
         finally:
             self.stop.set()
             self.player.flush()
+            if transport is not None:
+                transport.close()
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="duck-voice：鴨子端語音服務")
-    ap.add_argument("--url", default="ws://127.0.0.1:8791/duck-voice", help="Nous 端的 duck-voice 端點（只接受 loopback）")
+    ap.add_argument("--mode", choices=("wake", "native"), default="wake", help="wake＝只做喚醒偵測（路線 2，預設）；native＝實驗的原生上下行通道")
+    ap.add_argument("--wake-udp-port", type=int, default=WAKE_UDP[1], help="喚醒事件送到 127.0.0.1 的哪個埠（duckd 的感知輸入）；0＝不送")
+    ap.add_argument("--control-udp-port", type=int, default=CONTROL_UDP[1], help="在 127.0.0.1 的哪個埠收對話狀態；0＝不收")
+    ap.add_argument("--url", default="ws://127.0.0.1:8791/duck-voice", help="（native）Nous 端的 duck-voice 端點（只接受 loopback）")
     ap.add_argument("--settings-dir", type=Path, default=None, help="鴨子設定資料夾（預設 ~/duck/settings）")
     ap.add_argument("--mic-device", default=None)
     ap.add_argument("--speaker", default=SPEAKER)
@@ -374,7 +462,9 @@ def main() -> int:
         if not ipaddress.ip_address(host).is_loopback:
             ap.error("--notify-duckd 只能是 loopback")
         notify = (host, int(port))
-    svc = VoiceService(a.url, a.settings_dir, a.mic_device, a.speaker, notify, a.models_dir)
+    svc = VoiceService(a.url, a.settings_dir, a.mic_device, a.speaker, notify, a.models_dir, a.mode,
+                       ("127.0.0.1", a.wake_udp_port) if a.wake_udp_port else None,
+                       ("127.0.0.1", a.control_udp_port) if a.control_udp_port else None)
     try:
         asyncio.run(svc.run())
     except KeyboardInterrupt:

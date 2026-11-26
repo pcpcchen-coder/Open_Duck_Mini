@@ -14,7 +14,8 @@ MAN="$OUT/manifest.jsonl"
 
 gen() { # voice keyword_id(or -) slug text
   local voice="$1" kid="$2" slug="$3" text="$4"
-  local base="$OUT/${slug}_${voice}"
+  local vslug; vslug="$(printf "%s" "$voice" | tr -cd "A-Za-z")"
+  local base="$OUT/${slug}_${vslug}"
   if say -v "$voice" -o "$base.aiff" "$text" 2>/dev/null; then
     afconvert -f WAVE -d LEI16@16000 -c 1 "$base.aiff" "$base.wav"
     rm -f "$base.aiff"
@@ -25,9 +26,11 @@ gen() { # voice keyword_id(or -) slug text
   fi
 }
 
-for v in Meijia Tingting Sinji; do
+for v in Meijia Tingting Sinji "Flo (中文（台灣）)" "Eddy (中文（台灣）)" "Sandy (中文（台灣）)" "Reed (中文（台灣）)"; do
   gen "$v" HEI_YAZI hei_yazi "嘿鴨子"
   gen "$v" HEY_YAZI hey_yazi "Hey 鴨子"
+  gen "$v" HELLO_YAZI hello_yazi "Hello 鴨子"
+  gen "$v" - neg_hello_yeye "Hello 爺爺，鴨子在哪裡？"
   gen "$v" XIAOYA_XIAOYA xiaoya_xiaoya "小鴨小鴨"
   gen "$v" YAZI_YAZI yazi_yazi "鴨子鴨子"
   gen "$v" - neg_weather "今天天氣很好，我們去散步吧。"

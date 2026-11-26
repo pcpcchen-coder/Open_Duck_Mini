@@ -54,10 +54,11 @@
 | 方位視窗、最少樣本數、分群角度 | `DoaConfig` 的預設（可寫進 `doa.json`） | duck-doa | 原本要重啟；現在即時 | 已實作 | `hearing.window_s`、`min_speech_samples`、`cluster_tolerance_deg` |
 | 取樣率、送出頻率 | `DoaConfig` | duck-doa | 要重啟 | 已實作 | 沒接（沒有調的理由） |
 | 讀不讀麥克風的方向 | 沒有（服務有跑就讀） | — | — | — | `privacy.sound_direction`（關掉就不讀裝置） |
-| 音量、白天音量上限、本機靜音 | `duck_audio/playback.py` 的 `GateConfig`／`GateState` | duck-voice | 即時（下一段聲音） | 已實作（2026-11-26；音量沒有量過聲壓） | `audio.volume`、`audio.volume_cap_day`、`audio.mute` |
+| 提示音音量與上限、本機靜音 | `duck_audio/playback.py` 的 `GateConfig`／`GateState` | duck-voice | 即時 | 已實作（2026-11-26；只管本機提示音，管不到 Chromium 播的對話聲音；沒有量過聲壓） | `audio.volume`、`audio.volume_cap_day`、`audio.mute` |
 | 夜間時段、夜間音量上限、房間禁止出聲 | `GateState`（沒有來源在設定它） | — | — | 規劃中 | `audio.night_start`／`night_end`、`audio.volume_cap_night`（停用） |
-| 變聲方式、音高、共振峰 | `duck_audio/voice.py` 的參數 | duck-voice | 即時（下一句回話） | 已實作（使用者還沒試聽定案） | `audio.voice_*` 3 項 |
-| 喚醒詞、門檻倍數、收音逾時、回音消除參考、播放時打斷 | `config/wake_keywords.json`、`duck_audio/session.py` | duck-voice | 即時（喚醒詞幾秒內重新載入） | 已實作（門檻沒有用真人聲音校準） | `audio.wake_keyword`、`wake_sensitivity`、`listen_*` 3 項、`reply_timeout_s`、`aec_reference`、`barge_in`、`features.wake_word` |
+| 變聲方式、音高、共振峰 | `duck_audio/voice.py` 的參數 | — | — | **路線 2 不適用**（對話的聲音由 Chromium 直接播，不經過變聲） | `audio.voice_*` 3 項（停用） |
+| 喚醒詞、門檻倍數、叫醒後多久不再偵測 | `config/wake_keywords.json` | duck-voice | 即時（喚醒詞幾秒內重新載入） | 已實作（預設「Hello 鴨子／Hey 鴨子」；門檻沒有用真人聲音校準） | `audio.wake_keyword`、`wake_sensitivity`、`wake_holdoff_s`、`features.wake_word` |
+| 語音終端（Pi 上的 Chromium） | 沒有（B 線的腳本） | — | — | 規劃中（還沒真的連 Nous 出聲測過） | `features.voice_terminal`（停用） |
 | 對話提示音開關 | `sounds/manifest.json` | duck-voice | 即時 | 已實作（只有語音服務的提示音；表情音效還沒接） | `features.sound_effects` |
 | 常駐喚醒聆聽（麥克風） | 沒有（服務有跑就聽） | duck-voice | 即時 | 已實作 | `privacy.wake_listening`（關掉就不開麥克風） |
 | 鏡頭、臉部辨識、隱私模式 | ADR-0006（沒有程式） | — | — | 硬體未到／規劃中 | `privacy.camera`、`face_recognition`、`mode`（停用） |

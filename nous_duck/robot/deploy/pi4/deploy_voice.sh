@@ -4,7 +4,6 @@
 # 用法（在 repo 的 checkout 裡）：
 #   bash nous_duck/robot/deploy/pi4/deploy_voice.sh [host]            # 預設 host = duck-pi4
 #   bash nous_duck/robot/deploy/pi4/deploy_voice.sh --uninstall [host]
-#   DUCK_VOICE_URL=ws://127.0.0.1:8791/duck-voice bash …               # Nous 端的端點（只能是 loopback；預設如左）
 #
 # 做的事：
 #   1. 複製 duck_audio/、sounds/、config/、fetch_models.py 到 ~/duck/voice/；另外放一份 duck_settings（只用它的讀取端）。
@@ -24,7 +23,6 @@ HOST="${1:-duck-pi4}"
 REPO="$(cd "$(dirname "$0")/../../../.." && pwd)"
 ROBOT="$REPO/nous_duck/robot"
 UNIT=duck-voice
-URL="${DUCK_VOICE_URL:-ws://127.0.0.1:8791/duck-voice}"
 
 if [ "$MODE" = uninstall ]; then
   ssh "$HOST" "sudo systemctl disable --now $UNIT 2>/dev/null || true; sudo rm -f /etc/systemd/system/$UNIT.service; sudo systemctl daemon-reload"
@@ -38,6 +36,7 @@ R=(rsync -a --delete --exclude __pycache__)
 "${R[@]}" "$ROBOT/audio/duck_audio/" "$HOST:duck/voice/duck_audio/"
 "${R[@]}" "$ROBOT/audio/sounds/" "$HOST:duck/voice/sounds/"
 "${R[@]}" "$ROBOT/audio/config/" "$HOST:duck/voice/config/"
+"${R[@]}" "$ROBOT/audio/alsa/" "$HOST:duck/voice/alsa/"
 "${R[@]}" --exclude web "$ROBOT/settings/duck_settings/" "$HOST:duck/voice/duck_settings/"
 rsync -a "$ROBOT/audio/tools/fetch_models.py" "$HOST:duck/voice/tools/"
 rsync -a "$ROBOT/audio/requirements.txt" "$ROBOT/audio/requirements-kws.txt" "$ROBOT/audio/requirements-voice.txt" "$HOST:duck/voice/"
@@ -66,7 +65,11 @@ After=sound.target network.target
 User=$PI_USER
 SupplementaryGroups=audio
 WorkingDirectory=$PI_HOME/duck/voice
-ExecStart=$PI_HOME/duck/audio-venv/bin/python -m duck_audio.voice_service --url $URL --settings-dir $PI_HOME/duck/settings --models-dir $PI_HOME/duck/voice/models
+# 路線 2（預設）：只做喚醒偵測，把 wake_word 丟給 duckd（UDP 127.0.0.1:8793）；對話由 Chromium 語音終端做。
+# 麥克風用 dsnoop 的共用裝置 duck_mic，Chromium 才能同時開（--alsa-input-device=duck_mic）。
+Environment=ALSA_CONFIG_PATH=/usr/share/alsa/alsa.conf:$PI_HOME/duck/voice/alsa/duck-audio.conf
+Environment=DUCK_MIC_DEVICE=duck_mic
+ExecStart=$PI_HOME/duck/audio-venv/bin/python -m duck_audio.voice_service --mode wake --settings-dir $PI_HOME/duck/settings --models-dir $PI_HOME/duck/voice/models
 Restart=on-failure
 RestartSec=5
 Nice=5
@@ -85,10 +88,13 @@ ssh "$HOST" 'sudo systemctl daemon-reload; systemctl is-enabled duck-voice 2>/de
 
 cat <<MSG
 
-安裝完成。服務沒有 enable、沒有啟動。它連的是 $URL（Mac 上 Nous 端的端點，要先開 SSH 通道）。
-  先不接 Nous、用模擬的 Nous（mock，回一句固定的合成語音）試：
-    ssh $HOST 'cd ~/duck/voice && ~/duck/audio-venv/bin/python -m duck_audio.mock_nous --port 8791 --listen-s 4'   # 分頁 1
-    ssh $HOST 'sudo systemctl start duck-voice && journalctl -u duck-voice -f'                              # 分頁 2，然後對鴨子說喚醒詞
-  停止：        ssh $HOST 'sudo systemctl stop duck-voice'
-  喚醒詞、音量、變聲、逾時：在設定頁改（http://duck-pi4.local:8081/ 的「語音與聲音」），幾秒內生效。
+安裝完成。服務沒有 enable、沒有啟動。模式：wake（只做喚醒偵測；不連 Nous，音訊不離開這個行程）。
+  啟動並看 log： ssh $HOST 'sudo systemctl start duck-voice && journalctl -u duck-voice -f'
+                 然後對鴨子說「Hello 鴨子」或「Hey 鴨子」：應該聽到往上的「嘟嘟」，log 出現「喚醒詞 …」。
+  不出聲地手動觸發一次（測事件有沒有送出）： ssh $HOST 'sudo systemctl kill -s USR1 duck-voice'
+  停止：         ssh $HOST 'sudo systemctl stop duck-voice'
+  喚醒詞、門檻倍數、提示音音量：在設定頁改（http://duck-pi4.local:8081/ 的「語音與聲音」），幾秒內生效。
+  Chromium 語音終端要和它共用麥克風：啟動 Chromium 時設
+     ALSA_CONFIG_PATH=/usr/share/alsa/alsa.conf:\$HOME/duck/voice/alsa/duck-audio.conf
+     並加 --alsa-input-device=duck_mic --alsa-output-device=plughw:CARD=CD002,DEV=0
 MSG

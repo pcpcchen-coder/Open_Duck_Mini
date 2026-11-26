@@ -199,11 +199,11 @@ def _build() -> tuple[Setting, ...]:
                 consumer=VOICE, basis=_VOICE_TEST))
 
     # ------------------------------------------------------------ 語音與聲音（duck-voice 服務）
-    add(Setting("audio.volume", "audio", "音量", "number", 0.2,
-                "鴨子出聲的音量（線性增益）。實際音量不會超過下面的上限。", consumer=VOICE, min=0.0, max=1.0, step=0.05,
+    add(Setting("audio.volume", "audio", "提示音音量", "number", 0.2,
+                "鴨子本機提示音（被叫醒的「嘟嘟」等）的音量（線性增益），不會超過下面的上限。**管不到對話的聲音**：那是 Chromium 直接播的。", consumer=VOICE, min=0.0, max=1.0, step=0.05,
                 basis="保守初值；沒有量過聲壓。" + _VOICE_TEST))
-    add(Setting("audio.volume_cap_day", "audio", "白天音量上限", "number", 0.5,
-                "鴨子出聲的線性增益上限。Nous 只能在這個上限以內調音量。", consumer=VOICE,
+    add(Setting("audio.volume_cap_day", "audio", "提示音音量上限", "number", 0.5,
+                "鴨子本機提示音的線性增益上限。", consumer=VOICE,
                 min=0.0, max=0.5, step=0.05, basis="ADR-0010 §7；duck_audio.playback.GateConfig 的初始值，未校準"))
     add(Setting("audio.volume_cap_night", "audio", "夜間音量上限", "number", 0.15,
                 "夜間時段的音量上限。", status="planned", blocked_by="夜間模式的排程還沒做（ADR-0006 待決第 4 項），目前一律用白天上限",
@@ -212,36 +212,29 @@ def _build() -> tuple[Setting, ...]:
                 blocked_by="夜間模式的排程還沒做（ADR-0006 待決第 4 項）"))
     add(Setting("audio.night_end", "audio", "夜間結束", "time", "07:00", "夜間模式結束的時間。", status="planned",
                 blocked_by="夜間模式的排程還沒做（ADR-0006 待決第 4 項）"))
-    add(Setting("audio.mute", "audio", "本機靜音", "bool", False, "擋下鴨子的所有聲音（回話與提示音）。", consumer=VOICE))
+    add(Setting("audio.mute", "audio", "本機靜音", "bool", False, "擋下鴨子本機的提示音。**擋不到對話的聲音**（Chromium 直接播的）。", consumer=VOICE))
+    why_voice = "路線 2 不適用：對話的聲音由 Pi 上的 Chromium 直接播出，不經過鴨子的變聲（使用者 2026-11-26 決定走路線 2）"
     add(Setting("audio.voice_changer", "audio", "變聲方式", "enum", "phase_vocoder",
-                "把 Nous 的聲音變成鴨子的聲音的演算法。下一句回話開始套用。", consumer=VOICE,
-                choices=(("delay_line", "延遲線（省運算，延遲 20 ms）"), ("phase_vocoder", "相位聲碼器（可控共振峰，延遲 53 ms）")),
-                basis="audio-2026-11-25 驗證紀錄；使用者還沒試聽定案"))
-    add(Setting("audio.voice_semitones", "audio", "音高平移", "number", 5.0, "聲音升高幾個半音。0＝不升。候選是 +3、+5、+7。",
-                consumer=VOICE, min=0.0, max=7.0, step=1.0, unit=" 半音", basis="ADR-0010 §4 的候選值；使用者還沒試聽定案"))
-    add(Setting("audio.voice_formant_ratio", "audio", "共振峰比例", "number", 1.12, "1.0＝保留原本的共振峰；大於 1 聽起來身體比較小。只對相位聲碼器有用。",
-                consumer=VOICE, min=1.0, max=1.2, step=0.01, basis="audio-2026-11-25 驗證紀錄建議的起點；使用者還沒試聽定案"))
-    add(Setting("audio.wake_keyword", "audio", "喚醒詞", "enum", "HEY_YAZI", "用哪一句叫醒鴨子。改了之後幾秒內生效。",
-                consumer=VOICE, basis="ADR-0003 §3：預設「Hey 鴨子」，可以改。清單在 robot/audio/config/wake_keywords.json；" + _VOICE_TEST,
-                choices=(("HEY_YAZI", "Hey 鴨子"), ("HEI_YAZI", "嘿鴨子"), ("HEY_DUCK", "Hey Duck"), ("HELLO_DUCK", "Hello Duck"),
-                         ("XIAOYA_XIAOYA", "小鴨小鴨"), ("HEY_NOUS", "Hey Nous（和 Nous 其他終端相同）"), ("HELLO_NOUS", "Hello Nous（和 Nous 其他終端相同）"))))
+                "把 Nous 的聲音變成鴨子的聲音的演算法。", status="planned", blocked_by=why_voice,
+                choices=(("delay_line", "延遲線（省運算，延遲 20 ms）"), ("phase_vocoder", "相位聲碼器（可控共振峰，延遲 53 ms）"))))
+    add(Setting("audio.voice_semitones", "audio", "音高平移", "number", 5.0, "聲音升高幾個半音。候選是 +3、+5、+7。",
+                status="planned", blocked_by=why_voice, min=0.0, max=7.0, step=1.0, unit=" 半音", basis="ADR-0010 §4 的候選值"))
+    add(Setting("audio.voice_formant_ratio", "audio", "共振峰比例", "number", 1.0, "1.0＝保留原本的共振峰；大於 1 聽起來身體比較小。",
+                status="planned", blocked_by=why_voice, min=1.0, max=1.2, step=0.01, basis="audio-2026-11-25 驗證紀錄的候選值"))
+    add(Setting("audio.wake_keyword", "audio", "喚醒詞", "enum", "YAZI_EN", "用哪一句叫醒鴨子。改了之後幾秒內生效。",
+                consumer=VOICE, basis="使用者 2026-11-26 決定先用「Hello 鴨子」與「Hey 鴨子」，之後可能換。清單在 robot/audio/config/wake_keywords.json；" + _VOICE_TEST,
+                choices=(("YAZI_EN", "Hello 鴨子／Hey 鴨子（兩句都可以）"), ("HELLO_YAZI", "只有 Hello 鴨子"), ("HEY_YAZI", "只有 Hey 鴨子"),
+                         ("HEY_DUCK", "Hey Duck"), ("HELLO_DUCK", "Hello Duck"),
+                         ("HEY_NOUS", "Hey Nous（和 Nous 其他終端相同）"), ("HELLO_NOUS", "Hello Nous（和 Nous 其他終端相同）"))))
     add(Setting("audio.wake_sensitivity", "audio", "喚醒門檻倍數", "number", 1.0,
                 "把喚醒詞的門檻乘上這個倍數。調高比較不會誤喚醒、但比較難叫醒；調低相反。", consumer=VOICE, min=0.5, max=3.0, step=0.1,
                 basis="門檻本身沿用 AIOS 的值，在鴨子的麥克風上沒有用真人聲音校準"))
-    add(Setting("audio.listen_no_speech_s", "audio", "叫醒後沒人說話，等多久", "number", 8.0,
-                "被叫醒後一直沒聽到說話，過這麼久就結束這一輪、關掉上行。", consumer=VOICE, min=3.0, max=20.0, step=1.0, unit=" 秒"))
-    add(Setting("audio.listen_end_silence_s", "audio", "說完後安靜多久算說完", "number", 1.5,
-                "鴨子自己判斷「說完了」的安靜時間。Nous 通常會更早通知說完了。", consumer=VOICE, min=0.5, max=5.0, step=0.1, unit=" 秒", advanced=True))
-    add(Setting("audio.listen_max_s", "audio", "單輪最長收音", "number", 30.0,
-                "一輪最多送這麼久的聲音給 Nous，時間到自動停。", consumer=VOICE, min=5.0, max=60.0, step=5.0, unit=" 秒"))
-    add(Setting("audio.reply_timeout_s", "audio", "等回話的上限", "number", 15.0,
-                "說完後等 Nous 回話，超過就放棄並播提示音。", consumer=VOICE, min=5.0, max=60.0, step=5.0, unit=" 秒", advanced=True))
-    add(Setting("audio.aec_reference", "audio", "把播出的聲音送給麥克風當回音消除的參考", "bool", True,
-                "打開時，鴨子播的聲音同時送進麥克風陣列，讓它把喇叭的聲音從收音裡消掉。", consumer=VOICE, advanced=True,
-                basis="2026-11-26 實機：處理後聲道在播放時的音量從 −19 dBFS 降到 −52～−58 dBFS。" + _VOICE_TEST))
-    add(Setting("audio.barge_in", "audio", "鴨子說話時可以用喚醒詞打斷", "bool", False,
-                "關掉時（預設）鴨子說話期間不聽喚醒詞。打開前要先確認鴨子自己的聲音不會誤觸發。", consumer=VOICE, advanced=True,
-                basis="還沒有用真人聲音量過說話中的喚醒率與自我觸發"))
+    add(Setting("audio.wake_holdoff_s", "audio", "叫醒後多久內不再聽喚醒詞", "number", 8.0,
+                "叫醒一次之後，這段時間內不再偵測喚醒詞（對話由語音終端接手）。有對話狀態回報時，對話期間本來就不偵測。",
+                consumer=VOICE, min=2.0, max=60.0, step=1.0, unit=" 秒", advanced=True))
+    add(Setting("features.voice_terminal", "features", "語音終端（鴨子上的 Nous 頁面）", "bool", True,
+                "讓鴨子自己的麥克風與喇叭和 Nous 對話。", status="planned",
+                blocked_by="Pi 上無螢幕的 Chromium 已確認拿得到麥克風，但還沒有真的連 Nous、出聲測過（要你在場）；啟動它的服務也還沒做"))
 
     # ------------------------------------------------------------ 聽聲轉頭門檻
     add(Setting("hearing.min_speech_energy", "hearing", "語音能量門檻", "number", 200000.0,
@@ -342,6 +335,4 @@ def check_cross_rules(values: dict[str, Any]) -> list[str]:
             f"「頭停穩後等多久才再聽」（{values['hearing.settle_s']:g} 秒）要比「方位視窗」（{values['hearing.window_s']:g} 秒）長 0.1 秒以上，"
             "否則頭停下後還會收到轉動時的方位，頭會來回擺"
         )
-    if values["audio.listen_end_silence_s"] >= values["audio.listen_no_speech_s"]:
-        errors.append("「說完後安靜多久算說完」要比「叫醒後沒人說話，等多久」短")
     return errors

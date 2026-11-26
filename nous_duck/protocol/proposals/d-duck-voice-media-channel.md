@@ -3,7 +3,7 @@
 # 協定提案（D 線）：duck-voice v0——鴨子與 Nous 之間的語音媒體通道
 
 - 提出：D 線（鴨子端音訊），2026-11-26。**沒有改 duck-link schema。**
-- 狀態：**草案，鴨子端已照這份實作；Nous 端還沒有對應的實作，B 線尚未回覆同意**（2026-11-26 20:09 送出提案，寫這份文件時還沒收到回覆）。B 線回覆後以雙方同意的版本為準，這裡會跟著改。
+- 狀態：**未採用（實驗）**。使用者 2026-11-26 決定語音對話走「路線 2」：鴨子的 Pi 上跑 Chromium 開 Nous 頁面，收音與播放由 Chromium 做，不經過這條通道。這份介面與兩端的實作（鴨子端 `voice_service.py --mode native`、B 線在 `nous_adapter` 的 hub）互通過，留著當實驗紀錄，**不是鴨子現有的能力**。路線 2 的喚醒事件與麥克風共用見 [`docs/validation/voice-duck-side-2026-11-26.md`](../../docs/validation/voice-duck-side-2026-11-26.md)。
 - 鴨子端實作：[`robot/audio/duck_audio/voice_service.py`](../../robot/audio/duck_audio/voice_service.py)、[`session.py`](../../robot/audio/duck_audio/session.py)；模擬的 Nous 端（mock，測試用）：[`mock_nous.py`](../../robot/audio/duck_audio/mock_nous.py)。
 - 相關：[ADR-0010](../../docs/adr/ADR-0010-duck-voice.md)（語音鏈）、[ADR-0003](../../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md) §6（紅線）、[語音路徑](../../nous_adapter/docs/voice-path.md)。
 

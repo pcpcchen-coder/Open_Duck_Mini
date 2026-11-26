@@ -118,8 +118,8 @@ class Harness:
             (self.dir / "settings.json").write_text(json.dumps({"schema": 1, "revision": 1, "values": settings}), encoding="utf-8")
         monkeypatch.setattr(vs.VoiceService, "mic_thread", lambda self: None)  # 沒有麥克風
 
-    def service(self, port):
-        svc = vs.VoiceService(f"ws://127.0.0.1:{port}/duck-voice", self.dir)
+    def service(self, port, mode="native", **kw):
+        svc = vs.VoiceService(f"ws://127.0.0.1:{port}/duck-voice", self.dir, mode=mode, **kw)
 
         def sink():
             self.sinks.append(CaptureSink())
@@ -203,6 +203,50 @@ def test_settings_disable_listening_and_mute(tmp_path, monkeypatch):
         server.close()
 
     asyncio.run(scenario())
+
+
+def test_wake_mode_sends_wake_word_plays_cue_and_never_uplinks(tmp_path, monkeypatch):
+    """路線 2（預設模式）：喚醒 → 提示音 → UDP wake_word；不連 Nous、沒有任何音訊離開；對話期間不再偵測。"""
+    import socket
+
+    h = Harness(tmp_path, monkeypatch, {"audio.wake_holdoff_s": 2.0})
+    rx = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    rx.bind(("127.0.0.1", 0))
+    rx.settimeout(3.0)
+    ctl = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    ctl.bind(("127.0.0.1", 0))
+    ctl_port = ctl.getsockname()[1]
+    ctl.close()
+
+    async def scenario():
+        svc = h.service(9, mode="wake", wake_udp=("127.0.0.1", rx.getsockname()[1]), control_udp=("127.0.0.1", ctl_port))
+        task = asyncio.ensure_future(svc.run())
+        await until(lambda: svc.kws_on.is_set())
+        assert svc.ws is None  # 這個模式不連 Nous
+        for _ in range(50):
+            svc._on_frame(tone(0.02, 16000), True)
+        svc._on_wake("HEY_YAZI")
+        msg = json.loads(rx.recv(2048))
+        assert msg["kind"] == "wake_word" and msg["keyword_id"] == "HEY_YAZI" and msg["doa_deg"] is None and msg["v"] == 1
+        assert set(msg) == {"v", "kind", "keyword_id", "doa_deg", "t_ms", "mock"}  # 沒有音訊欄位
+        await until(lambda: len(h.sinks) == 1 and not svc.sfx.is_playing)
+        assert not svc.kws_on.is_set()
+        svc._on_wake("HEY_YAZI")  # 冷卻時間內再叫：不重複送
+        assert svc.wake_sent == 1
+        # 對話狀態回報 speaking：一直不聽；回報 idle：很快恢復
+        tx = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        tx.sendto(b'{"v":1,"kind":"presence","state":"speaking"}', ("127.0.0.1", ctl_port))
+        await asyncio.sleep(2.3)
+        assert not svc.kws_on.is_set()
+        tx.sendto(b'{"v":1,"kind":"presence","state":"idle"}', ("127.0.0.1", ctl_port))
+        tx.sendto(b"garbage", ("127.0.0.1", ctl_port))
+        await until(lambda: svc.kws_on.is_set(), timeout=3)
+        assert svc.session.frames_up == 0
+        svc.stop.set()
+        task.cancel()
+
+    asyncio.run(scenario())
+    rx.close()
 
 
 def test_no_file_writing_in_voice_modules():

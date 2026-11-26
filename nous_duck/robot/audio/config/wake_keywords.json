@@ -1,21 +1,112 @@
 {
-  "comment": "鴨子的喚醒詞清單。用哪一句由設定頁的 audio.wake_keyword 決定（對應這裡的 group）。Hey Nous／Hello Nous 的寫法、提升分數與門檻沿用 AIOS shared/wake-runtime.json（唯讀查閱；Nous 收三種念法，任一命中都算）。其他是鴨子自己的候選。門檻在鴨子的麥克風上還沒有用真人聲音校準。tokens：中文是帶聲調的拼音聲母與韻母，英文是 ARPAbet，可以混用（zh-en-3M 模型的 tokens.txt）。",
+  "comment": "鴨子的喚醒詞清單。使用者 2026-11-26 決定先用「Hello 鴨子」與「Hey 鴨子」（presets 的 YAZI_EN，兩句同時有效）；之後可能換，所以用哪一組由設定頁的 audio.wake_keyword 決定（對應 presets 的名字，或單一 group）。「英文開頭＋中文鴨子」用 ARPAbet 與帶聲調拼音混寫（zh-en-3M 模型的 tokens.txt 兩種都有）。Hey Nous／Hello Nous 的寫法、提升分數與門檻沿用 AIOS shared/wake-runtime.json（唯讀查閱）。門檻在鴨子的麥克風上還沒有用真人聲音校準。",
   "status": "uncalibrated",
   "model": "kws-zh-en",
   "keywords_score": 1.5,
   "keywords_threshold": 0.15,
   "num_threads": 1,
   "entries": [
-    { "id": "HEY_NOUS_OW", "group": "HEY_NOUS", "text": "Hey Nous", "tokens": "HH EY1 N OW1 S", "boost": 1.0, "threshold": 0.25 },
-    { "id": "HEY_NOUS_AW", "group": "HEY_NOUS", "text": "Hey Nous", "tokens": "HH EY1 N AW1 S", "boost": 1.0, "threshold": 0.25 },
-    { "id": "HEY_NOUS_UW", "group": "HEY_NOUS", "text": "Hey Nous", "tokens": "HH EY1 N UW1 S", "boost": 1.0, "threshold": 0.25 },
-    { "id": "HELLO_NOUS_OW", "group": "HELLO_NOUS", "text": "Hello Nous", "tokens": "HH AH0 L OW1 N OW1 S", "boost": null, "threshold": null },
-    { "id": "HELLO_NOUS_AW", "group": "HELLO_NOUS", "text": "Hello Nous", "tokens": "HH AH0 L OW1 N AW1 S", "boost": null, "threshold": null },
-    { "id": "HELLO_NOUS_UW", "group": "HELLO_NOUS", "text": "Hello Nous", "tokens": "HH AH0 L OW1 N UW1 S", "boost": null, "threshold": null },
-    { "id": "HEY_YAZI", "group": "HEY_YAZI", "text": "Hey 鴨子", "tokens": "HH EY1 y ā z i", "boost": null, "threshold": null },
-    { "id": "HEI_YAZI", "group": "HEI_YAZI", "text": "嘿鴨子", "tokens": "h ēi y ā z i", "boost": null, "threshold": null },
-    { "id": "HEY_DUCK", "group": "HEY_DUCK", "text": "Hey Duck", "tokens": "HH EY1 D AH1 K", "boost": null, "threshold": null },
-    { "id": "HELLO_DUCK", "group": "HELLO_DUCK", "text": "Hello Duck", "tokens": "HH AH0 L OW1 D AH1 K", "boost": null, "threshold": null },
-    { "id": "XIAOYA_XIAOYA", "group": "XIAOYA_XIAOYA", "text": "小鴨小鴨", "tokens": "x iǎo y ā x iǎo y ā", "boost": null, "threshold": null }
-  ]
+    {
+      "id": "HEY_NOUS_OW",
+      "group": "HEY_NOUS",
+      "text": "Hey Nous",
+      "tokens": "HH EY1 N OW1 S",
+      "boost": 1.0,
+      "threshold": 0.25
+    },
+    {
+      "id": "HEY_NOUS_AW",
+      "group": "HEY_NOUS",
+      "text": "Hey Nous",
+      "tokens": "HH EY1 N AW1 S",
+      "boost": 1.0,
+      "threshold": 0.25
+    },
+    {
+      "id": "HEY_NOUS_UW",
+      "group": "HEY_NOUS",
+      "text": "Hey Nous",
+      "tokens": "HH EY1 N UW1 S",
+      "boost": 1.0,
+      "threshold": 0.25
+    },
+    {
+      "id": "HELLO_NOUS_OW",
+      "group": "HELLO_NOUS",
+      "text": "Hello Nous",
+      "tokens": "HH AH0 L OW1 N OW1 S",
+      "boost": null,
+      "threshold": null
+    },
+    {
+      "id": "HELLO_NOUS_AW",
+      "group": "HELLO_NOUS",
+      "text": "Hello Nous",
+      "tokens": "HH AH0 L OW1 N AW1 S",
+      "boost": null,
+      "threshold": null
+    },
+    {
+      "id": "HELLO_NOUS_UW",
+      "group": "HELLO_NOUS",
+      "text": "Hello Nous",
+      "tokens": "HH AH0 L OW1 N UW1 S",
+      "boost": null,
+      "threshold": null
+    },
+    {
+      "id": "HELLO_YAZI",
+      "group": "HELLO_YAZI",
+      "text": "Hello 鴨子",
+      "tokens": "HH AH0 L OW1 y ā z i",
+      "boost": null,
+      "threshold": null
+    },
+    {
+      "id": "HEY_YAZI_EN",
+      "group": "HEY_YAZI",
+      "text": "Hey 鴨子",
+      "tokens": "HH EY1 y ā z i",
+      "boost": null,
+      "threshold": null
+    },
+    {
+      "id": "HEY_YAZI_ZH",
+      "group": "HEY_YAZI",
+      "text": "Hey 鴨子（Hey 念成「嘿」）",
+      "tokens": "h ēi y ā z i",
+      "boost": null,
+      "threshold": null
+    },
+    {
+      "id": "HEY_DUCK",
+      "group": "HEY_DUCK",
+      "text": "Hey Duck",
+      "tokens": "HH EY1 D AH1 K",
+      "boost": null,
+      "threshold": null
+    },
+    {
+      "id": "HELLO_DUCK",
+      "group": "HELLO_DUCK",
+      "text": "Hello Duck",
+      "tokens": "HH AH0 L OW1 D AH1 K",
+      "boost": null,
+      "threshold": null
+    },
+    {
+      "id": "XIAOYA_XIAOYA",
+      "group": "XIAOYA_XIAOYA",
+      "text": "小鴨小鴨",
+      "tokens": "x iǎo y ā x iǎo y ā",
+      "boost": null,
+      "threshold": null
+    }
+  ],
+  "presets": {
+    "YAZI_EN": [
+      "HELLO_YAZI",
+      "HEY_YAZI"
+    ]
+  }
 }

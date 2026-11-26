@@ -3,7 +3,7 @@
 # Protocol proposal (line D): duck-voice v0 — the voice media channel between the duck and Nous
 
 - Proposed by: line D (duck-side audio), 2026-11-26. **The duck-link schema is not changed.**
-- Status: **draft; the duck side is implemented against it; there is no Nous-side implementation yet and line B has not replied** (proposal sent 2026-11-26 20:09; no reply at the time of writing). Once line B replies, the version both sides agree on wins and this file follows.
+- Status: **not adopted (experimental)**. On 2026-11-26 the user decided that voice conversation takes "route 2": Chromium on the duck's Pi opens the Nous page and does the capture and playback, so nothing goes through this channel. This interface and both implementations (duck side `voice_service.py --mode native`, line B's hub in `nous_adapter`) were run against each other and are kept as an experiment record; **this is not a capability the duck has**. For route 2's wake event and microphone sharing see [`docs/validation/voice-duck-side-2026-11-26.md`](../../docs/validation/voice-duck-side-2026-11-26.md) (Traditional Chinese).
 - Duck-side implementation: [`robot/audio/duck_audio/voice_service.py`](../../robot/audio/duck_audio/voice_service.py), [`session.py`](../../robot/audio/duck_audio/session.py); simulated Nous end (mock, for tests): [`mock_nous.py`](../../robot/audio/duck_audio/mock_nous.py).
 - Related: [ADR-0010](../../docs/adr/ADR-0010-duck-voice.md) (voice chain), [ADR-0003](../../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md) §6 (red lines), [voice path](../../nous_adapter/docs/voice-path.en.md).
 
