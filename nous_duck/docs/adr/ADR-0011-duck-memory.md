@@ -1,9 +1,9 @@
-# ADR-0010：鴨子的記憶系統＝沿用 Nous 記憶層，鴨子只補「身體、空間、任務」記憶
+# ADR-0011：鴨子的記憶系統＝沿用 Nous 記憶層，鴨子只補「身體、空間、任務」記憶
 
 - 狀態：**採用（Accepted）**：2026-11-26 使用者決定 §11 的 8 項（見決定紀錄）；容量、期限等數字仍待量測；物品位置記憶決定要做，**另立 ADR**（尚未撰寫）
 - 日期：2026-11-17 提出；2026-11-26 採用
-- 編號說明：草案時編為 ADR-0007；同期 `v2` 先合併了 ADR-0007（跟著我來）、ADR-0008（單板 Pi 4）與 ADR-0009（duck-link 傳輸與指令橋接），所以改為 ADR-0010
-- 相關：[ADR-0001](ADR-0001-duck-role-in-nous.md)（Nous 管記憶）、[ADR-0002](ADR-0002-indoor-localization-and-navigation.md)（地圖）、[ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md)（行動終端、找人）、[ADR-0006](ADR-0006-privacy-settings.md)（隱私設定）、[ADR-0007](ADR-0007-follow-me-and-wait-here.md)（跟隨時的暫時外觀特徵）、[ADR-0008](ADR-0008-single-board-pi4.md)（單板 Pi 4）、[ADR-0009](ADR-0009-duck-link-transport-and-command-bridge.md)（duck-link 傳輸）、[路線圖](../roadmap.md)
+- 編號說明：草案時編為 ADR-0007；同期 `v2` 先合併了 ADR-0007（跟著我來）、ADR-0008（單板 Pi 4）與 ADR-0009（duck-link 傳輸與指令橋接）、ADR-0010（鴨子的語音），所以改為 ADR-0011
+- 相關：[ADR-0001](ADR-0001-duck-role-in-nous.md)（Nous 管記憶）、[ADR-0002](ADR-0002-indoor-localization-and-navigation.md)（地圖）、[ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md)（行動終端、找人）、[ADR-0006](ADR-0006-privacy-settings.md)（隱私設定）、[ADR-0007](ADR-0007-follow-me-and-wait-here.md)（跟隨時的暫時外觀特徵）、[ADR-0008](ADR-0008-single-board-pi4.md)（單板 Pi 4）、[ADR-0009](ADR-0009-duck-link-transport-and-command-bridge.md)（duck-link 傳輸）、[ADR-0010](ADR-0010-duck-voice.md)（鴨子的語音）、[路線圖](../roadmap.md)
 - AIOS 參考（唯讀，main `7b0257d`）：`docs/16_Nous_Memory_Layer_Design_2026-10-26.md`、`docs/adr/ADR-0002-nous-family-memory.md`、`docs/02_OSS_Component_Map.md`、`prototype/ambient-shell/server/memory/`
 
 ## 0. 一頁摘要
