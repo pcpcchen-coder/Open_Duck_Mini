@@ -1,0 +1,3182 @@
+{
+ "simulated": true,
+ "note": "MuJoCo 模擬值（上游策略 BEST_WALK_ONNX_2.onnx、walk_sim 模型）；加裝件的重量與位置都是估計，沒有秤過，不是實機量測",
+ "budget": {
+  "file": "sim/mass_budget/p2_single_pi4.json",
+  "version": 1,
+  "date": "2026-11-26"
+ },
+ "onset_phases": [
+  0,
+  3,
+  6,
+  9,
+  12,
+  15,
+  18,
+  21,
+  24
+ ],
+ "fall_rate_seeds": 40,
+ "fall_rate_seconds": 60.0,
+ "profiles": [
+  {
+   "name": "upstream",
+   "label": "上游模型（沒有加裝件）",
+   "model": {},
+   "items": [],
+   "static": {
+    "total_mass_kg": 2.0615,
+    "com_base_m": [
+     -0.0273,
+     0.0002,
+     0.0404
+    ],
+    "head_chain_mass_kg": 0.5359,
+    "head_chain_com_base_m": [
+     0.0112,
+     0.0003,
+     0.1914
+    ],
+    "head_assembly_mass_kg": 0.361,
+    "gravity_torque_home_Nm": {
+     "neck_pitch": 0.0535,
+     "head_pitch": 0.0535,
+     "head_yaw": 0.0,
+     "head_roll": -0.0006
+    },
+    "neck_torque_max_Nm": {
+     "neck_pitch": 0.5033,
+     "head_pitch": 0.2037
+    }
+   },
+   "stand": {
+    "fallen": false,
+    "stepping_fraction": 0.0,
+    "drift_m": 0.0114,
+    "tilt_max_deg": 6.26,
+    "base_z_mean_m": 0.166
+   },
+   "walk": [
+    {
+     "axis": "vx",
+     "cmd": 0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.115,
+     "ratio": 0.767,
+     "tilt_max_deg": 6.1
+    },
+    {
+     "axis": "vx",
+     "cmd": -0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": -0.0519,
+     "ratio": 0.346,
+     "tilt_max_deg": 6.0
+    },
+    {
+     "axis": "yaw_rate",
+     "cmd": 1.0,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.8274,
+     "ratio": 0.827,
+     "tilt_max_deg": 5.5
+    },
+    {
+     "axis": "yaw_rate",
+     "cmd": -1.0,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": -0.875,
+     "ratio": 0.875,
+     "tilt_max_deg": 5.6
+    },
+    {
+     "axis": "vy",
+     "cmd": 0.2,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.115,
+     "ratio": 0.575,
+     "tilt_max_deg": 5.6
+    }
+   ],
+   "start_threshold": [
+    {
+     "vx": 0.06,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": 0.08,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": 0.1,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": 0.12,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": -0.1,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": -0.12,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": -0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    }
+   ],
+   "head_standing": [
+    {
+     "joint": "head_yaw",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": 0.446
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": -0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": -0.638
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": 1.0,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": 0.966
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": -1.0,
+     "fallen": true,
+     "tilt_max_deg": 48.3,
+     "actual_rad": -1.193
+    },
+    {
+     "joint": "head_pitch",
+     "cmd_rad": 0.3,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": 0.193
+    },
+    {
+     "joint": "head_pitch",
+     "cmd_rad": -0.78,
+     "fallen": false,
+     "tilt_max_deg": 7.7,
+     "actual_rad": -0.786
+    },
+    {
+     "joint": "head_roll",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": 0.412
+    },
+    {
+     "joint": "head_roll",
+     "cmd_rad": -0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": -0.524
+    },
+    {
+     "joint": "neck_pitch",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 6.6,
+     "actual_rad": 0.731
+    },
+    {
+     "joint": "neck_pitch",
+     "cmd_rad": -0.34,
+     "fallen": false,
+     "tilt_max_deg": 6.0,
+     "actual_rad": -0.151
+    }
+   ],
+   "fall_rate": {
+    "label": "upstream",
+    "seeds": 40,
+    "seconds_each": 60.0,
+    "falls": 0,
+    "fall_rate": 0.0,
+    "fall_times_s": [],
+    "tilt_max_deg_p50": 6.9,
+    "tilt_max_deg_worst": 8.3
+   }
+  },
+  {
+   "name": "p2_low",
+   "label": "單板 Pi 4＋加裝件（各元件取下限）",
+   "model": {},
+   "items": [
+    {
+     "id": "pi_zero_2w",
+     "body": "head_assembly",
+     "mass_g": -18.0,
+     "pos_base_m": [
+      0.036,
+      0.048,
+      0.224
+     ]
+    },
+    {
+     "id": "pi4_board",
+     "body": "trunk_assembly",
+     "mass_g": 46.0,
+     "pos_base_m": [
+      -0.045,
+      0.0,
+      0.095
+     ]
+    },
+    {
+     "id": "pi4_heatsink",
+     "body": "trunk_assembly",
+     "mass_g": 5.0,
+     "pos_base_m": [
+      -0.045,
+      0.0,
+      0.104
+     ]
+    },
+    {
+     "id": "ubec_5v",
+     "body": "trunk_assembly",
+     "mass_g": 10.0,
+     "pos_base_m": [
+      -0.095,
+      0.035,
+      0.03
+     ]
+    },
+    {
+     "id": "mic_xvf3800_flex",
+     "body": "trunk_assembly",
+     "mass_g": 15.0,
+     "pos_base_m": [
+      -0.04,
+      0.0,
+      0.106
+     ]
+    },
+    {
+     "id": "speaker",
+     "body": "trunk_assembly",
+     "mass_g": 10.0,
+     "pos_base_m": [
+      0.015,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "dock_contact_plate",
+     "body": "trunk_assembly",
+     "mass_g": 35.0,
+     "pos_base_m": [
+      -0.158,
+      0.0,
+      0.04
+     ]
+    },
+    {
+     "id": "wiring_trunk",
+     "body": "trunk_assembly",
+     "mass_g": 5.0,
+     "pos_base_m": [
+      -0.04,
+      0.0,
+      0.07
+     ]
+    },
+    {
+     "id": "ar0144_stereo",
+     "body": "head_assembly",
+     "mass_g": 15.0,
+     "pos_base_m": [
+      0.09,
+      0.0,
+      0.205
+     ]
+    },
+    {
+     "id": "ir_illuminator",
+     "body": "head_assembly",
+     "mass_g": 3.0,
+     "pos_base_m": [
+      0.095,
+      0.0,
+      0.225
+     ]
+    },
+    {
+     "id": "eyes_gc9a01_left",
+     "body": "head_assembly",
+     "mass_g": 8.0,
+     "pos_base_m": [
+      0.085,
+      0.05,
+      0.205
+     ]
+    },
+    {
+     "id": "eyes_gc9a01_right",
+     "body": "head_assembly",
+     "mass_g": 8.0,
+     "pos_base_m": [
+      0.085,
+      -0.05,
+      0.205
+     ]
+    },
+    {
+     "id": "wiring_head",
+     "body": "head_assembly",
+     "mass_g": 5.0,
+     "pos_base_m": [
+      0.0,
+      0.0,
+      0.195
+     ]
+    }
+   ],
+   "static": {
+    "total_mass_kg": 2.2085,
+    "com_base_m": [
+     -0.0287,
+     -0.0,
+     0.0434
+    ],
+    "head_chain_mass_kg": 0.5569,
+    "head_chain_com_base_m": [
+     0.015,
+     -0.0012,
+     0.1913
+    ],
+    "head_assembly_mass_kg": 0.382,
+    "gravity_torque_home_Nm": {
+     "neck_pitch": 0.0763,
+     "head_pitch": 0.0763,
+     "head_yaw": 0.0,
+     "head_roll": 0.0079
+    },
+    "neck_torque_max_Nm": {
+     "neck_pitch": 0.5288,
+     "head_pitch": 0.2171
+    }
+   },
+   "stand": {
+    "fallen": false,
+    "stepping_fraction": 0.0,
+    "drift_m": 0.0115,
+    "tilt_max_deg": 6.28,
+    "base_z_mean_m": 0.1658
+   },
+   "walk": [
+    {
+     "axis": "vx",
+     "cmd": 0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.1145,
+     "ratio": 0.763,
+     "tilt_max_deg": 6.4
+    },
+    {
+     "axis": "vx",
+     "cmd": -0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": -0.0491,
+     "ratio": 0.327,
+     "tilt_max_deg": 6.1
+    },
+    {
+     "axis": "yaw_rate",
+     "cmd": 1.0,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.833,
+     "ratio": 0.833,
+     "tilt_max_deg": 5.5
+    },
+    {
+     "axis": "yaw_rate",
+     "cmd": -1.0,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": -0.8769,
+     "ratio": 0.877,
+     "tilt_max_deg": 5.5
+    },
+    {
+     "axis": "vy",
+     "cmd": 0.2,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.1127,
+     "ratio": 0.563,
+     "tilt_max_deg": 5.6
+    }
+   ],
+   "start_threshold": [
+    {
+     "vx": 0.06,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": 0.08,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": 0.1,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": 0.12,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": -0.1,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": -0.12,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": -0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    }
+   ],
+   "head_standing": [
+    {
+     "joint": "head_yaw",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": 0.449
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": -0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": -0.637
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": 1.0,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": 0.968
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": -1.0,
+     "fallen": true,
+     "tilt_max_deg": 47.1,
+     "actual_rad": -1.215
+    },
+    {
+     "joint": "head_pitch",
+     "cmd_rad": 0.3,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": 0.192
+    },
+    {
+     "joint": "head_pitch",
+     "cmd_rad": -0.78,
+     "fallen": false,
+     "tilt_max_deg": 7.5,
+     "actual_rad": -0.786
+    },
+    {
+     "joint": "head_roll",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": 0.411
+    },
+    {
+     "joint": "head_roll",
+     "cmd_rad": -0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.7,
+     "actual_rad": -0.52
+    },
+    {
+     "joint": "neck_pitch",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 6.5,
+     "actual_rad": 0.731
+    },
+    {
+     "joint": "neck_pitch",
+     "cmd_rad": -0.34,
+     "fallen": false,
+     "tilt_max_deg": 6.0,
+     "actual_rad": -0.153
+    }
+   ],
+   "fall_rate": {
+    "label": "p2_low",
+    "seeds": 40,
+    "seconds_each": 60.0,
+    "falls": 0,
+    "fall_rate": 0.0,
+    "fall_times_s": [],
+    "tilt_max_deg_p50": 6.9,
+    "tilt_max_deg_worst": 8.5
+   }
+  },
+  {
+   "name": "p2_nominal",
+   "label": "單板 Pi 4＋加裝件（估計值）",
+   "model": {},
+   "items": [
+    {
+     "id": "pi_zero_2w",
+     "body": "head_assembly",
+     "mass_g": -15.0,
+     "pos_base_m": [
+      0.036,
+      0.048,
+      0.224
+     ]
+    },
+    {
+     "id": "pi4_board",
+     "body": "trunk_assembly",
+     "mass_g": 50.0,
+     "pos_base_m": [
+      -0.045,
+      0.0,
+      0.095
+     ]
+    },
+    {
+     "id": "pi4_heatsink",
+     "body": "trunk_assembly",
+     "mass_g": 10.0,
+     "pos_base_m": [
+      -0.045,
+      0.0,
+      0.104
+     ]
+    },
+    {
+     "id": "ubec_5v",
+     "body": "trunk_assembly",
+     "mass_g": 15.0,
+     "pos_base_m": [
+      -0.095,
+      0.035,
+      0.03
+     ]
+    },
+    {
+     "id": "mic_xvf3800_flex",
+     "body": "trunk_assembly",
+     "mass_g": 30.0,
+     "pos_base_m": [
+      -0.04,
+      0.0,
+      0.106
+     ]
+    },
+    {
+     "id": "speaker",
+     "body": "trunk_assembly",
+     "mass_g": 20.0,
+     "pos_base_m": [
+      0.015,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "dock_contact_plate",
+     "body": "trunk_assembly",
+     "mass_g": 42.0,
+     "pos_base_m": [
+      -0.158,
+      0.0,
+      0.04
+     ]
+    },
+    {
+     "id": "wiring_trunk",
+     "body": "trunk_assembly",
+     "mass_g": 10.0,
+     "pos_base_m": [
+      -0.04,
+      0.0,
+      0.07
+     ]
+    },
+    {
+     "id": "ar0144_stereo",
+     "body": "head_assembly",
+     "mass_g": 15.0,
+     "pos_base_m": [
+      0.09,
+      0.0,
+      0.205
+     ]
+    },
+    {
+     "id": "ir_illuminator",
+     "body": "head_assembly",
+     "mass_g": 5.0,
+     "pos_base_m": [
+      0.095,
+      0.0,
+      0.225
+     ]
+    },
+    {
+     "id": "eyes_gc9a01_left",
+     "body": "head_assembly",
+     "mass_g": 8.4,
+     "pos_base_m": [
+      0.085,
+      0.05,
+      0.205
+     ]
+    },
+    {
+     "id": "eyes_gc9a01_right",
+     "body": "head_assembly",
+     "mass_g": 8.4,
+     "pos_base_m": [
+      0.085,
+      -0.05,
+      0.205
+     ]
+    },
+    {
+     "id": "wiring_head",
+     "body": "head_assembly",
+     "mass_g": 10.0,
+     "pos_base_m": [
+      0.0,
+      0.0,
+      0.195
+     ]
+    }
+   ],
+   "static": {
+    "total_mass_kg": 2.2703,
+    "com_base_m": [
+     -0.0289,
+     0.0001,
+     0.0446
+    ],
+    "head_chain_mass_kg": 0.5677,
+    "head_chain_com_base_m": [
+     0.0153,
+     -0.0009,
+     0.1916
+    ],
+    "head_assembly_mass_kg": 0.3928,
+    "gravity_torque_home_Nm": {
+     "neck_pitch": 0.0798,
+     "head_pitch": 0.0798,
+     "head_yaw": 0.0,
+     "head_roll": 0.0065
+    },
+    "neck_torque_max_Nm": {
+     "neck_pitch": 0.5415,
+     "head_pitch": 0.2236
+    }
+   },
+   "stand": {
+    "fallen": false,
+    "stepping_fraction": 0.002,
+    "drift_m": 0.0115,
+    "tilt_max_deg": 6.39,
+    "base_z_mean_m": 0.1656
+   },
+   "walk": [
+    {
+     "axis": "vx",
+     "cmd": 0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.114,
+     "ratio": 0.76,
+     "tilt_max_deg": 6.5
+    },
+    {
+     "axis": "vx",
+     "cmd": -0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": -0.0481,
+     "ratio": 0.32,
+     "tilt_max_deg": 6.1
+    },
+    {
+     "axis": "yaw_rate",
+     "cmd": 1.0,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.8402,
+     "ratio": 0.84,
+     "tilt_max_deg": 5.5
+    },
+    {
+     "axis": "yaw_rate",
+     "cmd": -1.0,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": -0.884,
+     "ratio": 0.884,
+     "tilt_max_deg": 5.7
+    },
+    {
+     "axis": "vy",
+     "cmd": 0.2,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.1106,
+     "ratio": 0.553,
+     "tilt_max_deg": 5.6
+    }
+   ],
+   "start_threshold": [
+    {
+     "vx": 0.06,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": 0.08,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": 0.1,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": 0.12,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": -0.1,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": -0.12,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": -0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    }
+   ],
+   "head_standing": [
+    {
+     "joint": "head_yaw",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": 0.448
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": -0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": -0.639
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": 1.0,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": 0.97
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": -1.0,
+     "fallen": true,
+     "tilt_max_deg": 45.5,
+     "actual_rad": -1.217
+    },
+    {
+     "joint": "head_pitch",
+     "cmd_rad": 0.3,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": 0.192
+    },
+    {
+     "joint": "head_pitch",
+     "cmd_rad": -0.78,
+     "fallen": false,
+     "tilt_max_deg": 7.4,
+     "actual_rad": -0.786
+    },
+    {
+     "joint": "head_roll",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": 0.419
+    },
+    {
+     "joint": "head_roll",
+     "cmd_rad": -0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.7,
+     "actual_rad": -0.519
+    },
+    {
+     "joint": "neck_pitch",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 6.7,
+     "actual_rad": 0.732
+    },
+    {
+     "joint": "neck_pitch",
+     "cmd_rad": -0.34,
+     "fallen": false,
+     "tilt_max_deg": 6.0,
+     "actual_rad": -0.153
+    }
+   ],
+   "fall_rate": {
+    "label": "p2_nominal",
+    "seeds": 40,
+    "seconds_each": 60.0,
+    "falls": 0,
+    "fall_rate": 0.0,
+    "fall_times_s": [],
+    "tilt_max_deg_p50": 6.9,
+    "tilt_max_deg_worst": 8.4
+   }
+  },
+  {
+   "name": "p2_high",
+   "label": "單板 Pi 4＋加裝件（各元件取上限）",
+   "model": {},
+   "items": [
+    {
+     "id": "pi_zero_2w",
+     "body": "head_assembly",
+     "mass_g": -10.0,
+     "pos_base_m": [
+      0.036,
+      0.048,
+      0.224
+     ]
+    },
+    {
+     "id": "pi4_board",
+     "body": "trunk_assembly",
+     "mass_g": 60.0,
+     "pos_base_m": [
+      -0.045,
+      0.0,
+      0.095
+     ]
+    },
+    {
+     "id": "pi4_heatsink",
+     "body": "trunk_assembly",
+     "mass_g": 25.0,
+     "pos_base_m": [
+      -0.045,
+      0.0,
+      0.104
+     ]
+    },
+    {
+     "id": "ubec_5v",
+     "body": "trunk_assembly",
+     "mass_g": 25.0,
+     "pos_base_m": [
+      -0.095,
+      0.035,
+      0.03
+     ]
+    },
+    {
+     "id": "mic_xvf3800_flex",
+     "body": "trunk_assembly",
+     "mass_g": 50.0,
+     "pos_base_m": [
+      -0.04,
+      0.0,
+      0.106
+     ]
+    },
+    {
+     "id": "speaker",
+     "body": "trunk_assembly",
+     "mass_g": 40.0,
+     "pos_base_m": [
+      0.015,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "dock_contact_plate",
+     "body": "trunk_assembly",
+     "mass_g": 55.0,
+     "pos_base_m": [
+      -0.158,
+      0.0,
+      0.04
+     ]
+    },
+    {
+     "id": "wiring_trunk",
+     "body": "trunk_assembly",
+     "mass_g": 25.0,
+     "pos_base_m": [
+      -0.04,
+      0.0,
+      0.07
+     ]
+    },
+    {
+     "id": "ar0144_stereo",
+     "body": "head_assembly",
+     "mass_g": 27.0,
+     "pos_base_m": [
+      0.09,
+      0.0,
+      0.205
+     ]
+    },
+    {
+     "id": "ir_illuminator",
+     "body": "head_assembly",
+     "mass_g": 10.0,
+     "pos_base_m": [
+      0.095,
+      0.0,
+      0.225
+     ]
+    },
+    {
+     "id": "eyes_gc9a01_left",
+     "body": "head_assembly",
+     "mass_g": 15.0,
+     "pos_base_m": [
+      0.085,
+      0.05,
+      0.205
+     ]
+    },
+    {
+     "id": "eyes_gc9a01_right",
+     "body": "head_assembly",
+     "mass_g": 15.0,
+     "pos_base_m": [
+      0.085,
+      -0.05,
+      0.205
+     ]
+    },
+    {
+     "id": "wiring_head",
+     "body": "head_assembly",
+     "mass_g": 20.0,
+     "pos_base_m": [
+      0.0,
+      0.0,
+      0.195
+     ]
+    },
+    {
+     "id": "head_shell_delta",
+     "body": "head_assembly",
+     "mass_g": 30.0,
+     "pos_base_m": [
+      0.02,
+      0.0,
+      0.205
+     ]
+    }
+   ],
+   "static": {
+    "total_mass_kg": 2.4485,
+    "com_base_m": [
+     -0.0275,
+     0.0003,
+     0.0504
+    ],
+    "head_chain_mass_kg": 0.6429,
+    "head_chain_com_base_m": [
+     0.0189,
+     -0.0005,
+     0.1933
+    ],
+    "head_assembly_mass_kg": 0.468,
+    "gravity_torque_home_Nm": {
+     "neck_pitch": 0.113,
+     "head_pitch": 0.113,
+     "head_yaw": 0.0,
+     "head_roll": 0.0042
+    },
+    "neck_torque_max_Nm": {
+     "neck_pitch": 0.6303,
+     "head_pitch": 0.2709
+    }
+   },
+   "stand": {
+    "fallen": false,
+    "stepping_fraction": 0.001,
+    "drift_m": 0.0126,
+    "tilt_max_deg": 6.11,
+    "base_z_mean_m": 0.1647
+   },
+   "walk": [
+    {
+     "axis": "vx",
+     "cmd": 0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.1108,
+     "ratio": 0.739,
+     "tilt_max_deg": 6.7
+    },
+    {
+     "axis": "vx",
+     "cmd": -0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": -0.0445,
+     "ratio": 0.297,
+     "tilt_max_deg": 5.6
+    },
+    {
+     "axis": "yaw_rate",
+     "cmd": 1.0,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.876,
+     "ratio": 0.876,
+     "tilt_max_deg": 5.3
+    },
+    {
+     "axis": "yaw_rate",
+     "cmd": -1.0,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": -0.8646,
+     "ratio": 0.865,
+     "tilt_max_deg": 5.5
+    },
+    {
+     "axis": "vy",
+     "cmd": 0.2,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.1084,
+     "ratio": 0.542,
+     "tilt_max_deg": 5.4
+    }
+   ],
+   "start_threshold": [
+    {
+     "vx": 0.06,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": 0.08,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": 0.1,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": 0.12,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": -0.1,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": -0.12,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": -0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    }
+   ],
+   "head_standing": [
+    {
+     "joint": "head_yaw",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.4,
+     "actual_rad": 0.443
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": -0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.4,
+     "actual_rad": -0.652
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": 1.0,
+     "fallen": false,
+     "tilt_max_deg": 5.4,
+     "actual_rad": 0.97
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": -1.0,
+     "fallen": true,
+     "tilt_max_deg": 45.6,
+     "actual_rad": -1.209
+    },
+    {
+     "joint": "head_pitch",
+     "cmd_rad": 0.3,
+     "fallen": false,
+     "tilt_max_deg": 5.4,
+     "actual_rad": 0.19
+    },
+    {
+     "joint": "head_pitch",
+     "cmd_rad": -0.78,
+     "fallen": false,
+     "tilt_max_deg": 6.7,
+     "actual_rad": -0.786
+    },
+    {
+     "joint": "head_roll",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.4,
+     "actual_rad": 0.419
+    },
+    {
+     "joint": "head_roll",
+     "cmd_rad": -0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.4,
+     "actual_rad": -0.518
+    },
+    {
+     "joint": "neck_pitch",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 6.8,
+     "actual_rad": 0.733
+    },
+    {
+     "joint": "neck_pitch",
+     "cmd_rad": -0.34,
+     "fallen": false,
+     "tilt_max_deg": 5.7,
+     "actual_rad": -0.158
+    }
+   ],
+   "fall_rate": {
+    "label": "p2_high",
+    "seeds": 40,
+    "seconds_each": 60.0,
+    "falls": 0,
+    "fall_rate": 0.0,
+    "fall_times_s": [],
+    "tilt_max_deg_p50": 7.3,
+    "tilt_max_deg_worst": 8.5
+   }
+  },
+  {
+   "name": "p2_nominal_pi4_top_front",
+   "label": "估計值，Pi 4 改放 top_front",
+   "model": {},
+   "items": [
+    {
+     "id": "pi_zero_2w",
+     "body": "head_assembly",
+     "mass_g": -15.0,
+     "pos_base_m": [
+      0.036,
+      0.048,
+      0.224
+     ]
+    },
+    {
+     "id": "pi4_board",
+     "body": "trunk_assembly",
+     "mass_g": 50.0,
+     "pos_base_m": [
+      -0.005,
+      0.0,
+      0.095
+     ]
+    },
+    {
+     "id": "pi4_heatsink",
+     "body": "trunk_assembly",
+     "mass_g": 10.0,
+     "pos_base_m": [
+      -0.005,
+      0.0,
+      0.104
+     ]
+    },
+    {
+     "id": "ubec_5v",
+     "body": "trunk_assembly",
+     "mass_g": 15.0,
+     "pos_base_m": [
+      -0.095,
+      0.035,
+      0.03
+     ]
+    },
+    {
+     "id": "mic_xvf3800_flex",
+     "body": "trunk_assembly",
+     "mass_g": 30.0,
+     "pos_base_m": [
+      -0.04,
+      0.0,
+      0.106
+     ]
+    },
+    {
+     "id": "speaker",
+     "body": "trunk_assembly",
+     "mass_g": 20.0,
+     "pos_base_m": [
+      0.015,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "dock_contact_plate",
+     "body": "trunk_assembly",
+     "mass_g": 42.0,
+     "pos_base_m": [
+      -0.158,
+      0.0,
+      0.04
+     ]
+    },
+    {
+     "id": "wiring_trunk",
+     "body": "trunk_assembly",
+     "mass_g": 10.0,
+     "pos_base_m": [
+      -0.04,
+      0.0,
+      0.07
+     ]
+    },
+    {
+     "id": "ar0144_stereo",
+     "body": "head_assembly",
+     "mass_g": 15.0,
+     "pos_base_m": [
+      0.09,
+      0.0,
+      0.205
+     ]
+    },
+    {
+     "id": "ir_illuminator",
+     "body": "head_assembly",
+     "mass_g": 5.0,
+     "pos_base_m": [
+      0.095,
+      0.0,
+      0.225
+     ]
+    },
+    {
+     "id": "eyes_gc9a01_left",
+     "body": "head_assembly",
+     "mass_g": 8.4,
+     "pos_base_m": [
+      0.085,
+      0.05,
+      0.205
+     ]
+    },
+    {
+     "id": "eyes_gc9a01_right",
+     "body": "head_assembly",
+     "mass_g": 8.4,
+     "pos_base_m": [
+      0.085,
+      -0.05,
+      0.205
+     ]
+    },
+    {
+     "id": "wiring_head",
+     "body": "head_assembly",
+     "mass_g": 10.0,
+     "pos_base_m": [
+      0.0,
+      0.0,
+      0.195
+     ]
+    }
+   ],
+   "static": {
+    "total_mass_kg": 2.2703,
+    "com_base_m": [
+     -0.0278,
+     0.0001,
+     0.0446
+    ],
+    "head_chain_mass_kg": 0.5677,
+    "head_chain_com_base_m": [
+     0.0153,
+     -0.0009,
+     0.1916
+    ],
+    "head_assembly_mass_kg": 0.3928,
+    "gravity_torque_home_Nm": {
+     "neck_pitch": 0.0798,
+     "head_pitch": 0.0798,
+     "head_yaw": 0.0,
+     "head_roll": 0.0065
+    },
+    "neck_torque_max_Nm": {
+     "neck_pitch": 0.5415,
+     "head_pitch": 0.2236
+    }
+   },
+   "stand": {
+    "fallen": false,
+    "stepping_fraction": 0.001,
+    "drift_m": 0.0117,
+    "tilt_max_deg": 6.26,
+    "base_z_mean_m": 0.1654
+   },
+   "walk": [
+    {
+     "axis": "vx",
+     "cmd": 0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.1137,
+     "ratio": 0.758,
+     "tilt_max_deg": 6.7
+    },
+    {
+     "axis": "vx",
+     "cmd": -0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": -0.0467,
+     "ratio": 0.312,
+     "tilt_max_deg": 6.0
+    },
+    {
+     "axis": "yaw_rate",
+     "cmd": 1.0,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.8452,
+     "ratio": 0.845,
+     "tilt_max_deg": 5.4
+    },
+    {
+     "axis": "yaw_rate",
+     "cmd": -1.0,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": -0.8854,
+     "ratio": 0.885,
+     "tilt_max_deg": 5.4
+    },
+    {
+     "axis": "vy",
+     "cmd": 0.2,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.1104,
+     "ratio": 0.552,
+     "tilt_max_deg": 5.5
+    }
+   ],
+   "start_threshold": [
+    {
+     "vx": 0.06,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": 0.08,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": 0.1,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": 0.12,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": -0.1,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": -0.12,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": -0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    }
+   ],
+   "head_standing": [
+    {
+     "joint": "head_yaw",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.5,
+     "actual_rad": 0.445
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": -0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.5,
+     "actual_rad": -0.642
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": 1.0,
+     "fallen": false,
+     "tilt_max_deg": 5.5,
+     "actual_rad": 0.967
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": -1.0,
+     "fallen": true,
+     "tilt_max_deg": 47.2,
+     "actual_rad": -1.195
+    },
+    {
+     "joint": "head_pitch",
+     "cmd_rad": 0.3,
+     "fallen": false,
+     "tilt_max_deg": 5.5,
+     "actual_rad": 0.191
+    },
+    {
+     "joint": "head_pitch",
+     "cmd_rad": -0.78,
+     "fallen": false,
+     "tilt_max_deg": 7.6,
+     "actual_rad": -0.786
+    },
+    {
+     "joint": "head_roll",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.5,
+     "actual_rad": 0.42
+    },
+    {
+     "joint": "head_roll",
+     "cmd_rad": -0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.5,
+     "actual_rad": -0.521
+    },
+    {
+     "joint": "neck_pitch",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 7.0,
+     "actual_rad": 0.731
+    },
+    {
+     "joint": "neck_pitch",
+     "cmd_rad": -0.34,
+     "fallen": false,
+     "tilt_max_deg": 5.9,
+     "actual_rad": -0.154
+    }
+   ],
+   "fall_rate": {
+    "label": "p2_nominal_pi4_top_front",
+    "seeds": 40,
+    "seconds_each": 60.0,
+    "falls": 0,
+    "fall_rate": 0.0,
+    "fall_times_s": [],
+    "tilt_max_deg_p50": 7.0,
+    "tilt_max_deg_worst": 7.9
+   }
+  },
+  {
+   "name": "p2_nominal_pi4_top_back",
+   "label": "估計值，Pi 4 改放 top_back",
+   "model": {},
+   "items": [
+    {
+     "id": "pi_zero_2w",
+     "body": "head_assembly",
+     "mass_g": -15.0,
+     "pos_base_m": [
+      0.036,
+      0.048,
+      0.224
+     ]
+    },
+    {
+     "id": "pi4_board",
+     "body": "trunk_assembly",
+     "mass_g": 50.0,
+     "pos_base_m": [
+      -0.085,
+      0.0,
+      0.095
+     ]
+    },
+    {
+     "id": "pi4_heatsink",
+     "body": "trunk_assembly",
+     "mass_g": 10.0,
+     "pos_base_m": [
+      -0.085,
+      0.0,
+      0.104
+     ]
+    },
+    {
+     "id": "ubec_5v",
+     "body": "trunk_assembly",
+     "mass_g": 15.0,
+     "pos_base_m": [
+      -0.095,
+      0.035,
+      0.03
+     ]
+    },
+    {
+     "id": "mic_xvf3800_flex",
+     "body": "trunk_assembly",
+     "mass_g": 30.0,
+     "pos_base_m": [
+      -0.04,
+      0.0,
+      0.106
+     ]
+    },
+    {
+     "id": "speaker",
+     "body": "trunk_assembly",
+     "mass_g": 20.0,
+     "pos_base_m": [
+      0.015,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "dock_contact_plate",
+     "body": "trunk_assembly",
+     "mass_g": 42.0,
+     "pos_base_m": [
+      -0.158,
+      0.0,
+      0.04
+     ]
+    },
+    {
+     "id": "wiring_trunk",
+     "body": "trunk_assembly",
+     "mass_g": 10.0,
+     "pos_base_m": [
+      -0.04,
+      0.0,
+      0.07
+     ]
+    },
+    {
+     "id": "ar0144_stereo",
+     "body": "head_assembly",
+     "mass_g": 15.0,
+     "pos_base_m": [
+      0.09,
+      0.0,
+      0.205
+     ]
+    },
+    {
+     "id": "ir_illuminator",
+     "body": "head_assembly",
+     "mass_g": 5.0,
+     "pos_base_m": [
+      0.095,
+      0.0,
+      0.225
+     ]
+    },
+    {
+     "id": "eyes_gc9a01_left",
+     "body": "head_assembly",
+     "mass_g": 8.4,
+     "pos_base_m": [
+      0.085,
+      0.05,
+      0.205
+     ]
+    },
+    {
+     "id": "eyes_gc9a01_right",
+     "body": "head_assembly",
+     "mass_g": 8.4,
+     "pos_base_m": [
+      0.085,
+      -0.05,
+      0.205
+     ]
+    },
+    {
+     "id": "wiring_head",
+     "body": "head_assembly",
+     "mass_g": 10.0,
+     "pos_base_m": [
+      0.0,
+      0.0,
+      0.195
+     ]
+    }
+   ],
+   "static": {
+    "total_mass_kg": 2.2703,
+    "com_base_m": [
+     -0.03,
+     0.0001,
+     0.0446
+    ],
+    "head_chain_mass_kg": 0.5677,
+    "head_chain_com_base_m": [
+     0.0153,
+     -0.0009,
+     0.1916
+    ],
+    "head_assembly_mass_kg": 0.3928,
+    "gravity_torque_home_Nm": {
+     "neck_pitch": 0.0798,
+     "head_pitch": 0.0798,
+     "head_yaw": 0.0,
+     "head_roll": 0.0065
+    },
+    "neck_torque_max_Nm": {
+     "neck_pitch": 0.5415,
+     "head_pitch": 0.2236
+    }
+   },
+   "stand": {
+    "fallen": false,
+    "stepping_fraction": 0.001,
+    "drift_m": 0.0113,
+    "tilt_max_deg": 6.4,
+    "base_z_mean_m": 0.1658
+   },
+   "walk": [
+    {
+     "axis": "vx",
+     "cmd": 0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.1146,
+     "ratio": 0.764,
+     "tilt_max_deg": 6.3
+    },
+    {
+     "axis": "vx",
+     "cmd": -0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": -0.0495,
+     "ratio": 0.33,
+     "tilt_max_deg": 6.1
+    },
+    {
+     "axis": "yaw_rate",
+     "cmd": 1.0,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.8264,
+     "ratio": 0.826,
+     "tilt_max_deg": 5.6
+    },
+    {
+     "axis": "yaw_rate",
+     "cmd": -1.0,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": -0.871,
+     "ratio": 0.871,
+     "tilt_max_deg": 5.6
+    },
+    {
+     "axis": "vy",
+     "cmd": 0.2,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.1117,
+     "ratio": 0.558,
+     "tilt_max_deg": 5.7
+    }
+   ],
+   "start_threshold": [
+    {
+     "vx": 0.06,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": 0.08,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": 0.1,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": 0.12,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": -0.1,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": -0.12,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": -0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    }
+   ],
+   "head_standing": [
+    {
+     "joint": "head_yaw",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.7,
+     "actual_rad": 0.447
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": -0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.7,
+     "actual_rad": -0.635
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": 1.0,
+     "fallen": false,
+     "tilt_max_deg": 5.7,
+     "actual_rad": 0.973
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": -1.0,
+     "fallen": true,
+     "tilt_max_deg": 47.1,
+     "actual_rad": -1.226
+    },
+    {
+     "joint": "head_pitch",
+     "cmd_rad": 0.3,
+     "fallen": false,
+     "tilt_max_deg": 5.7,
+     "actual_rad": 0.193
+    },
+    {
+     "joint": "head_pitch",
+     "cmd_rad": -0.78,
+     "fallen": false,
+     "tilt_max_deg": 7.6,
+     "actual_rad": -0.786
+    },
+    {
+     "joint": "head_roll",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.7,
+     "actual_rad": 0.412
+    },
+    {
+     "joint": "head_roll",
+     "cmd_rad": -0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.7,
+     "actual_rad": -0.518
+    },
+    {
+     "joint": "neck_pitch",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 6.3,
+     "actual_rad": 0.732
+    },
+    {
+     "joint": "neck_pitch",
+     "cmd_rad": -0.34,
+     "fallen": false,
+     "tilt_max_deg": 6.1,
+     "actual_rad": -0.153
+    }
+   ],
+   "fall_rate": {
+    "label": "p2_nominal_pi4_top_back",
+    "seeds": 40,
+    "seconds_each": 60.0,
+    "falls": 0,
+    "fall_rate": 0.0,
+    "fall_times_s": [],
+    "tilt_max_deg_p50": 6.9,
+    "tilt_max_deg_worst": 8.2
+   }
+  },
+  {
+   "name": "p2_nominal_pi4_low_mid",
+   "label": "估計值，Pi 4 改放 low_mid",
+   "model": {},
+   "items": [
+    {
+     "id": "pi_zero_2w",
+     "body": "head_assembly",
+     "mass_g": -15.0,
+     "pos_base_m": [
+      0.036,
+      0.048,
+      0.224
+     ]
+    },
+    {
+     "id": "pi4_board",
+     "body": "trunk_assembly",
+     "mass_g": 50.0,
+     "pos_base_m": [
+      -0.06,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "pi4_heatsink",
+     "body": "trunk_assembly",
+     "mass_g": 10.0,
+     "pos_base_m": [
+      -0.06,
+      0.0,
+      0.009
+     ]
+    },
+    {
+     "id": "ubec_5v",
+     "body": "trunk_assembly",
+     "mass_g": 15.0,
+     "pos_base_m": [
+      -0.095,
+      0.035,
+      0.03
+     ]
+    },
+    {
+     "id": "mic_xvf3800_flex",
+     "body": "trunk_assembly",
+     "mass_g": 30.0,
+     "pos_base_m": [
+      -0.04,
+      0.0,
+      0.106
+     ]
+    },
+    {
+     "id": "speaker",
+     "body": "trunk_assembly",
+     "mass_g": 20.0,
+     "pos_base_m": [
+      0.015,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "dock_contact_plate",
+     "body": "trunk_assembly",
+     "mass_g": 42.0,
+     "pos_base_m": [
+      -0.158,
+      0.0,
+      0.04
+     ]
+    },
+    {
+     "id": "wiring_trunk",
+     "body": "trunk_assembly",
+     "mass_g": 10.0,
+     "pos_base_m": [
+      -0.04,
+      0.0,
+      0.07
+     ]
+    },
+    {
+     "id": "ar0144_stereo",
+     "body": "head_assembly",
+     "mass_g": 15.0,
+     "pos_base_m": [
+      0.09,
+      0.0,
+      0.205
+     ]
+    },
+    {
+     "id": "ir_illuminator",
+     "body": "head_assembly",
+     "mass_g": 5.0,
+     "pos_base_m": [
+      0.095,
+      0.0,
+      0.225
+     ]
+    },
+    {
+     "id": "eyes_gc9a01_left",
+     "body": "head_assembly",
+     "mass_g": 8.4,
+     "pos_base_m": [
+      0.085,
+      0.05,
+      0.205
+     ]
+    },
+    {
+     "id": "eyes_gc9a01_right",
+     "body": "head_assembly",
+     "mass_g": 8.4,
+     "pos_base_m": [
+      0.085,
+      -0.05,
+      0.205
+     ]
+    },
+    {
+     "id": "wiring_head",
+     "body": "head_assembly",
+     "mass_g": 10.0,
+     "pos_base_m": [
+      0.0,
+      0.0,
+      0.195
+     ]
+    }
+   ],
+   "static": {
+    "total_mass_kg": 2.2703,
+    "com_base_m": [
+     -0.0293,
+     0.0001,
+     0.0421
+    ],
+    "head_chain_mass_kg": 0.5677,
+    "head_chain_com_base_m": [
+     0.0153,
+     -0.0009,
+     0.1916
+    ],
+    "head_assembly_mass_kg": 0.3928,
+    "gravity_torque_home_Nm": {
+     "neck_pitch": 0.0798,
+     "head_pitch": 0.0798,
+     "head_yaw": 0.0,
+     "head_roll": 0.0065
+    },
+    "neck_torque_max_Nm": {
+     "neck_pitch": 0.5415,
+     "head_pitch": 0.2236
+    }
+   },
+   "stand": {
+    "fallen": false,
+    "stepping_fraction": 0.002,
+    "drift_m": 0.0114,
+    "tilt_max_deg": 6.36,
+    "base_z_mean_m": 0.1657
+   },
+   "walk": [
+    {
+     "axis": "vx",
+     "cmd": 0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.1138,
+     "ratio": 0.759,
+     "tilt_max_deg": 6.4
+    },
+    {
+     "axis": "vx",
+     "cmd": -0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": -0.0468,
+     "ratio": 0.312,
+     "tilt_max_deg": 6.0
+    },
+    {
+     "axis": "yaw_rate",
+     "cmd": 1.0,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.8248,
+     "ratio": 0.825,
+     "tilt_max_deg": 5.5
+    },
+    {
+     "axis": "yaw_rate",
+     "cmd": -1.0,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": -0.8624,
+     "ratio": 0.862,
+     "tilt_max_deg": 5.5
+    },
+    {
+     "axis": "vy",
+     "cmd": 0.2,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.1103,
+     "ratio": 0.552,
+     "tilt_max_deg": 5.6
+    }
+   ],
+   "start_threshold": [
+    {
+     "vx": 0.06,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": 0.08,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": 0.1,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": 0.12,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": -0.1,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": -0.12,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": -0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    }
+   ],
+   "head_standing": [
+    {
+     "joint": "head_yaw",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": 0.449
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": -0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.7,
+     "actual_rad": -0.638
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": 1.0,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": 0.97
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": -1.0,
+     "fallen": true,
+     "tilt_max_deg": 47.2,
+     "actual_rad": -1.218
+    },
+    {
+     "joint": "head_pitch",
+     "cmd_rad": 0.3,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": 0.192
+    },
+    {
+     "joint": "head_pitch",
+     "cmd_rad": -0.78,
+     "fallen": false,
+     "tilt_max_deg": 7.5,
+     "actual_rad": -0.786
+    },
+    {
+     "joint": "head_roll",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.6,
+     "actual_rad": 0.417
+    },
+    {
+     "joint": "head_roll",
+     "cmd_rad": -0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.7,
+     "actual_rad": -0.52
+    },
+    {
+     "joint": "neck_pitch",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 6.6,
+     "actual_rad": 0.732
+    },
+    {
+     "joint": "neck_pitch",
+     "cmd_rad": -0.34,
+     "fallen": false,
+     "tilt_max_deg": 6.0,
+     "actual_rad": -0.153
+    }
+   ],
+   "fall_rate": {
+    "label": "p2_nominal_pi4_low_mid",
+    "seeds": 40,
+    "seconds_each": 60.0,
+    "falls": 0,
+    "fall_rate": 0.0,
+    "fall_times_s": [],
+    "tilt_max_deg_p50": 6.9,
+    "tilt_max_deg_worst": 8.0
+   }
+  },
+  {
+   "name": "upstream_kp80",
+   "label": "上游模型，舵機 kp −20%",
+   "model": {
+    "kp": 10.696
+   },
+   "items": [],
+   "static": {
+    "total_mass_kg": 2.0615,
+    "com_base_m": [
+     -0.0273,
+     0.0002,
+     0.0404
+    ],
+    "head_chain_mass_kg": 0.5359,
+    "head_chain_com_base_m": [
+     0.0112,
+     0.0003,
+     0.1914
+    ],
+    "head_assembly_mass_kg": 0.361,
+    "gravity_torque_home_Nm": {
+     "neck_pitch": 0.0535,
+     "head_pitch": 0.0535,
+     "head_yaw": 0.0,
+     "head_roll": -0.0006
+    },
+    "neck_torque_max_Nm": {
+     "neck_pitch": 0.5033,
+     "head_pitch": 0.2037
+    }
+   },
+   "stand": {
+    "fallen": false,
+    "stepping_fraction": 0.0,
+    "drift_m": 0.0136,
+    "tilt_max_deg": 5.67,
+    "base_z_mean_m": 0.1644
+   },
+   "walk": [
+    {
+     "axis": "vx",
+     "cmd": 0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.0713,
+     "ratio": 0.475,
+     "tilt_max_deg": 6.5
+    },
+    {
+     "axis": "vx",
+     "cmd": -0.15,
+     "n": 9,
+     "started": 0,
+     "fallen": 0,
+     "actual_mean": null,
+     "ratio": null,
+     "tilt_max_deg": 5.3
+    },
+    {
+     "axis": "yaw_rate",
+     "cmd": 1.0,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.5581,
+     "ratio": 0.558,
+     "tilt_max_deg": 5.2
+    },
+    {
+     "axis": "yaw_rate",
+     "cmd": -1.0,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": -0.6095,
+     "ratio": 0.609,
+     "tilt_max_deg": 5.3
+    },
+    {
+     "axis": "vy",
+     "cmd": 0.2,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.0531,
+     "ratio": 0.266,
+     "tilt_max_deg": 5.3
+    }
+   ],
+   "start_threshold": [
+    {
+     "vx": 0.06,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": 0.08,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": 0.1,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": 0.12,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": -0.1,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": -0.12,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": -0.15,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    }
+   ],
+   "head_standing": [
+    {
+     "joint": "head_yaw",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.4,
+     "actual_rad": 0.436
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": -0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.4,
+     "actual_rad": -0.66
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": 1.0,
+     "fallen": false,
+     "tilt_max_deg": 5.4,
+     "actual_rad": 0.959
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": -1.0,
+     "fallen": true,
+     "tilt_max_deg": 45.3,
+     "actual_rad": -1.19
+    },
+    {
+     "joint": "head_pitch",
+     "cmd_rad": 0.3,
+     "fallen": false,
+     "tilt_max_deg": 5.4,
+     "actual_rad": 0.195
+    },
+    {
+     "joint": "head_pitch",
+     "cmd_rad": -0.78,
+     "fallen": false,
+     "tilt_max_deg": 6.2,
+     "actual_rad": -0.786
+    },
+    {
+     "joint": "head_roll",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.4,
+     "actual_rad": 0.419
+    },
+    {
+     "joint": "head_roll",
+     "cmd_rad": -0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.4,
+     "actual_rad": -0.517
+    },
+    {
+     "joint": "neck_pitch",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 6.9,
+     "actual_rad": 0.741
+    },
+    {
+     "joint": "neck_pitch",
+     "cmd_rad": -0.34,
+     "fallen": false,
+     "tilt_max_deg": 5.4,
+     "actual_rad": -0.157
+    }
+   ],
+   "fall_rate": {
+    "label": "upstream_kp80",
+    "seeds": 40,
+    "seconds_each": 60.0,
+    "falls": 0,
+    "fall_rate": 0.0,
+    "fall_times_s": [],
+    "tilt_max_deg_p50": 6.5,
+    "tilt_max_deg_worst": 7.9
+   }
+  },
+  {
+   "name": "p2_high_kp80",
+   "label": "加裝件取上限，舵機 kp −20%",
+   "model": {
+    "kp": 10.696
+   },
+   "items": [
+    {
+     "id": "pi_zero_2w",
+     "body": "head_assembly",
+     "mass_g": -10.0,
+     "pos_base_m": [
+      0.036,
+      0.048,
+      0.224
+     ]
+    },
+    {
+     "id": "pi4_board",
+     "body": "trunk_assembly",
+     "mass_g": 60.0,
+     "pos_base_m": [
+      -0.045,
+      0.0,
+      0.095
+     ]
+    },
+    {
+     "id": "pi4_heatsink",
+     "body": "trunk_assembly",
+     "mass_g": 25.0,
+     "pos_base_m": [
+      -0.045,
+      0.0,
+      0.104
+     ]
+    },
+    {
+     "id": "ubec_5v",
+     "body": "trunk_assembly",
+     "mass_g": 25.0,
+     "pos_base_m": [
+      -0.095,
+      0.035,
+      0.03
+     ]
+    },
+    {
+     "id": "mic_xvf3800_flex",
+     "body": "trunk_assembly",
+     "mass_g": 50.0,
+     "pos_base_m": [
+      -0.04,
+      0.0,
+      0.106
+     ]
+    },
+    {
+     "id": "speaker",
+     "body": "trunk_assembly",
+     "mass_g": 40.0,
+     "pos_base_m": [
+      0.015,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "dock_contact_plate",
+     "body": "trunk_assembly",
+     "mass_g": 55.0,
+     "pos_base_m": [
+      -0.158,
+      0.0,
+      0.04
+     ]
+    },
+    {
+     "id": "wiring_trunk",
+     "body": "trunk_assembly",
+     "mass_g": 25.0,
+     "pos_base_m": [
+      -0.04,
+      0.0,
+      0.07
+     ]
+    },
+    {
+     "id": "ar0144_stereo",
+     "body": "head_assembly",
+     "mass_g": 27.0,
+     "pos_base_m": [
+      0.09,
+      0.0,
+      0.205
+     ]
+    },
+    {
+     "id": "ir_illuminator",
+     "body": "head_assembly",
+     "mass_g": 10.0,
+     "pos_base_m": [
+      0.095,
+      0.0,
+      0.225
+     ]
+    },
+    {
+     "id": "eyes_gc9a01_left",
+     "body": "head_assembly",
+     "mass_g": 15.0,
+     "pos_base_m": [
+      0.085,
+      0.05,
+      0.205
+     ]
+    },
+    {
+     "id": "eyes_gc9a01_right",
+     "body": "head_assembly",
+     "mass_g": 15.0,
+     "pos_base_m": [
+      0.085,
+      -0.05,
+      0.205
+     ]
+    },
+    {
+     "id": "wiring_head",
+     "body": "head_assembly",
+     "mass_g": 20.0,
+     "pos_base_m": [
+      0.0,
+      0.0,
+      0.195
+     ]
+    },
+    {
+     "id": "head_shell_delta",
+     "body": "head_assembly",
+     "mass_g": 30.0,
+     "pos_base_m": [
+      0.02,
+      0.0,
+      0.205
+     ]
+    }
+   ],
+   "static": {
+    "total_mass_kg": 2.4485,
+    "com_base_m": [
+     -0.0275,
+     0.0003,
+     0.0504
+    ],
+    "head_chain_mass_kg": 0.6429,
+    "head_chain_com_base_m": [
+     0.0189,
+     -0.0005,
+     0.1933
+    ],
+    "head_assembly_mass_kg": 0.468,
+    "gravity_torque_home_Nm": {
+     "neck_pitch": 0.113,
+     "head_pitch": 0.113,
+     "head_yaw": 0.0,
+     "head_roll": 0.0042
+    },
+    "neck_torque_max_Nm": {
+     "neck_pitch": 0.6303,
+     "head_pitch": 0.2709
+    }
+   },
+   "stand": {
+    "fallen": false,
+    "stepping_fraction": 0.0,
+    "drift_m": 0.0144,
+    "tilt_max_deg": 5.23,
+    "base_z_mean_m": 0.1627
+   },
+   "walk": [
+    {
+     "axis": "vx",
+     "cmd": 0.15,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.0663,
+     "ratio": 0.442,
+     "tilt_max_deg": 6.7
+    },
+    {
+     "axis": "vx",
+     "cmd": -0.15,
+     "n": 9,
+     "started": 0,
+     "fallen": 0,
+     "actual_mean": null,
+     "ratio": null,
+     "tilt_max_deg": 5.2
+    },
+    {
+     "axis": "yaw_rate",
+     "cmd": 1.0,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.5458,
+     "ratio": 0.546,
+     "tilt_max_deg": 5.5
+    },
+    {
+     "axis": "yaw_rate",
+     "cmd": -1.0,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": -0.5362,
+     "ratio": 0.536,
+     "tilt_max_deg": 5.1
+    },
+    {
+     "axis": "vy",
+     "cmd": 0.2,
+     "n": 9,
+     "started": 9,
+     "fallen": 0,
+     "actual_mean": 0.0639,
+     "ratio": 0.319,
+     "tilt_max_deg": 5.2
+    }
+   ],
+   "start_threshold": [
+    {
+     "vx": 0.06,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": 0.08,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": 0.1,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": 0.12,
+     "n": 9,
+     "started": 9,
+     "fallen": 0
+    },
+    {
+     "vx": -0.1,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": -0.12,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    },
+    {
+     "vx": -0.15,
+     "n": 9,
+     "started": 0,
+     "fallen": 0
+    }
+   ],
+   "head_standing": [
+    {
+     "joint": "head_yaw",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.2,
+     "actual_rad": 0.438
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": -0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.2,
+     "actual_rad": -0.663
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": 1.0,
+     "fallen": false,
+     "tilt_max_deg": 5.2,
+     "actual_rad": 0.959
+    },
+    {
+     "joint": "head_yaw",
+     "cmd_rad": -1.0,
+     "fallen": true,
+     "tilt_max_deg": 47.5,
+     "actual_rad": -1.223
+    },
+    {
+     "joint": "head_pitch",
+     "cmd_rad": 0.3,
+     "fallen": false,
+     "tilt_max_deg": 5.2,
+     "actual_rad": 0.19
+    },
+    {
+     "joint": "head_pitch",
+     "cmd_rad": -0.78,
+     "fallen": false,
+     "tilt_max_deg": 5.2,
+     "actual_rad": -0.786
+    },
+    {
+     "joint": "head_roll",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.2,
+     "actual_rad": 0.426
+    },
+    {
+     "joint": "head_roll",
+     "cmd_rad": -0.5,
+     "fallen": false,
+     "tilt_max_deg": 5.2,
+     "actual_rad": -0.494
+    },
+    {
+     "joint": "neck_pitch",
+     "cmd_rad": 0.5,
+     "fallen": false,
+     "tilt_max_deg": 7.3,
+     "actual_rad": 0.744
+    },
+    {
+     "joint": "neck_pitch",
+     "cmd_rad": -0.34,
+     "fallen": false,
+     "tilt_max_deg": 5.2,
+     "actual_rad": -0.169
+    }
+   ],
+   "fall_rate": {
+    "label": "p2_high_kp80",
+    "seeds": 40,
+    "seconds_each": 60.0,
+    "falls": 0,
+    "fall_rate": 0.0,
+    "fall_times_s": [],
+    "tilt_max_deg_p50": 7.9,
+    "tilt_max_deg_worst": 10.5
+   }
+  }
+ ],
+ "margin": {
+  "head_front": [
+   {
+    "extra_g": 0,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.76,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 6.5
+   },
+   {
+    "extra_g": 25,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.765,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 6.7
+   },
+   {
+    "extra_g": 50,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.752,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 6.8
+   },
+   {
+    "extra_g": 75,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.744,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 7.3
+   },
+   {
+    "extra_g": 100,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.721,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 7.5
+   },
+   {
+    "extra_g": 150,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.71,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0",
+     "neck_pitch -0.34"
+    ],
+    "walk_tilt_max_deg": 8.1
+   },
+   {
+    "extra_g": 200,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.73,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0",
+     "neck_pitch -0.34"
+    ],
+    "walk_tilt_max_deg": 8.8
+   }
+  ],
+  "trunk_top": [
+   {
+    "extra_g": 0,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.76,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 6.5
+   },
+   {
+    "extra_g": 100,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.751,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 6.6
+   },
+   {
+    "extra_g": 200,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.739,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 6.6
+   },
+   {
+    "extra_g": 400,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.709,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 6.7
+   },
+   {
+    "extra_g": 600,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.675,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 6.7
+   },
+   {
+    "extra_g": 800,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.628,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 6.6
+   }
+  ],
+  "head_front_kp80": [
+   {
+    "extra_g": 0,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.444,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 6.0
+   },
+   {
+    "extra_g": 25,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.46,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 6.5
+   },
+   {
+    "extra_g": 50,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.472,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 7.1
+   },
+   {
+    "extra_g": 75,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.469,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 7.8
+   },
+   {
+    "extra_g": 100,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.453,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0",
+     "neck_pitch -0.34"
+    ],
+    "walk_tilt_max_deg": 8.7
+   },
+   {
+    "extra_g": 150,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.412,
+    "vx_0p10_started": 5,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0",
+     "neck_pitch -0.34"
+    ],
+    "walk_tilt_max_deg": 11.5
+   },
+   {
+    "extra_g": 200,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.637,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0",
+     "neck_pitch -0.34"
+    ],
+    "walk_tilt_max_deg": 13.6
+   }
+  ]
+ }
+}
