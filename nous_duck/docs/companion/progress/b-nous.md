@@ -1,8 +1,48 @@
 # B 線進度：Nous 端（`nous_adapter/`）
 
-分支：`claude/duck-b-nous-a19b67`（從 `claude/duck-companion-overnight` 的 `3b2b0f6` 開出；只有本機 commit，沒有 push、沒有 PR、沒有合併別的分支）。最後更新：2026-11-25 23:10。
+分支：`claude/duck-b-nous-a19b67`，PR 的 base 是 `claude/duck-companion-overnight`。最後更新：2026-11-26。
 
-一句話：**Nous 端的程式都寫好了，測試 137 項全過，和 A 線的 duckd（mock 身體）端到端講得通；還沒搬進 AIOS，也還沒對真的鴨子下過指令。**
+一句話：**Nous 這一端的程式（本 repo 與 AIOS 分支）都寫好了、fixture 測試全過，和 duckd 的模擬身體端到端講得通；還沒有人用真實語音試過，也還沒有對真的鴨子下過指令。**
+
+## 2026-11-26：桌上互動（T2、T3、T6）
+
+| Step | 內容 | 狀態 | 驗證層級 |
+|---|---|---|---|
+| T2 | 語音命令轉頭：說話 → Nous → `app.duck.look`／`gesture` → 鴨子 | **程式完成，等你試**。AIOS 分支 `claude/duck-link`（[pcpcchen-coder/AIOS#156](https://github.com/pcpcchen-coder/AIOS/pull/156)，旗標 `NOUS_DUCK` 預設關閉，沒有合併）：`/duck-link` 端點（D1）＋ `duck` adapter（D2，先開 `status`、`stop`、`look`、`gesture`、`express`、`track`） | AIOS 的 fixture 測試（122 項，假鴨子）；AIOS 的 hub＋Dispatcher 對 duckd **模擬身體**的本機檢查（兩端都在 Mac）。**沒有真實語音、沒有實機** |
+| T3 | 語音互動時的動作：真實語音事件 → `presence` | **程式完成（粗略版），等你試**。同一個 PR 的 D4a：核心的工作階段事件（開始、連上、委派、結束）→ `wake`／`thinking`／`listening`／`working`／`error`／`idle`。**沒有 `speaking`**（核心不知道模型正在說話；要頁面回報 phase，是下一批 D4b） | 同上（fixture＋假時鐘；對 duckd 模擬身體送過 presence 並回讀） |
+| T6 | 鴨子自己的喇叭與麥克風進行對話（路線 A：Pi 上無螢幕跑 Nous 頁面） | **準備完成；真正連 Nous、出聲的那一步等你**（也等麥克風接上） | 見[終端 spike 紀錄](../../validation/duck-terminal-spike-2026-11-26.md)：實機（Pi 4），不連 Nous、不出聲、沒有麥克風 |
+| 過渡示範 | `duckctl say-command "往左看"`：文字 → 工具 → 鴨子 | 完成。**開發用的固定關鍵字規則，不是 Nous、不是語音辨識、不是語言模型**；不開麥克風 | 單元／整合測試；對 duckd 模擬身體手動執行 |
+| 對真的鴨子跑 `look`、`gesture`、`presence` | — | **沒有做**：A 線的實機頭部（T1）還沒好（Pi 上的 duckd 沒有啟動，舵機控制台占著匯流排）。B 線沒有碰 Pi 上的 duckd 與匯流排 | — |
+
+### 你要親手做的事
+
+1. **看 AIOS 的 PR**：[pcpcchen-coder/AIOS#156](https://github.com/pcpcchen-coder/AIOS/pull/156)。要特別看的五點寫在 PR 說明（新依賴 `ajv`、第一個入站 WebSocket、`realtime-routes.ts` 的改動、模型工具基準檔、presence 沒有 `speaking`）。
+2. **用語音試（T2、T3）**，不影響正在跑的 Nous：照 AIOS 分支 `docs/validation/duck-link-2026-11-26.md` §5 另起一個開發實例（`PORT=8790`、新的 `NOUS_CONFIG_DIR`、`NOUS_DUCK=on`、`NOUS_AIL=on`、`NOUS_AIL_SERVICES=duck`；登入或 API key 你自己設定）。checkout 已經在 `~/AIOS-duck-link`（分支 `claude/duck-link`，`npm ci` 做過了，**沒有 `.env`**）。那些步驟會連雲端模型、會出聲，沒有人執行過。
+   - 還沒有真的鴨子時，可以先對 duckd 的模擬身體：`cd nous_duck/robot/duckd && python -m duckd --body mock --engage --allow-unverified-gestures --url ws://127.0.0.1:8790/duck-link`（不用通道，都在 Mac）。
+   - A 線的實機頭部好了之後，通道的埠要和開發實例一致：`ssh -N -R 127.0.0.1:8790:127.0.0.1:8790 duck-pi4`，Pi 上的 duckd 連 `ws://127.0.0.1:8790/duck-link`。
+3. **不經 Nous 先確認「命令 → 頭」**（今天就能做，不用雲端）：`nous_adapter/README.md` 的「親手試」，把 `mock-duck` 換成 duckd；然後 `bin/duckctl say-command "往左看"`、`"點頭"`、`"回正"`。
+4. **T6 的實機步驟**（接上 XVF3800、在場、會出聲）：照終端 spike 紀錄最後的「等你」步驟。
+
+### 要你決定的事（我用了保守的預設）
+
+| 事項 | 我用的預設 |
+|---|---|
+| AIOS 要不要為 schema 驗證加 `ajv` | 加了（鎖 8.20.0），在 PR 說明標出來 |
+| 第一階段給模型哪些工具 | 照整合線轉達的決定：`status`、`stop`、`look`、`gesture`、`express`、`track` |
+| 沒啟用的 11 個工具要不要列在 Nous 的指令表 | 不列（`hidden`），免得看起來現在能用 |
+| `app.duck.resume` 給不給模型 | 不給 |
+| 鴨子連 Nous 的通道方向 | 文件兩種都寫；示範用 Mac → Pi（`ssh -R`） |
+| `look` 的方向 | 照 duckd 的註解：`head_yaw` 正＝往左、`head_pitch` 正＝抬頭。**還沒在實機確認**；如果相反，`say-command` 的左右或上下會反，模型也可能轉錯邊（工具說明寫的是這個方向） |
+| 動作清單 | duckd 預設不列出還沒實機驗證的動作（`nod` 等），要加 `--allow-unverified-gestures`；不加的話 Nous 說「鴨子點點頭」會得到「清單裡沒有這個名稱」 |
+
+### 這一批改了什麼（本 repo）
+
+- `nous_adapter/`：hub 多了 `attach(server)`（AIOS 核心的接法）；`DUCK_STAGE1_TOOLS`；`sendDuckPresence()`；AIOS 契約的宣告拆成和 AIOS 模組一對一的三個檔；`duckctl say-command`。測試 144 項通過（`validator` 33、`hub` 24、`duck-adapter` 51、`terminal` 18、`cli` 18）。
+- `nous_adapter/docs/`：整合計畫加 §0（實際做法、和計畫的差異、契約比對）；語音路徑依修訂後的 ADR-0003／0005／0010 更新（麥克風是標準版 XVF3800 裝在頭上、喚醒詞預設「Hey 鴨子」）。
+- `robot/deploy/pi4/setup_terminal.sh`、`robot/deploy/pi4/terminal/`：T6 的安裝、探測與量測腳本（新檔）。
+- 本 repo 的 ADR 編號變動（記憶 ADR-0011、低電量回家 ADR-0012、動作庫 ADR-0015）：B 線的文件沒有引用到這幾號，不用改。
+
+以下是 2026-11-25 夜間（B1～B6）的紀錄，數字是當時的。
 
 ## 各 Step
 

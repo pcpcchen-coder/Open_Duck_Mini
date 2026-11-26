@@ -2,7 +2,7 @@
 
 # Voice path: how Nous's voice reaches the duck, and how the duck listens
 
-Status: **design (not implemented, no listening test, no measurement on real hardware)**. Date: 2026-11-25.
+Status: **design (no listening test; for route A's terminal only the "not connected to Nous, no sound" preparation and measurement have been done)**. Date: 2026-11-25; updated 2026-11-26 in line with the revised ADR-0003, ADR-0005 and ADR-0010 (see §7).
 
 This document lines up the current state of AIOS (facts) against the duck's current hardware and answers four questions: the shortest workable conversation path today, how it changes once the microphone array arrives, what AIOS has to change, and what can be done on the duck side.
 
@@ -78,7 +78,7 @@ Person ──speech──► USB microphone on the duck ──► Chromium on th
   - The output device preference is one global copy (fact 4): the device ID selected on the Mac does not exist on the Pi. How the rpi4 terminal handles this today has not been fully looked into; it has to be confirmed in the spike.
 - In this approach the source of `presence` is right on the duck's own Pi (the page knows the full listening／thinking／speaking state), but the page's CSP is `connect-src 'self'` (`server/page-headers.ts:11`), so it **cannot connect to duckd directly**; it still has to go through the core (batch D4b: page reports phase → core → hub → the duck).
 
-## 3. After the microphone array arrives (the reSpeaker Flex XVF3800 of ADR-0005)
+## 3. After the microphone array is connected (ADR-0005: the standard reSpeaker XVF3800, mounted on the head)
 
 Route A stays the same; the capture and playback hardware is swapped:
 
@@ -87,7 +87,7 @@ Route A stays the same; the capture and playback hardware is swapped:
 | Capture | Replaced by the microphone array, with echo cancellation, beamforming and noise reduction done in hardware | The duck (hardware + system audio layer) |
 | Playback | The speaker is driven by the array's output instead, so that the echo-cancellation reference signal is the sound actually played (ADR-0010 §4); whether the array uses its own playback signal as the reference **has to be verified on arrival** | The duck |
 | Direction of arrival (DOA) | Read from the array's USB control interface, **not through the page**. The page's capture keeps only channel 1 when the channel count is not 1, 2, 4 or 6 (`spike/wake/direction/logic.ts:31-35`), so the page cannot get direction and should not be relied on for it | The duck (`robot/audio/`), with the result reported in the `data` of the duck-link event `wake_word` |
-| Wake word | Two options: (a) keep the page's wake (Chromium on the Pi detects it itself; the keyword is "Hey Nous"); (b) the duck natively detects its own wake word locally (ADR-0003 §3) | (a) no AIOS change; (b) detection is on the duck, but "starting a conversation after waking" needs AIOS's cooperation (see §4) |
+| Wake word | The duck's wake word defaults to 「Hey 鴨子」 ("Hey Duck") and can be changed (ADR-0003 §3, decided 2026-11-26). Two approaches: (a) keep the page's wake (Chromium on the Pi detects it itself; AIOS's current keywords are only "Hello Nous" and "Hey Nous", and adding 「Hey 鴨子」 requires changing AIOS's wake configuration); (b) the duck detects it natively and locally (`robot/audio/`) | (a) no AIOS change; (b) detection is on the duck, but "starting a conversation after waking" needs AIOS's cooperation (see §4) |
 | Multi-device arbitration | When the Mac, rpi4 and the duck hear the same utterance at once, respond only once | AIOS (batch D6) |
 | Finding a person | Wake → DOA → turn → find a face (ADR-0003 §4) | Locally on the duck; Nous only issues `find_person` |
 
@@ -121,5 +121,18 @@ If the spike does not pass (the Pi 4 cannot run Chromium, or the microphone cann
 
 - Whether to plug in a USB microphone first and do the route A spike (recommendation: yes); which one to use.
 - Listening tests and volume (it will make sound; daytime, with a person present).
-- The duck's terminal ID and wake word (pending in ADR-0003 §8).
+- The duck's terminal ID (the wake word is settled: 「Hey 鴨子」 by default, ADR-0003 §3).
 - Whether to spend time trying approach 1 (forwarding the Mac's audio to the duck).
+
+## 7. 2026-11-26 update
+
+In line with the revised ADRs and that day's progress, the sections above are to be read as follows:
+
+| Item | Update |
+|---|---|
+| Microphone | The user decided to use the **standard** reSpeaker XVF3800 USB 4-Mic Array (USB VID `0x2886`, PID `0x001A`), **mounted on the head** (ADR-0005 §2.3.1). The "Flex version, mounted on the body" originally written in this document is void. When checked on 2026-11-26 it was not yet connected to the Pi |
+| DOA | The array is on the head, so the sound-source angle read is **relative to the head**; the head's current rotation angle has to be added to get the direction relative to the body. This part is done by line A locally on the duck (`track sound`), not through Nous |
+| Wake word | 「Hey 鴨子」 by default, can be changed (ADR-0003 §3). There is no corresponding implementation on the Nous side yet |
+| Approach 0 (talk at the Mac, the duck does the motions) | AIOS batches D1, D2 and D4a **have been implemented on the AIOS branch `claude/duck-link` and a PR has been opened** (flag `NOUS_DUCK` off by default; fixture tests and a local check against duckd's simulated body, no real hardware, no real voice). See [`aios-integration-plan.md` §0](aios-integration-plan.en.md#0-2026-11-26-update-d1-d2-and-d4a-implemented-on-an-aios-branch) |
+| The route A spike | For the preparation work (the script for running Chromium without a screen on the Pi, and measurements) see [`../../robot/deploy/pi4/terminal/`](../../robot/deploy/pi4/terminal/) and the [validation record](../../docs/validation/duck-terminal-spike-2026-11-26.md). The step that actually connects to Nous and makes sound is **waiting for you** to be present |
+| `speaking` | The presence in this AIOS batch has only `wake`／`thinking`／`listening`／`working`／`error`／`idle`; there is **no `speaking`** (the core does not know the model is speaking). Nodding while speaking has to wait for the page to report phase (D4b), or for the duck itself to measure the sound being played (the recommendation in §4) |

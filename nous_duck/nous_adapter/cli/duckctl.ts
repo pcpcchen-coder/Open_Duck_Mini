@@ -236,13 +236,14 @@ async function main(): Promise<number> {
     const dryRun = takeFlag(argv, "dry-run");
     const text = argv.join(" ").trim();
     if (!text) throw new Error('用法：duckctl say-command "往左看" [--dry-run]');
-    const reply = await withHub(port, (c) => c.request<{ matched: { tool: string; args: Record<string, unknown>; rule: string } | null; result?: ToolResult | null; examples?: string[]; gestures?: string[] }>("say_command", { text, dry_run: dryRun }));
+    const reply = await withHub(port, (c) => c.request<{ matched: { tool: string; args: Record<string, unknown>; rule: string } | null; result?: ToolResult | null; examples?: string[]; gestures?: string[]; expressions?: string[] }>("say_command", { text, dry_run: dryRun }));
     if (json) return console.log(JSON.stringify(reply, null, 2)), reply.result ? exitCode(reply.result) : reply.matched ? 0 : 1;
     console.log("開發用的文字命令對應（固定規則）：不是 Nous、不是語音辨識、不是語言模型。");
     if (!reply.matched) {
       console.log(`認不得「${text}」，沒有送出任何指令。`);
       console.log(`認得的說法例如：${(reply.examples ?? []).join("、")}`);
       console.log(`鴨子目前回報的動作清單：${(reply.gestures ?? []).join("、") || "（空的；點頭、搖頭這類命令現在對應不到）"}`);
+      console.log(`鴨子目前回報的表情清單：${(reply.expressions ?? []).join("、") || "（空的；表情類的命令現在對應不到）"}`);
       return 1;
     }
     console.log(`「${text}」 → ${reply.matched.tool} ${JSON.stringify(reply.matched.args)}   （規則：${reply.matched.rule}）`);
