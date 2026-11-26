@@ -27,7 +27,9 @@ duckd 不做語音、視覺、決策（那是 Nous 的事，[ADR-0001](../../doc
 | `duckd/gestures.py`、`duckd/library/*.json` | 動作庫：定義檔、載入時檢查、播放（`nod`、`shake`、`tilt`、`look_around`） | A4 |
 | `duckd/presence.py` | `presence` → 眼睛表情＋頭部目標 | A5 |
 | `duckd/eyes_out.py` | `duck_eyes` 渲染＋虛擬面板（PNG） | A6 |
-| `duckd/percept.py` | 感知的本機輸入（UDP `127.0.0.1:8793`），給 `track` 用 | （配合 D 線） |
+| `duckd/percept.py` | 感知的本機輸入（UDP `127.0.0.1:8793`）：人臉／聲音方位、來源存活訊息 | T5 |
+| `duckd/track.py` | 聽聲辨位轉頭的目標決定：死區、平滑、舵機自噪音迴避、逾時回正 | T5 |
+| [`tools/head_check.sh`](tools/head_check.sh) | 實機頭部檢查：前置檢查 → 接手 → 端到端與租約量測 → 釋放 | T1 |
 | `duckd/gait_host.py`、`duckd/gait_fakes.py` | 步態 host：以 importlib 載入上游步態腳本、把手把換成仲裁器；假硬體介面（mock） | A7 |
 | `duckd/localctl.py`、`duckd/ctl.py` | 本機控制（UNIX socket）：`status`、`engage`、`release`、`estop`、`clear-estop` | A8 |
 | `duckd/mock_hub.py` | **假的** hub（mock）：測試與開發用，不是 Nous，也不是 B 線的 hub | 測試 |
@@ -130,10 +132,36 @@ ssh duck-pi4 'sudo systemctl stop duckd'
 | `gesture` | 支援 `nod`、`shake`、`tilt`、`look_around`；一次一個，進行中再來一個會被拒絕 |
 | `presence` | 支援：眼睛表情＋頭部小動作；`speech_level` 有持續更新才會點動 |
 | `express` | 支援（虛擬面板）；代表鴨子實際狀態的表情（例如沒電）Nous 叫不出來 |
-| `track` | 有感知來源在餵 UDP 8793 時支援（只動頭；`body: true` 會被改成 false 並回報）；沒有來源回 `unsupported` |
+| `track` | 有感知來源在餵 UDP 8793 時支援（只動頭；`body: true` 會被改成 false 並回報）；沒有來源回 `unsupported`。`sound` 見下面「聽聲辨位轉頭」 |
 | `walk` | `unsupported`：步態 host 還沒接進主程式、足底開關沒接、實機走路要有人在場 |
 | `antennas`、`sound` | `unsupported`：沒有天線舵機；聲音還沒接進 duckd（D 線） |
 | `where`、`places`、`go_to`、`find_person`、`return_home`、`follow_me`、`wait_here` | `unsupported`（導航還沒接進 duckd，C 線）；`mission_status`、`cancel_mission` 回 `no_mission` |
+
+## 聽聲辨位轉頭（`track sound`）
+
+驗證層級：單元測試＋ Mac↔Pi 真實通道（模擬身體、模擬 DOA，都是 mock）。**還沒有接真的麥克風，也還沒有在真的頭上跑過。**
+
+資料怎麼走：XVF3800 → [`duck_audio.doa`](../audio/README.md#聲源方向doat4)（服務 `duck-doa`）→ UDP `127.0.0.1:8793` 的 `sound` 訊息 → duckd → 頭部 yaw。
+
+| 規則 | 數值（初始值，[`duckd/track.py`](duckd/track.py)） |
+|---|---|
+| 只在偵測到語音時才有方位 | DOA 服務只在 `speech_detected` 為真時送 |
+| 平滑 | 0.8 s 內至少 2 筆、彼此不超過 25° 才採用，取環狀平均 |
+| 死區 | 新方位和目前目標差不到 8° 不動 |
+| 舵機自噪音 | 頭在動、或停下不到 0.5 s 時收到的方位全部丟掉 |
+| 超出頭部範圍 | 轉到極限（±0.5 rad），`tracking_acquired` 事件的 `data.at_limit` 是 `true`。坐著不轉身：`body: true` 會被改成 false |
+| 回正 | 8 s 沒有聽到聲音，頭回正（送 `tracking_lost`，`reason: quiet`）；追蹤本身不結束 |
+| 來源不見 | 5 s 沒有收到 DOA 服務的存活訊息（麥克風拔掉、服務停了）：結束追蹤，`capabilities.tracking_sound` 變 `unsupported` |
+
+**麥克風裝在哪**（設定在 Pi 的 `~/duck/doa/config/doa.json`，改完 `sudo systemctl restart duck-doa`）：
+
+| `mount` | 意思 | 換算 |
+|---|---|---|
+| `head` | 裝在頭上、跟著頭轉（[ADR-0005 §2.3.1](../../docs/adr/ADR-0005-compute-and-sensor-upgrade.md) 的規劃） | 方位相對頭部；duckd 加上當下的頭部 yaw 換成相對身體（[ADR-0003 §4.1](../../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md) 的簡化式 φ ≈ α＋ψ；頭的俯仰、側擺沒有修正） |
+| `body` | 裝在身體上 | 方位就是相對身體 |
+| `desk`（預設） | 放在桌上、不在鴨子身上 | 當成相對身體。只有麥克風緊靠鴨子、說話的人比較遠時才近似正確 |
+
+`front_angle_deg` 是「麥克風回報的哪個角度對應鴨子正前方」，用 `--calibrate` 量（步驟在 [`robot/audio` 的 README](../audio/README.md#聲源方向doat4)）。沒校準時 `calibrated: false`，服務的存活訊息會帶 `front angle not calibrated`。`counterclockwise` 是角度增加的方向，**要在實機上確認**（站到鴨子左邊說話，方位應該是正的）。
 
 ## 還沒做
 
@@ -143,4 +171,5 @@ ssh duck-pi4 'sudo systemctl stop duckd'
 - 頭部角速度、角加速度上限的模擬量測（ADR-0015 §2.3 要求；目前直接用 30°/s 的保守值）。
 - 跌倒偵測、手把接管的規則寫在仲裁器裡並有單元測試，但主程式沒有 IMU 與手把輸入可餵（BNO055 還沒校準）。
 - `state.link.rtt_ms` 一直是 `null`：往返時間由 Nous 端用心跳回聲量，鴨子端量不到。
+- **實機頭部**（T1）：2026-11-26 舵機沒有電，還沒做。電源接上後跑 `tools/head_check.sh`。
 - 協定上的缺口寫在 [`protocol/proposals/a-duckd-gaps.md`](../../protocol/proposals/a-duckd-gaps.md)。

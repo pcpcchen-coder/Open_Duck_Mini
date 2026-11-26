@@ -100,6 +100,51 @@ Nous 的語音 ─► play_voice ─► 閘門 ─► 變聲 ─┐
 | 變聲 `phase_vocoder`（可控共振峰） | 佔一顆核心 6.4%，演算法延遲 53 ms |
 | 喚醒詞（sherpa-onnx 2.0.1，zh-en-3M，1 執行緒） | 即時常駐佔一顆核心 14.7%；記憶體約 98 MB；載入 3.2 秒；關鍵詞說完到回報 0.3～0.7 秒（中位數 0.49 秒，不含麥克風與驅動緩衝） |
 
+## 聲源方向（DOA，T4）
+
+狀態（2026-11-26，A 線接手這一塊）：**程式與測試完成，還沒有接過真的麥克風**。驗證層級：單元測試（模擬裝置，20 項）＋ Pi 上用模擬角度經真實通道讓 duckd（模擬身體）轉頭。USB ID、韌體版本、指令在 Pi（Linux）上能不能用、角度方向，都要等麥克風接上才知道。
+
+| 路徑 | 內容 |
+|---|---|
+| `duck_audio/doa.py` | XVF3800 經 USB 控制介面讀角度與語音旗標、環狀分群、正前方校準、只在有語音時把方位送給 duckd（UDP `127.0.0.1:8793`）；每秒送一次存活訊息 |
+| `config/doa.json` | `mount`（`head`／`body`／`desk`）、`front_angle_deg`、`counterclockwise`、`calibrated` |
+| `requirements-doa.txt` | pyusb 1.3.1（Pi 上沿用 runtime-venv 的） |
+| [`../deploy/pi4/setup_doa.sh`](../deploy/pi4/setup_doa.sh) | 複製到 `~/duck/doa/`、udev 規則（VID 2886 給 plugdev）、服務 `duck-doa`（不 enable、不啟動） |
+
+讀法沿用使用者的 [FamilyRecorder](https://github.com/pcpcchen-coder/FamilyRecorder)（`src/family_recorder/direction.py`，commit `ff76063`）。該 repo 的 `LICENSE` 是 **MIT**（ADR-0003 寫 Apache-2.0，和 repo 裡的檔案不一致，以檔案為準）；這裡是讀過之後重寫，沒有整段複製。
+
+- 只用 USB 控制端點：不 claim 介面、不 detach `snd-usb-audio`，**不占用收音與播放**（那是 B 線「鴨子當終端」要用的）。
+- 只送方位，不讀也不存任何聲音。
+- 找裝置只看 VID `2886`；PID 不是 `001a`（FamilyRecorder 驗證過的標準版）時照樣嘗試，`--probe` 會標成未驗證。
+
+麥克風接上後（在 Mac 上下指令）：
+
+```bash
+ssh duck-pi4 'lsusb | grep -i 2886'
+```
+
+```bash
+ssh duck-pi4 'cd ~/duck/doa && ~/duck/duckd-venv/bin/python -m duck_audio.doa --probe'
+```
+
+校準正前方（指令開始後 5 秒內，站在鴨子正前方約 1 m 說話）：
+
+```bash
+ssh duck-pi4 'cd ~/duck/doa && ~/duck/duckd-venv/bin/python -m duck_audio.doa --calibrate 5 --write-config --config ~/duck/doa/config/doa.json'
+```
+
+看即時讀值（在不同方向說話，確認左邊是正的；不對就把 `counterclockwise` 改成 `false`）：
+
+```bash
+ssh duck-pi4 'cd ~/duck/doa && ~/duck/duckd-venv/bin/python -m duck_audio.doa --watch 20 --config ~/duck/doa/config/doa.json'
+```
+
+```bash
+ssh duck-pi4 'sudo systemctl start duck-doa'
+```
+
+測試：`cd nous_duck/robot/audio && ../duckd/.venv/bin/python -m pytest tests/test_doa.py -q`（需要 duckd 的 venv 或任何有 pytest 的 Python 3.10+；不需要 pyusb）。
+
 ## 等硬體／等你
 
 | 等什麼 | 要做 |

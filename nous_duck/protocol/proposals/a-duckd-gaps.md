@@ -42,3 +42,9 @@
 ## 7. `capability_changed` 事件的 `data`
 
 - duckd 在接手／釋放頭部時送 `capability_changed`，`data` 是 `{"capability": "head", "status": "..."}`。schema 沒有規定 `data` 的形狀；建議寫明。
+
+## 8. 追蹤的細節（2026-11-26，`track sound`）
+
+- **現況**：`state.tracking` 只有 `none`／`face`／`sound`。聽聲轉頭時「聲源在頭轉不到的地方、已經轉到極限」沒有欄位可放。
+- **目前繞法**：每次轉向送 `tracking_acquired`，`data` 是 `{"target":"sound","mock":…,"bearing_rad":…,"head_yaw_rad":…,"at_limit":true|false}`；安靜 8 s 回正時送 `tracking_lost`、`reason: quiet`、`data.recentered: true`（追蹤沒有結束，只是回正）。
+- **建議**：`state` 加可選的 `tracking_detail`（`bearing_rad`、`at_limit`、`source_ok`），並把「回正」和「追丟」分成兩個事件。

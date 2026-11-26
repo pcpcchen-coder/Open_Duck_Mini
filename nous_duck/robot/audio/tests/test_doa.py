@@ -195,3 +195,32 @@ def test_messages_are_accepted_by_duckd_percept():
     assert (o.kind, o.yaw, o.frame, o.mock) == ("sound", 0.3, "head", True)
     st = percept.parse_status(doa.status_message(True, False, "x"), 1.0)
     assert (st.source, st.ok, st.mock, st.detail) == ("sound", True, False, "x")
+
+
+def test_run_forever_reports_missing_device_then_starts_when_plugged_in():
+    import socket
+    import threading
+    import time as _time
+
+    rx = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    rx.bind(("127.0.0.1", 0))
+    rx.settimeout(3.0)
+    attempts = []
+
+    def open_reader():
+        attempts.append(1)
+        if len(attempts) < 2:
+            raise DoaError("找不到 XVF3800")
+        return MockDoaReader(45)  # 模擬「後來接上了」
+
+    done = threading.Event()
+    th = threading.Thread(target=doa.run_forever, args=(DoaConfig(), rx.getsockname()), kwargs={"open_reader": open_reader, "retry_s": 0.2, "stop": done.is_set}, daemon=True)
+    th.start()
+    first = json.loads(rx.recvfrom(2048)[0])
+    assert first == {"v": 1, "kind": "status", "source": "sound", "ok": False, "mock": False, "detail": "XVF3800 not found"}
+    deadline, got_sound = _time.monotonic() + 5, False
+    while _time.monotonic() < deadline and not got_sound:
+        got_sound = json.loads(rx.recvfrom(2048)[0])["kind"] == "sound"
+    done.set()
+    th.join(timeout=3)
+    assert got_sound and len(attempts) >= 2
