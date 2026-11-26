@@ -23,6 +23,21 @@
 3. **不經 Nous 先確認「命令 → 頭」**（今天就能做，不用雲端）：`nous_adapter/README.md` 的「親手試」，把 `mock-duck` 換成 duckd；然後 `bin/duckctl say-command "往左看"`、`"點頭"`、`"回正"`。
 4. **T6 的實機步驟**（接上 XVF3800、在場、會出聲）：照終端 spike 紀錄最後的「等你」步驟。
 
+### T6 終端 spike 的結果（Pi 4 實機；不連 Nous、不出聲、沒有麥克風）
+
+| 項目 | 結果 |
+|---|---|
+| 無螢幕跑 Chromium | 可以：`--headless=new` 與 Xvfb 兩種都行；建議 `--headless=new`（`run_nous_terminal.sh` 的預設），Xvfb 當退路 |
+| 自動播放、AudioContext | 每一種都允許自動播放、`AudioContext` 是 `running`（播的是靜音，沒有開任何實體輸出裝置） |
+| 取得麥克風 | 真的裝置：`NotFoundError`（**預期中**，現在沒有麥克風）。用 Chromium 的**假裝置**時成功——只代表瀏覽器這一段是通的，不是真的收音 |
+| 資源（閒置 60 秒；CPU 100%＝一顆核心） | 沒有媒體：CPU 平均 0.8%、最高約 7%；假麥克風：平均約 8.4%、最高 15%；假麥克風＋頁面內 WebRTC 迴路：約 26%、最高約 30%。可用記憶體約 1 610 MB → 最低約 1 400 MB；14 個 Chromium 行程；約 47 °C |
+| 途中發現 | 沒有桌面的 Pi 上 `enumerateDevices()` 會卡住，要加 `--disable-features=WebRtcPipeWireCamera`（已加進啟動參數） |
+| 沒有驗證 | 真的麥克風與權限提示、真的出聲、連到雲端模型的 WebRTC、回音消除、Nous 頁面本身、和 duckd 同時運作（duckd 當時沒有啟動） |
+
+Pi 上留下的東西：apt 套件 `chromium` 156.0.8078.108 與 `xvfb`（共 100 個套件，安裝後 671 MiB）；`~/duck/terminal-spike/`（412 KB）。沒有程式在跑。**另外有一個不該留的 `~/.local/share/pki/nssdb/`**（Chromium 第一次啟動建立的空憑證資料庫；腳本已修正不再產生）。背景工作想刪它時被權限系統擋下，我沒有代為執行——要刪請你自己下：`ssh duck-pi4 'rm -rf ~/.local/share/pki'`。全部移除：`bash nous_duck/robot/deploy/pi4/setup_terminal.sh --uninstall`（這個選項沒有實際跑過）。
+
+細節與「等你」的實測步驟：[終端 spike 紀錄](../../validation/duck-terminal-spike-2026-11-26.md)。
+
 ### 要你決定的事（我用了保守的預設）
 
 | 事項 | 我用的預設 |
