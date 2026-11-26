@@ -12,6 +12,7 @@
 | DuckAdapter（[`adapters/`](adapters/duck.ts)） | AIOS `IntegrationAdapter`，`service = "duck"`，17 個 `app.duck.*` 工具 | 完成 | 整合測試（mock 鴨子）；對 duckd mock 端到端 |
 | DuckTerminal（[`terminal/`](terminal/duck-terminal.ts)） | 鴨子事件的入口；`presence` 的來源介面與節流 | 完成（AIOS 的真實事件還沒接，只有開發用手動來源） | 單元／整合測試（mock 鴨子） |
 | `duckctl`（[`cli/`](cli/duckctl.ts)） | 不經過 AIOS，從終端機下 `app.duck.*` | 完成 | 整合測試；手動試過（對 mock） |
+| 語音媒體通道（[`hub/duck-voice-hub.ts`](hub/duck-voice-hub.ts)） | `/duck-voice`：鴨子本機喚醒後的上行語音、Nous 的回話下行、開始／結束／接著聽／打斷；`presence` 的 `speaking` 以鴨子回報的播放為準。**沒有語音模型**：後端只有「沒有」或標示 mock 的回放（[`docs/duck-voice.md`](docs/duck-voice.md)） | 通道完成；真正的對話要改 AIOS（等使用者決定路線） | 整合測試（模擬音訊端、合成音訊）；D 線狀態機的本機互通檢查 |
 | mock 鴨子（[`mock/`](mock/mock-duck.ts)） | **模擬**的鴨子，只給測試與試用；`hello` 與 `state` 帶 `mock: true` | 完成 | — |
 | 開發用文字命令（[`cli/text-command.ts`](cli/text-command.ts)） | `duckctl say-command "往左看"`：固定關鍵字規則把一句文字對應到一個工具。**不是 Nous、不是語音辨識、不是語言模型** | 完成 | 單元／整合測試（mock 鴨子） |
 | 搬進 AIOS | `/duck-link` 端點（D1）、註冊 adapter（D2，第一階段 6 個工具）、工作階段事件 → `presence`（D4a） | **已在 AIOS 分支 `claude/duck-link` 實作、PR 待審**（使用者 2026-11-26 同意；見 [`docs/aios-integration-plan.md` §0](docs/aios-integration-plan.md#0-2026-11-26-更新d1d2d4a-已在-aios-分支實作)） | AIOS 的 fixture 測試 122 項＋對 duckd 模擬身體的本機檢查；沒有實機、沒有真實語音 |
@@ -56,6 +57,9 @@ bin/duckctl presence speaking --level 0.4   # 手動送互動狀態（開發用�
 bin/duckctl go_to brother_room        # 任務：confirmed 只代表「已出發」
 bin/duckctl say-command "往左看"      # 開發用：文字 → 工具（固定規則，不是 Nous；認不得就不送）
 bin/duckctl events --follow           # 看鴨子回報的事件
+bin/duckctl hub --voice echo          # （取代上面的 hub）語音通道接模擬的回放後端
+bin/duckctl mock-voice                # 模擬的鴨子音訊端：送一次「喚醒」與合成音，不開麥克風、不出聲
+bin/duckctl voice                     # 語音通道的狀態與上一通的統計
 bin/duckctl help                      # 完整用法
 ```
 
@@ -120,7 +124,7 @@ npm run typecheck
 npm test
 ```
 
-2026-11-26 的結果：145 項通過（`validator` 33、`hub` 25、`duck-adapter` 51、`terminal` 18、`cli` 18），約 4 秒。測試只連本機的臨時埠，不碰 8791，也不連執行中的 Nous。測試工具與 AIOS 相同：vitest 5.0.3、tsx 4.23.15、TypeScript 7.0.2。
+2026-11-26 的結果：171 項通過（`validator` 33、`hub` 25、`duck-adapter` 51、`terminal` 18、`cli` 18、`duck-voice` 26），約 6 秒。測試只連本機的臨時埠，不碰 8791，也不連執行中的 Nous。測試工具與 AIOS 相同：vitest 5.0.3、tsx 4.23.15、TypeScript 7.0.2。
 
 對 A 線 duckd（mock 身體）的端到端檢查：
 
@@ -197,7 +201,10 @@ npx tsx scripts/e2e-duckd.ts --port 18792
 | `tests/` | vitest 測試 |
 | `docs/aios-integration-plan.md` | 搬進 AIOS 的計畫（檔案與函式層級） |
 | `docs/voice-path.md` | 語音路徑設計 |
-| `docs/voice-test.md` | 給使用者照做的語音實測步驟（用說的讓鴨子轉頭、點頭、搖頭） |
+| `docs/voice-test.md` | 給使用者照做的語音實測步驟（用說的讓鴨子轉頭、點頭、搖頭；喚醒詞＋麥克風＋喇叭的通道實測） |
+| `docs/duck-voice.md` | 語音媒體通道 `/duck-voice` 的 Nous 端：線上格式、規則、語音後端介面、還差什麼 |
+| `hub/duck-voice-hub.ts`、`shared/duck-voice.ts` | 語音媒體通道的 Nous 端（回合制；音訊只在記憶體） |
+| `mock/echo-voice-backend.ts`、`mock/mock-duck-voice.ts` | **模擬**的回放後端（不是語音模型）與模擬的鴨子音訊端（合成音訊） |
 
 ## 沿用的 AIOS 慣例
 

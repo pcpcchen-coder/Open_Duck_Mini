@@ -2,7 +2,7 @@
 
 # Voice test steps: telling the duck by voice to turn its head, nod and shake its head (T2, T3)
 
-Status: **the steps are written; nobody has run these steps yet.** Date: 2026-11-26. This document is for the user to follow; it connects to a cloud voice model, makes sound, and makes the duck's head move, so you do every step yourself.
+Status: **the steps are written; nobody has run these steps yet.** Date: 2026-11-26 (§7 was added that evening: the channel test with wake word + microphone + speaker). This document is for the user to follow; it connects to a cloud voice model, makes sound, and makes the duck's head move, so you do every step yourself.
 
 Current situation: AIOS's `/duck-link` endpoint, the `duck` adapter and the interaction states have been merged into AIOS main (PR #156, flags off by default). On the duck side, the real head and `duckctl` sending `look` / `gesture` through the tunnel have been confirmed by eye (line A, 2026-11-26). **What has not been verified yet is exactly the part in between: real voice → the model picks a tool → the duck.**
 
@@ -177,3 +177,76 @@ This document itself has not verified anything. As of 2026-11-26, the verified s
 - AIOS side: fixture tests and a local check against duckd's simulated body (no real voice).
 - Duck side: the real head, and `look` / `gesture` from `duckctl` through the tunnel against the real robot (line A, confirmed by eye).
 - **Not verified**: real voice, how the model uses these tools, the startup steps of the development instance (the `.env` combination, login under a separate config directory).
+
+## 7. Wake word, microphone and speaker: testing the voice channel (echo backend, no cloud)
+
+What this section tests is the channel itself: "speak to the duck → the duck captures the sound → the sound is sent to the Mac → the reply is sent back to the duck → the speaker plays it and the head moves along". **The reply is not spoken by Nous**: what is connected on the Mac side is the "echo" (replay) backend, marked simulated; after you finish speaking it plays the stretch of sound you just made back unchanged. Really having Nous reply requires changing AIOS, and the route is still waiting for your decision ([`duck-voice.md` §7](duck-voice.en.md#7-what-is-still-missing-before-it-is-a-real-conversation)).
+
+This section and the earlier §1–§3 (the development instance of Nous) **cannot run at the same time**: both use 8791. Shut one of them down first.
+
+### 7.1 Who does what
+
+| What | Who does it | Why |
+|---|---|---|
+| Starting the duck's voice service on the Pi (opens the microphone, always-on wake-word listening) | **You** | It opens the microphone; this is what "always-on wake listening" on the privacy settings page governs |
+| Being present, speaking, listening to the speaker | **You** | It makes sound |
+| Starting the hub and opening the tunnel on the Mac | Either you or the development agent (it touches no keys, does not connect to the cloud, makes no sound) | — |
+
+### 7.2 Steps
+
+1. Mac, tab 1: start the hub, with the voice channel connected to the echo backend.
+
+   ```bash
+   cd nous_duck/nous_adapter && bin/duckctl hub --voice echo
+   ```
+
+   Expect to see `語音通道：ws://127.0.0.1:8791/duck-voice；後端：echo（模擬：把聽到的聲音原樣放回去，不是語音模型）` (voice channel: ws://127.0.0.1:8791/duck-voice; backend: echo (simulated: plays the sound it heard back unchanged, not a speech model)).
+
+2. Mac, tab 2: open the tunnel (the same one the body uses).
+
+   ```bash
+   ssh -N -R 127.0.0.1:8791:127.0.0.1:8791 duck-pi4
+   ```
+
+3. (Optional) Make the head move along: start duckd and `engage` as in §2.3. The sound can be tested without starting it; the head just will not move.
+
+4. Pi: start the duck's voice service. The command in [`robot/audio/README.md`](../../robot/audio/README.md) (line D) prevails; when this document was written its form was:
+
+   ```bash
+   ssh duck-pi4 'cd ~/duck/d-line/audio && ~/duck/audio-venv/bin/python -m duck_audio.voice_service --url ws://127.0.0.1:8791/duck-voice'
+   ```
+
+   Expect tab 1 to show `語音通道：鴨子的音訊端已連線` (voice channel: the duck's audio end is connected). At this point the duck starts listening for the wake word (the audio does not leave the duck).
+
+5. Say the wake word to the duck (default 「Hey 鴨子」, "Hey duck"), say a sentence after you hear the cue sound (for example 「今天天氣不錯」, "the weather is nice today"), and then stop.
+
+### 7.3 What to expect
+
+| Point in time | The duck | Tab 1 on the Mac |
+|---|---|---|
+| After the wake word is said | Cue sound; the head lifts (when duckd is running) | `事件 wake_word` (event wake_word), `語音通道：對話開始（後端：echo…，mock）` (voice channel: conversation started (backend: echo…, mock)) |
+| You are speaking | The head is in the "listening" pose | — |
+| About 1 second after you stop | The speaker plays **the sentence you just said** (passed through the duck's voice changer); the head is in the "speaking" pose | — |
+| Playback finished | Back to "listening"; you can go on to say the next sentence without saying the wake word again | — |
+| Not speaking for a long while (about 8 seconds) | Cue sound, back to standby | `語音通道：對話結束（duck_no_speech）：… 秒，N 輪、M 段回話，上行 … 框、下行 … 框` (voice channel: conversation ended (duck_no_speech): … seconds, N turns, M reply stretches, uplink … frames, downlink … frames) |
+
+At any time you can look in another tab on the Mac: `bin/duckctl voice` (whether the audio end is connected, the conversation in progress, the statistics of the last conversation), `bin/duckctl events`.
+
+### 7.4 Things to note down
+
+1. The wake word: how many hits out of how many times said; whether it woke up by itself when nobody said it.
+2. From when you stop to when the speaker makes sound, roughly how many seconds.
+3. Whether the sound played back is clear, whether it is choppy, and whether the duck's own cue sound or motor noise was recorded into it as well.
+4. While the speaker is playing, whether the duck was woken or interrupted by its own sound.
+5. After playback finishes, whether going on to say a second sentence is picked up.
+6. The final statistics line in tab 1 (number of turns, number of frames), and whether `strayFrames` in the `計數` (counters) of `bin/duckctl voice` is 0 (not 0 means the duck sent audio when it should not have).
+
+### 7.5 Wrapping up
+
+1. Stop the voice service on the Pi (press Ctrl-C in its terminal; the microphone closes).
+2. If duckd was started: `ssh duck-pi4 'sudo systemctl stop duckd'`.
+3. Press Ctrl-C in the tunnel's tab; press Ctrl-C in the hub's tab.
+
+### 7.6 Verification level of this section
+
+As of 2026-11-26: the Nous-side channel has only been through unit/integration tests (a simulated audio end, synthetic audio), and one local interoperability check of "line D's real duck-side state machine against this hub" (synthetic audio). **Nobody has run the steps above with a real microphone and speaker yet.**

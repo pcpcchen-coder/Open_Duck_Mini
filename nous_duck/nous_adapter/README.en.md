@@ -12,6 +12,7 @@ This directory holds code that **will later be moved back into AIOS**: it lets N
 | DuckAdapter ([`adapters/`](adapters/duck.ts)) | AIOS `IntegrationAdapter`, `service = "duck"`, 17 `app.duck.*` tools | Complete | Integration tests (mock duck); end-to-end against duckd mock |
 | DuckTerminal ([`terminal/`](terminal/duck-terminal.ts)) | The entry point for duck events; the source interface and throttling for `presence` | Complete (AIOS's real events are not wired up yet; there is only the dev-only manual source) | Unit/integration tests (mock duck) |
 | `duckctl` ([`cli/`](cli/duckctl.ts)) | Issues `app.duck.*` from the terminal, without going through AIOS | Complete | Integration tests; tried by hand (against the mock) |
+| Voice media channel ([`hub/duck-voice-hub.ts`](hub/duck-voice-hub.ts)) | `/duck-voice`: uplink voice after the duck's local wake, downlink of Nous's reply, start / end / follow-up listening / interruption; `speaking` in `presence` goes by the playback the duck reports. **There is no speech model**: the backend is only "none" or the echo (replay) backend marked mock ([`docs/duck-voice.md`](docs/duck-voice.en.md)) | Channel complete; real conversation requires changing AIOS (waiting for the user's decision on the route) | Integration tests (simulated audio end, synthetic audio); a local interoperability check with line D's state machine |
 | mock duck ([`mock/`](mock/mock-duck.ts)) | A **simulated** duck, for tests and trying things out only; `hello` and `state` carry `mock: true` | Complete | — |
 | Dev-only text command ([`cli/text-command.ts`](cli/text-command.ts)) | `duckctl say-command "往左看"` ("look left"): fixed keyword rules map one sentence of text to one tool. **It is not Nous, not speech recognition, and not a language model** | Complete | Unit/integration tests (mock duck) |
 | Moving into AIOS | The `/duck-link` endpoint (D1), registering the adapter (D2, 6 tools in the first stage), session events → `presence` (D4a) | **Implemented on the AIOS branch `claude/duck-link`, PR awaiting review** (the user agreed on 2026-11-26; see [`docs/aios-integration-plan.md` §0](docs/aios-integration-plan.en.md#0-2026-11-26-update-d1-d2-and-d4a-implemented-on-an-aios-branch)) | AIOS's fixture tests (122) plus a local check against duckd's simulated body; no real hardware, no real voice |
@@ -56,6 +57,9 @@ bin/duckctl presence speaking --level 0.4   # manually send interaction state (d
 bin/duckctl go_to brother_room        # mission: confirmed only means "has set off"
 bin/duckctl say-command "往左看"      # dev-only: text → tool (fixed rules, not Nous; not sent if not recognised)
 bin/duckctl events --follow           # watch the events the duck reports
+bin/duckctl hub --voice echo          # (replaces the hub above) voice channel connected to the simulated echo (replay) backend
+bin/duckctl mock-voice                # simulated duck audio end: sends one "wake" and a synthetic tone; opens no microphone, makes no sound
+bin/duckctl voice                     # the voice channel's status and the statistics of the last conversation
 bin/duckctl help                      # full usage
 ```
 
@@ -120,7 +124,7 @@ npm run typecheck
 npm test
 ```
 
-Results on 2026-11-26: 145 passed (`validator` 33, `hub` 25, `duck-adapter` 51, `terminal` 18, `cli` 18), about 4 seconds. The tests connect only to ephemeral local ports, do not touch 8791, and do not connect to the running Nous. The test tooling is the same as AIOS's: vitest 5.0.3, tsx 4.23.15, TypeScript 7.0.2.
+Results on 2026-11-26: 171 passed (`validator` 33, `hub` 25, `duck-adapter` 51, `terminal` 18, `cli` 18, `duck-voice` 26), about 6 seconds. The tests connect only to ephemeral local ports, do not touch 8791, and do not connect to the running Nous. The test tooling is the same as AIOS's: vitest 5.0.3, tsx 4.23.15, TypeScript 7.0.2.
 
 End-to-end check against line A's duckd (mock body):
 
@@ -197,7 +201,10 @@ Tools not done yet: `app.duck.announce` (whether to do it depends on the voice p
 | `tests/` | vitest tests |
 | `docs/aios-integration-plan.md` | The plan for moving into AIOS (file and function level) |
 | `docs/voice-path.md` | Voice path design |
-| `docs/voice-test.md` | Step-by-step voice test for the user to follow (telling the duck by voice to turn its head, nod and shake its head) |
+| `docs/voice-test.md` | Step-by-step voice test for the user to follow (telling the duck by voice to turn its head, nod and shake its head; the channel test with wake word + microphone + speaker) |
+| `docs/duck-voice.md` | The Nous side of the voice media channel `/duck-voice`: wire format, rules, the voice backend interface, what is still missing |
+| `hub/duck-voice-hub.ts`, `shared/duck-voice.ts` | The Nous side of the voice media channel (turn-based; audio only in memory) |
+| `mock/echo-voice-backend.ts`, `mock/mock-duck-voice.ts` | The **simulated** echo (replay) backend (not a speech model) and the simulated duck audio end (synthetic audio) |
 
 ## AIOS conventions followed
 

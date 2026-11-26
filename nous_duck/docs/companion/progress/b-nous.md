@@ -1,8 +1,51 @@
 # B 線進度：Nous 端（`nous_adapter/`）
 
-最後更新：2026-11-26 傍晚。前兩批的分支 `claude/duck-b-nous-a19b67` 已經併進 `v2`（PR #39）；AIOS 的 #156 已經併進 AIOS main。
+最後更新：2026-11-26 晚上。前兩批的分支 `claude/duck-b-nous-a19b67` 已經併進 `v2`（PR #39）；AIOS 的 #156 已經併進 AIOS main。
 
 一句話：**Nous 這一端的程式（本 repo 與 AIOS 分支）都寫好了、fixture 測試全過，和 duckd 的模擬身體端到端講得通；還沒有人用真實語音試過，也還沒有對真的鴨子下過指令。**
+
+## 2026-11-26 晚上：語音通道（喚醒詞、麥克風、喇叭接到 Nous 端）
+
+分支 `claude/duck-b-voice-channel`（從 `origin/v2` 開出），對 `v2` 的 PR，沒有合併。
+
+一句話：**鴨子和 Nous 之間的語音通道（Nous 這一端）做好了，和 D 線鴨子端的狀態機互通；但是回話的還不是 Nous——真正的對話要改 AIOS，路線等你決定。**
+
+| 項目 | 狀態 | 驗證層級 |
+|---|---|---|
+| 查 AIOS 怎麼支援另一個裝置當語音終端 | 完成（唯讀，AIOS main `265cbee`）。結論：**沒有**這種機制——音訊都是瀏覽器頁面直接和雲端模型走 WebRTC，核心不經手音訊。整理在 [`duck-voice.md` §7](../../../nous_adapter/docs/duck-voice.md#7-還差什麼才是真的對話) | 讀程式碼 |
+| 和 D 線定介面 | 採用 **D 線鴨子端已經實作的線上格式**（回合制、半雙工、無標頭的 PCM）。我送出的兩則訊息 D 線還沒回覆（它那邊在忙）；介面說明寫在 [`duck-voice.md`](../../../nous_adapter/docs/duck-voice.md)（＋英文），D 線自己的草案檔還沒進 repo | 用 D 線 `session.py` 原檔跑過一次互通（見下） |
+| 媒體通道的 Nous 端（`/duck-voice`） | 完成：喚醒才開對話、上行閘門、回話、接著聽、打斷、逾時、結束；音訊只在記憶體 | 單元／整合測試 26 項（模擬音訊端、合成音訊、模擬後端）；D 線狀態機的本機互通檢查 |
+| `presence` 的真實 `speaking` | 完成：以鴨子回報的 `playback started／finished／flushed` 為準；音量不經網路 | 整合測試（對模擬的身體） |
+| DuckTerminal 接語音 | 完成：`wake_word`、`voice_session_ended` 事件（只有數量） | 整合測試 |
+| 語音後端 | 只有「沒有」與**模擬的回放**（把聽到的聲音放回去，不是語音模型） | — |
+| AIOS 的改動 | **沒有動**。兩條路線已回報整合線，等你決定 | — |
+| `voice-test.md` | 加了 §7：喚醒詞＋麥克風＋喇叭的通道實測步驟（回放後端）。**還沒有人照著跑過** | 文件 |
+
+### 你要決定的一件事
+
+鴨子的對話要走哪條路（細節在 `duck-voice.md` §7）：
+
+| | 路線 1：AIOS 核心直接和語音模型講音訊 | 路線 2：鴨子的 Pi 上跑瀏覽器開 Nous 頁面 |
+|---|---|---|
+| 需要 | 一把可以給鴨子用的 OpenAI API key（依用量計費） | 不限計費方式（ChatGPT 方案也行） |
+| 鴨子端 | D 線正在做的原生收音、變聲、閘門全部用得上；這條語音通道原樣搬進 AIOS | 對話的聲音改由 Pi 上的瀏覽器收與播，不經變聲與閘門 |
+| AIOS 改動 | 估 500～800 行含測試，旗標預設關閉 | 約 100～150 行加測試 |
+| 第一版少了什麼 | 家庭記憶、家人問候、頁面工具與確認卡 | 無（和一般終端相同） |
+| 沒驗證的 | 全部（AIOS 沒有任何核心端連模型的既有程式） | Pi 4 跑瀏覽器的負載、無螢幕取得麥克風、回音消除 |
+
+我的建議是路線 1（如果你有 API key 而且接受依用量計費），因為它和鴨子端正在做的東西一致、鴨子不必跑瀏覽器。我沒有讀任何 `.env` 或金鑰，不知道你平常用哪一種。
+
+### 你要親手做的
+
+1. 回答上面那個問題（整合線會問你）。
+2. 想先聽聽通道通不通（不用雲端、不用等 AIOS）：照 [`voice-test.md` §7](../../../nous_adapter/docs/voice-test.md#7-喚醒詞麥克風與喇叭語音通道實測回放後端不用雲端)。要等 D 線的語音服務可以啟動；會開麥克風、會出聲，Pi 上的服務由你啟動。預期：說「Hey 鴨子」加一句話，鴨子把**你那句話**放回來（不是 Nous 的回答）。
+
+### 這一批改了什麼
+
+- 新增：`nous_adapter/hub/duck-voice-hub.ts`、`shared/duck-voice.ts`、`mock/echo-voice-backend.ts`、`mock/mock-duck-voice.ts`、`tests/duck-voice.test.ts`、`docs/duck-voice.md`（＋英文）、`docs/validation/duck-voice-nous-side-2026-11-26.md`。
+- 修改：`hub/duck-link-hub.ts`（同一個埠可以多接一條 WebSocket 路徑，共用守門）、`terminal/presence.ts`（可以接多個來源）、`terminal/duck-terminal.ts`（`attachVoice`）、`cli/`（`duckctl hub --voice echo`、`voice`、`mock-voice`）、README 與 `voice-test.md`（中英）。
+- 測試：`nous_adapter` 171 項通過。
+- 沒有改 `protocol/schemas/**`、`robot/audio/`、`robot/duckd/`、AIOS。
 
 ## 2026-11-26 傍晚：hub 事件去重的 bug 與語音實測步驟
 
