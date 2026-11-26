@@ -1,8 +1,39 @@
 # B 線進度：Nous 端（`nous_adapter/`）
 
-最後更新：2026-11-26 傍晚。前兩批的分支 `claude/duck-b-nous-a19b67` 已經併進 `v2`（PR #39）；AIOS 的 #156 已經併進 AIOS main。
+最後更新：2026-11-26 深夜。前三批都已經併進 `v2`（PR #39、#43）；AIOS 的 #156、#157 已經併進 AIOS main。這一批（語音路線 2）的兩個 PR 都還沒合併。
 
 一句話：**Nous 這一端的程式（本 repo 與 AIOS 分支）都寫好了、fixture 測試全過，和 duckd 的模擬身體端到端講得通；還沒有人用真實語音試過，也還沒有對真的鴨子下過指令。**
+
+## 2026-11-26 深夜：語音互動走路線 2（鴨子當語音終端）
+
+使用者 2026-11-26 的決定（原話）：「我要路線2」；喚醒詞「先用 "Hello 鴨子" & "hey 鴨子"」；AIOS 的 PR「可以，開 PR」。**計費路徑使用者沒有指定，沒有動、也沒有推定。**
+
+路線 2 是：鴨子的 Pi 上跑 Chromium 開 Nous 的頁面（`?terminal=duck`）；鴨子本機偵測到喚醒詞後經 duck-link 送 `wake_word`，Nous 核心請那個頁面開始一通既有的即時語音對話；聲音由頁面直接和雲端模型往來，核心不經手音訊。設計見 [`voice-path.md` §8](../../../nous_adapter/docs/voice-path.md#8-2026-11-26-的決定路線-2)，實測步驟見 [`voice-test.md` §7](../../../nous_adapter/docs/voice-test.md)。
+
+| 項目 | 狀態 | 驗證層級 |
+|---|---|---|
+| AIOS 核心：`wake_word` → 對鴨子終端頁面送「開始對話」與一次性權杖；頁面回報聽／想／說 → 鴨子的 `presence`（含真的「說話中」） | 程式完成，PR [pcpcchen-coder/AIOS#158](https://github.com/pcpcchen-coder/AIOS/pull/158) 對 AIOS `main`，**未合併**。放在 `NOUS_DUCK` 後面，預設關閉 | 伺服器端 fixture 測試 17 項；AIOS 全套驗證通過（189 個測試檔、3600 項通過、4 項略過）。**頁面端只有型別檢查與建置，沒有在瀏覽器裡跑過** |
+| 既有限制怎麼套用到鴨子 | 寫在 AIOS PR 與 `voice-path.md` §8：每分鐘 3 次的限速照樣適用；鴨子的喚醒不需要 `NOUS_WAKE=on`（改用核心發的一次性權杖）；同意仍存在頁面裡，沒同意過就不開始 | fixture 測試 |
+| 鴨子終端的頁面只因為鴨子的 `wake_word` 開始對話 | 頁面不啟動內建的喚醒聆聽（就算 `NOUS_WAKE=on`）；Nous 自己的「Hello Nous」「Hey Nous」沒有改 | 程式與型別檢查；沒有在瀏覽器裡跑過 |
+| 本 repo 的文件 | `voice-path.md` §8、`voice-test.md` §7、`nous_adapter/README.md`（都有英文版） | 文件。**還沒有人照著跑過** |
+| 原生音訊通道 `/duck-voice` | **沒有採用、沒有併進 `v2`**。留在分支 `claude/duck-b-voice-channel`（已推上遠端，沒有開 PR），當作實驗紀錄 | 該分支上 fixture 測試；和 D 線的 `session.py` 用合成音訊對接過 |
+
+### 還沒接上、還沒解決的（路線 2 現在還不能用說的叫醒鴨子）
+
+- **鴨子端送出 `wake_word` 的那一段還沒有**：D 線的本機喚醒詞偵測 → duckd（A 線）→ duck-link。這一段不在 B 線的目錄裡。
+- **麥克風由誰拿**：本機喚醒偵測和 Chromium 都要用同一支麥克風（共用或交接），還沒實測。
+- **喇叭路徑**：第一版 Chromium 直接出聲，不經過 D 線的變聲與閘門。
+- **回音消除、鴨子自己的聲音會不會把自己叫醒**：沒有實測。
+- **Pi 4（2 GB）同時跑 Chromium、喚醒偵測與 duckd 的負載**：只有先前不連 Nous、不出聲的 spike 數字，沒有通話中的數字。
+- 已經把這些問題發給 D 線，寫這份紀錄時還沒有收到回覆。
+
+### 你要親手做的事
+
+1. 審 AIOS 的 PR（#158）與本 repo 這一批的 PR。合併由整合線處理。
+2. 鴨子端的 `wake_word` 接上之前，可以先照 `voice-test.md` §7 做一次性的設定（在鴨子的 Chromium 上按一次即時語音的同意）。這一步要你在場，會出聲。
+3. Pi 上有一個 spike 留下的目錄 `~/.local/share/pki/nssdb`（Chromium 建的憑證資料庫，空的）。先前想刪的時候被權限規則擋下，我沒有刪；要不要刪由你決定。
+
+測試：這一批沒有改 `nous_adapter` 的程式，`npm test` 仍是 145 項通過。
 
 ## 2026-11-26 傍晚：hub 事件去重的 bug 與語音實測步驟
 

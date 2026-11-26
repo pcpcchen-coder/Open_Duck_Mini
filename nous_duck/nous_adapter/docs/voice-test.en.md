@@ -2,7 +2,7 @@
 
 # Voice test steps: telling the duck by voice to turn its head, nod and shake its head (T2, T3)
 
-Status: **the steps are written; nobody has run these steps yet.** Date: 2026-11-26. This document is for the user to follow; it connects to a cloud voice model, makes sound, and makes the duck's head move, so you do every step yourself.
+Status: **the steps are written; nobody has run these steps yet.** Date: 2026-11-26 (§7 was added that evening: route 2, say 「Hey 鴨子」 ("Hey duck") to the duck to start a conversation). This document is for the user to follow; it connects to a cloud voice model, makes sound, opens the microphone, and makes the duck's head move, so you do every step yourself.
 
 Current situation: AIOS's `/duck-link` endpoint, the `duck` adapter and the interaction states have been merged into AIOS main (PR #156, flags off by default). On the duck side, the real head and `duckctl` sending `look` / `gesture` through the tunnel have been confirmed by eye (line A, 2026-11-26). **What has not been verified yet is exactly the part in between: real voice → the model picks a tool → the duck.**
 
@@ -177,3 +177,99 @@ This document itself has not verified anything. As of 2026-11-26, the verified s
 - AIOS side: fixture tests and a local check against duckd's simulated body (no real voice).
 - Duck side: the real head, and `look` / `gesture` from `duckctl` through the tunnel against the real robot (line A, confirmed by eye).
 - **Not verified**: real voice, how the model uses these tools, the startup steps of the development instance (the `.env` combination, login under a separate config directory).
+
+## 7. Route 2: the duck as a voice terminal (say 「Hey 鴨子」 to start a conversation)
+
+§1–§3 are "speak at the page on the Mac, the duck does the motions". This section is route 2, which you decided on 2026-11-26: **speak to the duck, and the duck's speaker answers** — Chromium on the Pi opens the Nous page as the terminal, and the duck locally detects 「Hello 鴨子」 ("Hello duck") and 「Hey 鴨子」 ("Hey duck") to start a conversation. For the design and the things not yet solved see [`voice-path.md` §8](voice-path.en.md#8-the-2026-11-26-decision-route-2).
+
+**Not all of this section's prerequisites are in place yet**; at the time this document was written:
+
+| Needed | Status |
+|---|---|
+| AIOS's DUCK-2 ([pcpcchen-coder/AIOS#158](https://github.com/pcpcchen-coder/AIOS/pull/158)) merged, or you start Nous from that branch | PR awaiting review |
+| The duck's local wake-word detection (line D) | In progress |
+| The wake delivered to duck-link (line D → duckd → `wake_word` event) | Not connected yet |
+| How the microphone is shared between wake detection and Chromium (line D's ALSA configuration) | Not decided yet |
+
+Until all four are in place, you can do the one-time setup in 7.2 and the "without the wake word" check in 7.4 first.
+
+### 7.1 Who does what
+
+| What | Who does it | Why |
+|---|---|---|
+| Starting a Nous with the flags turned on, its `.env` and keys | **You** | Same as §0 |
+| Consenting to realtime voice and allowing the microphone on the duck's browser profile | **You** (connecting from the Mac with DevTools and pressing) | This is your consent; the duck has no screen |
+| Starting the terminal page, the wake service, duckd and `engage` on the Pi | **You** | It opens the microphone, makes sound, and the head will move |
+| Being present, speaking, listening | **You** | — |
+
+### 7.2 One-time setup
+
+1. Nous (the development instance, same as §1; use code that includes DUCK-2): `.env` is the same as in §1.2 (`PORT=8791`, `NOUS_DUCK=on`, `NOUS_AIL=on`, `NOUS_AIL_SERVICES=duck`). The terminal ID defaults to `duck` and does not need to be set separately. `NOUS_WAKE=on` is **not needed**.
+2. Chromium and the scripts on the Pi (skip if already installed):
+
+   ```bash
+   bash nous_duck/robot/deploy/pi4/setup_terminal.sh
+   ```
+
+3. Press consent on the duck's browser profile (once per profile). First start Nous and the tunnel following §2.1 and §2.2, then:
+
+   ```bash
+   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --debug-port 9333'
+   ```
+
+   ```bash
+   ssh -N -L 9333:127.0.0.1:9333 duck-pi4
+   ```
+
+   In Chrome on the Mac open `chrome://inspect`, add `localhost:9333` to Discover network targets, and click inspect on that page; you can then see and operate the Nous page on the duck: start realtime voice once, press agree on the consent notice, press allow on the microphone permission, then end the conversation. After that this profile remembers.
+
+   **None of the details** of this step (whether DevTools can operate that page this way, whether the permission prompt appears in no-screen mode) **has been verified**; if you get stuck, note down the screen and the messages.
+
+### 7.3 Every test session
+
+1. Mac: start Nous (§2.1). The log must contain `鴨子：duck-link 已開在 ws://127.0.0.1:8791/duck-link…；語音終端頁面：http://localhost:8791/?terminal=duck` (Duck: duck-link is open at ws://127.0.0.1:8791/duck-link…; voice terminal page: http://localhost:8791/?terminal=duck).
+2. Mac: open the tunnel (§2.2).
+3. Pi: start the terminal page.
+
+   ```bash
+   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh'
+   ```
+
+4. Pi: start duckd and `engage` (§2.3). `鴨子：鴨子已連線` (Duck: duck connected) appears in Nous's log.
+5. Pi: start the duck's wake service ([`robot/audio/README.md`](../../robot/audio/README.md) is authoritative for the command).
+6. Say 「Hey 鴨子」 ("Hey duck") (or 「Hello 鴨子」 ("Hello duck")) to the duck, wait until it reacts, then say one sentence, for example 「鴨子看左邊」 (Duck, look left) or 「今天星期幾」 (What day of the week is it today).
+
+### 7.4 Checking the page segment first, without the wake word
+
+While the wake segment is not yet connected, you can first confirm "whether the page on the Pi can hold a conversation": after doing steps 1–4 of 7.3, connect to the page with the DevTools from step 3 of 7.2, start realtime voice once by hand, and speak into the duck's microphone. The sound should come out of the duck's speaker, and while Nous speaks the duck's head is in the "speaking" pose (this is the state reported by the page, which only exists as of this change).
+
+### 7.5 Expected
+
+| Point in time | Nous's log | The duck |
+|---|---|---|
+| After the wake word is said | `鴨子：聽到喚醒詞，已請終端頁面（duck）開始對話（1 個頁面）` (Duck: wake word heard, asked the terminal page (duck) to start a conversation (1 page)), followed by realtime voice starting | The woken-up reaction (head and prompt sound according to the duck-side settings) |
+| After connecting | — | Nous greets you (a wake-started conversation greets first), and the sound comes out of the duck's speaker |
+| You speak, it thinks, it answers | When a tool is used there is `整合層：… app.duck.… → …` (Integration layer: … app.duck.… → …) | The head is, in order, listening, thinking, **speaking**, listening |
+| Nobody speaks for 5 seconds | Realtime voice ends | Back to standby |
+
+If the log is `鴨子：聽到喚醒詞，但終端頁面（?terminal=duck）沒有連著，沒有開始對話` (Duck: wake word heard, but the terminal page (?terminal=duck) is not connected; no conversation started): the page on the Pi is not open or the tunnel has dropped. If there is no 「聽到喚醒詞」 (wake word heard) line at all: the wake did not reach Nous (the duck-side segment).
+
+### 7.6 Things to note down
+
+1. How many times the wake word hits; whether it wakes by itself when nobody called it; whether the duck is woken by its own voice while Nous is speaking.
+2. Roughly how many seconds from the end of the wake word until you can start speaking; whether the first sentence gets lost.
+3. Whether Nous hears you clearly (whether its answers are on topic); when you interrupt while it is speaking, whether it stops.
+4. Whether the speaker's sound is clear, the volume, and whether there is echo or howling.
+5. Whether the head's state keeps up (especially the start and end of "speaking").
+6. The Pi's load: the output of `ssh duck-pi4 'cd ~/duck/terminal-spike && bash measure.sh'` (CPU, memory, temperature).
+7. Call it four times in a row within one minute: the fourth should be refused (rate limit).
+
+### 7.7 Wrapping up
+
+1. Pi: stop the wake service; `ssh duck-pi4 'sudo systemctl stop duckd'`.
+2. Pi: press Ctrl-C in the terminal running `run_nous_terminal.sh` (closes Chromium and releases the microphone).
+3. Mac: Ctrl-C on the tunnel; Ctrl-C on `npm start`.
+
+### 7.8 Verification level of this section
+
+As of 2026-11-26: the server side on the AIOS side has fixture tests (a fake duck, a fake voice path); the page side has only type checking and a build, and **has not been run in a browser**. Chromium on the Pi has only been measured in the case of not connected to Nous, no sound, no microphone. **Not a single one of the steps above has been run by anyone.**
