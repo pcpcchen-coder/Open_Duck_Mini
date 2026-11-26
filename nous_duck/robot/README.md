@@ -22,7 +22,7 @@
 | `audio/` | （感知板）喚醒詞（sherpa-onnx KWS）、聲源方向、語音串流、喇叭（ADR-0003）；變聲輸出 `duck_voice`、本機音效 `duck_raw`、播放閘門與音量上限（[ADR-0010](../docs/adr/ADR-0010-duck-voice.md)） | 規劃中 |
 | [`servo_console/`](servo_console/README.md) | **舵機控制台**：Pi 4 上的網頁工具，控制 14 顆舵機、即時 3D 姿勢、姿勢與偏移、感測器、緊急停止（本機開發工具，不經過 Nous） | 第一版可用（[驗證](../docs/validation/servo-console-2026-11-25.md)：單元測試、模擬、實機只動頭部） |
 | `tests/` | 單元測試（safety 規則、意圖轉換、schema 驗證）；不需要硬體的部分可在雲端跑 | `test_look_at.py`（15 項）；其他規劃中 |
-| [`settings/`](settings/README.md) | **鴨子設定**（2026-11-26）：設定的單一來源（schema、預設值、範圍）、設定網頁（手機可用，埠 8081）、給 duckd 與 duck-doa 讀設定的介面（[ADR-0019](../docs/adr/ADR-0019-duck-settings-page.md)）。本機工具，不經過 Nous；碰不到舵機 | 單元測試、對模擬服務端到端、無頭瀏覽器（[驗證](../docs/validation/settings-2026-11-26.md)）；未部署到 Pi、未實機 |
+| [`settings/`](settings/README.md) | **鴨子設定**（2026-11-26）：設定的單一來源（schema、預設值、範圍）、設定網頁（手機可用，埠 8081）、給 duckd 與 duck-doa 讀設定的介面（[ADR-0019](../docs/adr/ADR-0019-duck-settings-page.md)）。本機工具，不經過 Nous；碰不到舵機 | 單元測試、對模擬服務端到端、無頭瀏覽器；設定頁在 Pi 上經區網驗證（[驗證](../docs/validation/settings-2026-11-26.md)）；duckd／duck-doa 未用新版部署，沒有設定在實機上生效過 |
 | [`duckd/`](duckd/README.md) | **鴨子端常駐程式**（2026-11-25）：`nous_link`、`behaviors`、`safety` 的第一版實作都在這裡（duck-link client、安全仲裁、頭部後端、動作庫、presence、眼睛輸出、步態 host 載入） | 單元測試、通道端到端（模擬身體）；實機頭部未測（[驗證](../docs/validation/duckd-2026-11-25.md)） |
 
 2026-11-25 起，`navigation/`（[README](navigation/README.md)）、`perception/`（[README](perception/README.md)）、`audio/`（[README](audio/README.md)）已有第一版程式，層級是模擬或合成資料；上表這三列的「規劃中」描述以各自的 README 為準。
