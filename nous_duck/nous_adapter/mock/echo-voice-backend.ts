@@ -1,10 +1,10 @@
 import type { VoiceBackend, VoiceBackendCall, VoiceBackendSink } from "../hub/duck-voice-hub.ts";
-import { DOWNLINK, pcmMs, pcmRms, resampleLinear, UPLINK, type PlaybackState } from "../shared/duck-voice.ts";
+import { DOWNLINK, pcmMs, pcmRms, resampleLinear, UPLINK } from "../shared/duck-voice.ts";
 
 // ⚠️ MOCK 語音後端：**不是語音模型，不辨識、不理解、不生成任何話**。
-// 它做的事：聽到一段聲音（音量超過門檻）、安靜一小段時間之後，把剛才那段聲音原樣放回去。
+// 它做的事：聽到一段聲音（音量超過門檻）、安靜一小段時間之後（或鴨子說「這一輪說完了」），把剛才那段聲音原樣放回去。
 // 用途：在真正的語音後端（要改 AIOS，等使用者授權）接上之前，讓鴨子端與 Nous 端先把
-// 通道、開始與結束、播放回報、插話清空這幾件事跑通。
+// 通道、開始與結束、播放回報、接著聽下一輪這幾件事跑通。
 // 隱私：聽到的聲音只放在記憶體裡的一個緩衝區（最多 maxSeconds 秒），放回去之後立刻丟掉；不寫檔、不進 log。
 
 export interface EchoBackendOptions {
@@ -24,40 +24,35 @@ export class EchoVoiceBackend implements VoiceBackend {
 
   constructor(private readonly options: EchoBackendOptions = {}) {}
 
-  async start(_info: { sessionId: string; wakeId: string }, sink: VoiceBackendSink): Promise<VoiceBackendCall> {
+  async start(_info: { sessionId: string }, sink: VoiceBackendSink): Promise<VoiceBackendCall> {
     const speechRms = this.options.speechRms ?? 0.01;
-    const endSilenceMs = this.options.endSilenceMs ?? 600;
+    const endSilenceMs = this.options.endSilenceMs ?? 800;
     const maxBytes = Math.round((this.options.maxSeconds ?? 10) * UPLINK.rate * 2);
     const endAfter = this.options.endAfterReplies ?? 0;
     let chunks: Buffer[] = [];
     let bytes = 0;
     let quietMs = 0;
     let hearing = false;
-    let playing = false;
     let replies = 0;
     let closed = false;
 
     const reply = () => {
+      if (!bytes) return;
       const heard = Buffer.concat(chunks);
       chunks = [];
       bytes = 0;
       hearing = false;
       quietMs = 0;
+      replies += 1;
       sink.phase("thinking");
       sink.audio(resampleLinear(heard, UPLINK.rate, DOWNLINK.rate));
-      replies += 1;
+      sink.audioEnd();
     };
 
     return {
       pushAudio(pcm) {
         if (closed) return;
-        const loud = pcmRms(pcm) >= speechRms;
-        if (loud) {
-          // 正在回放時又聽到聲音：當成插話，請鴨子清空播放。
-          if (playing) {
-            playing = false;
-            sink.interrupt();
-          }
+        if (pcmRms(pcm) >= speechRms) {
           if (!hearing) {
             hearing = true;
             sink.phase("hearing");
@@ -72,12 +67,16 @@ export class EchoVoiceBackend implements VoiceBackend {
         }
         if (hearing && (quietMs >= endSilenceMs || bytes >= maxBytes)) reply();
       },
-      playback(state: PlaybackState) {
-        playing = state === "started";
-        if (state !== "started" && !closed) {
-          sink.phase("listening");
-          if (endAfter && replies >= endAfter && state === "drained") sink.end("done");
-        }
+      endTurn() {
+        if (!closed && hearing) reply();
+      },
+      cancelReply() {
+        chunks = [];
+        bytes = 0;
+        hearing = false;
+      },
+      playback(state) {
+        if (!closed && state === "finished" && endAfter && replies >= endAfter) sink.end("done");
       },
       close() {
         closed = true;

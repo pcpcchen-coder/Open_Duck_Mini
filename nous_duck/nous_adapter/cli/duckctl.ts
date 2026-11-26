@@ -135,7 +135,7 @@ async function main(): Promise<number> {
     const running = await runHub({ port, voiceBackend: voiceOption, log: (line) => console.log(`[${stamp()}] ${line}`) });
     console.log(`duck-link hub 已啟動：ws://127.0.0.1:${running.port}${DUCK_LINK_PATH}（只聽本機 loopback）`);
     console.log(`控制通道：${running.socketPath}`);
-    console.log(`語音通道：ws://127.0.0.1:${running.port}/duck-voice；後端：${voiceOption === "echo" ? "echo（模擬：把聽到的聲音原樣放回去，不是語音模型）" : "沒有（每次喚醒都回 refused: no_backend；加 --voice echo 可以用模擬的回放後端）"}`);
+    console.log(`語音通道：ws://127.0.0.1:${running.port}/duck-voice；後端：${voiceOption === "echo" ? "echo（模擬：把聽到的聲音原樣放回去，不是語音模型）" : "沒有（每次喚醒都回 session_end: no_backend；加 --voice echo 可以用模擬的回放後端）"}`);
     console.log("presence 來源：語音通道的真實事件，加上開發用手動來源（duckctl presence …）。這裡沒有 Nous 的語音模型。");
     console.log("等鴨子連進來…（Ctrl-C 結束）");
     running.terminal.onEvent((e) => console.log(`[${stamp()}] 事件 ${e.origin === "hub" ? "（hub）" : ""}${e.name}${e.reason ? ` reason=${e.reason}` : ""}${e.mission_id ? ` mission=${e.mission_id}` : ""}${e.mock ? "（模擬）" : ""}`));
@@ -203,7 +203,7 @@ async function main(): Promise<number> {
     console.log(`語音通道：${String(v.listening)}`);
     console.log(`鴨子的音訊端：${v.connected ? `已連線（${v.duck.software}${v.duck.mock ? "，⚠ 模擬" : ""}）` : "沒有連線"}`);
     console.log(`語音後端：${v.backend ? `${v.backend.label}${v.backend.mock ? "  ⚠ 模擬" : ""}` : "沒有（喚醒會被拒絕：no_backend）"}`);
-    console.log(`進行中的對話：${v.session ? `${v.session.state}，${Math.round(v.session.ageMs / 100) / 10} 秒，上行 ${v.session.uplinkFrames} 框、下行 ${v.session.downlinkFrames} 框${v.session.speaking ? "，鴨子正在出聲" : ""}` : "沒有"}`);
+    console.log(`進行中的對話：${v.session ? `${v.session.state}，${Math.round(v.session.ageMs / 100) / 10} 秒，第 ${v.session.turns} 輪，上行 ${v.session.uplinkFrames} 框、下行 ${v.session.downlinkFrames} 框` : "沒有"}`);
     console.log(`計數：${JSON.stringify(v.counters)}`);
     if (v.last) console.log(`上一通：${JSON.stringify(v.last)}`);
     return 0;
@@ -214,26 +214,25 @@ async function main(): Promise<number> {
     const url = `ws://127.0.0.1:${port}/duck-voice`;
     const speakMs = Number(takeOption(argv, "speak-ms") ?? 800);
     console.log("⚠ 這是模擬的鴨子音訊端（mock）：不開麥克風、不出聲；上行是合成的正弦波，不是人聲。");
-    const duck = new MockDuckVoice({ url });
+    const duck = new MockDuckVoice({ url, followUp: false });
     await duck.connect();
-    duck.wake(`mockwake_${Date.now().toString(36)}`, { keyword_id: "mock" });
-    const reply = await duck.waitFor((m): m is Extract<NousVoiceMessage, { type: "session" }> => m.type === "session", 3_000);
-    if (reply.state === "refused") {
-      console.log(`喚醒被拒絕：${reply.reason}${reply.reason === "no_backend" ? "（hub 沒有語音後端；用 duckctl hub --voice echo 啟動）" : ""}`);
+    duck.wake({ keyword_id: "mock" });
+    console.log(`已送出喚醒（第 ${duck.turnId} 輪）。送 ${speakMs} ms 的合成音，再送最多 2 秒靜音…`);
+    await duck.stream(speakMs, 0.3);
+    await duck.stream(2_000, 0);
+    const ended = duck.messages.find((m): m is Extract<NousVoiceMessage, { type: "session_end" }> => m.type === "session_end");
+    if (ended && !duck.downlink.length) {
+      console.log(`對話沒有開始：${ended.reason ?? "沒有說明原因"}${ended.reason === "no_backend" ? "（hub 沒有語音後端；用 duckctl hub --voice echo 啟動）" : ""}`);
       duck.disconnect();
       return 1;
     }
-    console.log(`對話已開始（${reply.session_id}）。送 ${speakMs} ms 的合成音，再送 1 秒靜音…`);
-    await duck.stream(speakMs, 0.3);
-    await duck.stream(1_000, 0);
     const start = Date.now();
-    while (!duck.playback.includes("drained") && Date.now() - start < speakMs + 5_000) await new Promise((r) => setTimeout(r, 50));
-    const bytes = duck.downlink.reduce((n, f) => n + f.bytes, 0);
+    while (!duck.playback.includes("finished") && Date.now() - start < speakMs + 5_000) await new Promise((r) => setTimeout(r, 50));
+    const bytes = duck.downlink.reduce((n, b) => n + b, 0);
+    console.log(`收到的控制訊息：${duck.messages.map((m) => m.type).join(" → ")}`);
     console.log(`收到下行 ${duck.downlink.length} 框、${bytes} bytes（約 ${Math.round(bytes / 48)} ms 的 24 kHz 音訊）；播放回報：${duck.playback.join(" → ") || "沒有"}`);
-    duck.end("user");
-    await new Promise((r) => setTimeout(r, 200));
     duck.disconnect();
-    return duck.playback.includes("drained") ? 0 : 2;
+    return duck.playback.includes("finished") ? 0 : 2;
   }
 
   if (command === "link" || command === "state") {

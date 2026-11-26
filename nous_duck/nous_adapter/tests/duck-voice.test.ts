@@ -2,20 +2,21 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { WebSocket } from "ws";
-import { DuckLinkHub } from "../hub/duck-link-hub.ts";
-import { DuckVoiceHub, VOICE_CLOSE, type VoiceBackend, type VoiceBackendSink, type VoiceSessionStats, type VoiceTiming, type WakeInfo } from "../hub/duck-voice-hub.ts";
-import { EchoVoiceBackend } from "../mock/echo-voice-backend.ts";
-import { MockDuckVoice, synthTone } from "../mock/mock-duck-voice.ts";
-import { decodeFrame, DOWNLINK, encodeFrame, FRAME_DOWNLINK, FRAME_UPLINK, parseDuckVoiceMessage, pcmRms, resampleLinear, UPLINK, type NousVoiceMessage } from "../shared/duck-voice.ts";
 import { sendDuckPresence } from "../adapters/duck-exec.ts";
-import { PresenceDriver, type VoiceSessionEvent } from "../terminal/presence.ts";
+import { DuckLinkHub } from "../hub/duck-link-hub.ts";
+import { DOWNLINK_MAX_BYTES, DuckVoiceHub, VOICE_CLOSE, type VoiceBackend, type VoiceBackendSink, type VoiceSessionStats, type VoiceTiming, type WakeInfo } from "../hub/duck-voice-hub.ts";
+import { EchoVoiceBackend } from "../mock/echo-voice-backend.ts";
 import { MockDuck } from "../mock/mock-duck.ts";
+import { MockDuckVoice, synthTone } from "../mock/mock-duck-voice.ts";
+import { DOWNLINK, parseDuckVoiceMessage, pcmRms, resampleLinear, UPLINK, type NousVoiceMessage } from "../shared/duck-voice.ts";
+import { PresenceDriver, type VoiceSessionEvent } from "../terminal/presence.ts";
 import { FAST, sleep, until } from "./helpers.ts";
 
-// duck-voice（語音媒體通道）的 Nous 端。對面是標示 mock 的鴨子音訊端，音訊是程式合成的正弦波與靜音，
-// 語音後端是模擬的（回放或測試腳本）。驗證層級：單元／整合測試；沒有麥克風、沒有喇叭、沒有語音模型。
+// duck-voice（語音媒體通道）的 Nous 端。對面是標示 mock 的鴨子音訊端（照 D 線狀態機的規則做的簡化版），
+// 音訊是程式合成的正弦波與靜音，語音後端是模擬的（回放或測試腳本）。
+// 驗證層級：單元／整合測試；沒有麥克風、沒有喇叭、沒有語音模型。
 
-const TIMING: Partial<VoiceTiming> = { pingMs: 100, staleMs: 600, helloTimeoutMs: 150, backendStartMs: 200, uplinkGapMs: 300, silenceMs: 400, maxMs: 5_000, tickMs: 20 };
+const TIMING: Partial<VoiceTiming> = { pingMs: 100, staleMs: 600, helloTimeoutMs: 150, backendStartMs: 200, uplinkGapMs: 300, idleMs: 600, maxMs: 5_000, tickMs: 20 };
 
 interface Rig {
   link: DuckLinkHub;
@@ -28,8 +29,8 @@ interface Rig {
   logs: string[];
 }
 
-let rigs: Rig[] = [];
-let extras: (() => void | Promise<void>)[] = [];
+const rigs: Rig[] = [];
+const extras: (() => void | Promise<void>)[] = [];
 afterEach(async () => {
   for (const fn of extras.splice(0)) await fn();
   for (const r of rigs.splice(0)) {
@@ -39,14 +40,14 @@ afterEach(async () => {
   }
 });
 
-async function rig(options: { backend?: VoiceBackend | null; timing?: Partial<VoiceTiming>; speed?: number; connect?: boolean } = {}): Promise<Rig> {
+async function rig(options: { backend?: VoiceBackend | null; timing?: Partial<VoiceTiming>; speed?: number; connect?: boolean; followUp?: boolean } = {}): Promise<Rig> {
   const logs: string[] = [];
   const link = new DuckLinkHub({ port: 0, heartbeatMs: 40 });
   const voice = new DuckVoiceHub({ backend: options.backend === undefined ? new EchoVoiceBackend({ endSilenceMs: 120 }) : options.backend, timing: { ...TIMING, ...options.timing }, log: (l) => logs.push(l) });
   voice.attachTo(link);
   const port = await link.start();
   const url = `ws://127.0.0.1:${port}/duck-voice`;
-  const duck = new MockDuckVoice({ url, speed: options.speed ?? 10 });
+  const duck = new MockDuckVoice({ url, speed: options.speed ?? 10, ...(options.followUp !== undefined ? { followUp: options.followUp } : {}) });
   const presence: VoiceSessionEvent[] = [];
   const wakes: WakeInfo[] = [];
   const ended: VoiceSessionStats[] = [];
@@ -62,15 +63,16 @@ async function rig(options: { backend?: VoiceBackend | null; timing?: Partial<Vo
   return r;
 }
 
-const isOpen = (m: NousVoiceMessage): m is Extract<NousVoiceMessage, { type: "session"; state: "open" }> => m.type === "session" && m.state === "open";
-const isRefused = (m: NousVoiceMessage): m is Extract<NousVoiceMessage, { type: "session"; state: "refused" }> => m.type === "session" && m.state === "refused";
-const isEnd = (m: NousVoiceMessage): m is Extract<NousVoiceMessage, { type: "end" }> => m.type === "end";
-const isClear = (m: NousVoiceMessage): m is Extract<NousVoiceMessage, { type: "clear" }> => m.type === "clear";
+const is =
+  <T extends NousVoiceMessage["type"]>(type: T) =>
+  (m: NousVoiceMessage): m is Extract<NousVoiceMessage, { type: T }> =>
+    m.type === type;
+const types = (r: Rig) => r.duck.messages.map((m) => m.type);
 const phases = (events: VoiceSessionEvent[]) => events.map((e) => (e.kind === "phase" ? e.phase : e.kind === "session_started" ? `started:${e.source}` : e.kind === "session_ended" ? `ended:${e.reason}` : e.kind));
 
 /** 測試用的後端：測試自己決定什麼時候送音訊、狀態、插話與結束。 */
-function scripted(options: { failStart?: boolean; hangStart?: boolean } = {}) {
-  const state = { sink: null as VoiceBackendSink | null, pushed: 0, pushedBytes: 0, closed: [] as string[], playback: [] as string[], starts: 0 };
+function scripted(options: { failStart?: boolean; hangStart?: boolean; startDelayMs?: number } = {}) {
+  const state = { sink: null as VoiceBackendSink | null, pushed: 0, pushedBytes: 0, closed: [] as string[], playback: [] as string[], endTurns: 0, cancels: 0, starts: 0 };
   const backend: VoiceBackend = {
     label: "scripted（測試）",
     mock: true,
@@ -78,12 +80,15 @@ function scripted(options: { failStart?: boolean; hangStart?: boolean } = {}) {
       state.starts += 1;
       if (options.failStart) throw new Error("backend down");
       if (options.hangStart) await new Promise(() => {});
+      if (options.startDelayMs) await sleep(options.startDelayMs);
       state.sink = sink;
       return {
         pushAudio: (pcm) => {
           state.pushed += 1;
           state.pushedBytes += pcm.length;
         },
+        endTurn: () => void (state.endTurns += 1),
+        cancelReply: () => void (state.cancels += 1),
         playback: (s) => void state.playback.push(s),
         close: (reason) => void state.closed.push(reason),
       };
@@ -92,38 +97,23 @@ function scripted(options: { failStart?: boolean; hangStart?: boolean } = {}) {
   return { backend, state };
 }
 
-describe("框與控制訊息", () => {
-  it("二進位框：8 bytes 標頭（種類、保留、uint32 序號）＋PCM，可逆", () => {
-    const pcm = synthTone(20, UPLINK.rate);
-    const frame = encodeFrame(FRAME_UPLINK, 0x01020304, pcm);
-    expect(frame.length).toBe(8 + UPLINK.frameBytes);
-    expect([...frame.subarray(0, 8)]).toEqual([1, 0, 0, 0, 1, 2, 3, 4]);
-    const back = decodeFrame(frame)!;
-    expect(back).toMatchObject({ kind: FRAME_UPLINK, seq: 0x01020304 });
-    expect(back.pcm.equals(pcm)).toBe(true);
-  });
-
-  it("解不開的框回 null：太短、種類不對、保留位不是 0、PCM 長度是奇數", () => {
-    expect(decodeFrame(Buffer.alloc(8))).toBeNull();
-    expect(decodeFrame(Buffer.from([3, 0, 0, 0, 0, 0, 0, 0, 1, 2]))).toBeNull();
-    expect(decodeFrame(Buffer.from([1, 9, 0, 0, 0, 0, 0, 0, 1, 2]))).toBeNull();
-    expect(decodeFrame(Buffer.from([1, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3]))).toBeNull();
-  });
-
-  it("控制訊息的檢查：欄位、範圍、多餘欄位、版本", () => {
-    const ok = (o: object) => parseDuckVoiceMessage(JSON.stringify({ v: "0.1", ...o })).ok;
-    expect(ok({ type: "hello", role: "duck", software: "x", uplink: { rate: 16000, frame_ms: 20 }, downlink: { rate: 24000 } })).toBe(true);
-    expect(ok({ type: "hello", role: "duck", software: "x", uplink: { rate: 48000, frame_ms: 20 } })).toBe(false);
-    expect(ok({ type: "hello", role: "nous", software: "x" })).toBe(false);
-    expect(ok({ type: "wake", wake_id: "wake_0001", keyword_id: "hey_duck", doa_deg: 30 })).toBe(true);
-    expect(ok({ type: "wake", wake_id: "short" })).toBe(false);
-    expect(ok({ type: "wake", wake_id: "wake_0001", audio: "AAAA" })).toBe(false);
-    expect(ok({ type: "playback", session_id: "vs_12345678", state: "started", played_ms: 0 })).toBe(true);
-    expect(ok({ type: "playback", session_id: "vs_12345678", state: "paused" })).toBe(false);
-    expect(ok({ type: "end", session_id: "vs_12345678", reason: "user" })).toBe(true);
-    expect(ok({ type: "end", session_id: "vs_12345678", reason: "bored" })).toBe(false);
+describe("控制訊息與 PCM 小工具", () => {
+  it("鴨子送來的控制訊息：欄位與範圍；多的欄位忽略；不認得的 type 不合格", () => {
+    const ok = (o: object) => parseDuckVoiceMessage(JSON.stringify(o)).ok;
+    expect(ok({ type: "hello", v: 0, uplink: { rate: 16000, format: "s16le", channels: 1, frame_ms: 20 }, downlink: { rate: 24000, format: "s16le", channels: 1 } })).toBe(true);
+    expect(ok({ type: "hello", v: 0 })).toBe(true);
+    expect(ok({ type: "hello", v: 0, uplink: { rate: 48000 } })).toBe(false);
+    expect(parseDuckVoiceMessage(JSON.stringify({ type: "hello", v: 1 }))).toEqual({ ok: false, error: "version" });
+    expect(ok({ type: "turn_start", turn_id: 1, trigger: "wake_word", keyword_id: "hey_duck", doa_deg: -30 })).toBe(true);
+    expect(ok({ type: "turn_start", turn_id: 2, trigger: "follow_up", keyword_id: null, doa_deg: null })).toBe(true);
+    expect(ok({ type: "turn_start", turn_id: 1, trigger: "remote" })).toBe(false);
+    expect(ok({ type: "turn_start", turn_id: -1, trigger: "wake_word" })).toBe(false);
+    expect(ok({ type: "turn_end", turn_id: 1, reason: "silence" })).toBe(true);
+    expect(ok({ type: "turn_end", turn_id: 1, reason: "bored" })).toBe(false);
+    expect(ok({ type: "playback", turn_id: 1, state: "refused", reason: "quiet_hours" })).toBe(true);
+    expect(ok({ type: "playback", turn_id: 1, state: "paused" })).toBe(false);
+    expect(ok({ type: "turn_start", turn_id: 3, trigger: "wake_word", future_field: 1 })).toBe(true);
     expect(ok({ type: "transcript", text: "hi" })).toBe(false);
-    expect(parseDuckVoiceMessage(JSON.stringify({ v: "9.0", type: "pong", t: 1 }))).toEqual({ ok: false, error: "version" });
     expect(parseDuckVoiceMessage("{oops")).toEqual({ ok: false, error: "不是合法的 JSON" });
   });
 
@@ -154,145 +144,199 @@ describe("連線與守門", () => {
     await until(() => r.link.snapshot().connected);
   });
 
-  it("連上後 hub 送 hello（role nous）；第一則不是 hello → 關閉；版本不合 → 關閉", async () => {
+  it("hello → hello_ack（標示後端是模擬）；第一則不是 hello → 關閉；版本不合 → 關閉", async () => {
     const r = await rig();
-    expect(r.duck.messages[0]).toMatchObject({ type: "hello", role: "nous" });
-    expect(r.voice.snapshot()).toMatchObject({ connected: true, duck: { mock: true } });
+    await r.duck.waitFor(is("hello_ack"));
+    expect(r.duck.messages[0]).toEqual({ type: "hello_ack", v: 0, software: "duck-voice-hub 0.1.0", mock: true });
+    expect(r.voice.snapshot()).toMatchObject({ connected: true, duck: { mock: true }, backend: { mock: true } });
     const second = new MockDuckVoice({ url: r.url });
     extras.push(() => second.disconnect());
     await second.connect(false);
-    second.sendJson({ type: "pong", t: 1 });
+    second.sendJson({ type: "turn_start", turn_id: 1, trigger: "wake_word" });
     await until(() => second.closeCode !== null);
     expect(second.closeCode).toBe(VOICE_CLOSE.badHello);
     const third = new MockDuckVoice({ url: r.url });
     extras.push(() => third.disconnect());
     await third.connect(false);
-    third.sendRaw(JSON.stringify({ v: "9.0", type: "hello", role: "duck", software: "future" }));
+    third.sendJson({ type: "hello", v: 7 });
     await until(() => third.closeCode !== null);
     expect(third.closeCode).toBe(VOICE_CLOSE.version);
-    // 原本的連線不受影響。
     expect(r.voice.snapshot().connected).toBe(true);
   });
 
-  it("鴨子不回任何訊息（不回 pong）→ 關閉連線", async () => {
+  it("鴨子的行程卡住（連協定層的 pong 都不回）→ 關閉連線", async () => {
     const r = await rig({ connect: false });
-    const silent = new WebSocket(r.url);
+    const silent = new WebSocket(r.url, { autoPong: false });
+    extras.push(() => silent.terminate());
     let code: number | null = null;
     silent.on("close", (c) => (code = c));
-    silent.on("open", () => silent.send(JSON.stringify({ v: "0.1", type: "hello", role: "duck", software: "silent", mock: true })));
+    silent.on("open", () => silent.send(JSON.stringify({ type: "hello", v: 0 })));
     await until(() => code !== null, 3_000);
     expect(code).toBe(VOICE_CLOSE.stale);
   });
+
+  it("正常的音訊端（自動回 pong）閒置時不會被關掉", async () => {
+    const r = await rig();
+    await sleep(900);
+    expect(r.voice.snapshot().connected).toBe(true);
+    expect(r.duck.closeCode).toBeNull();
+  });
 });
 
-describe("喚醒 → 對話 → 回話 → 結束", () => {
-  it("完整的一通：open 之後才收上行；回話切成 ≤100 ms 的下行框；speaking 以鴨子回報的播放為準", async () => {
+describe("喚醒 → 聽 → 回話 → 接著聽 → 結束", () => {
+  it("完整的一通：turn_start 才開後端；listen_stop、speak_start、PCM、speak_end；播完送 listen；speaking 以鴨子回報為準", async () => {
     const r = await rig();
-    r.duck.wake("wake_00000001", { keyword_id: "hey_duck", doa_deg: -30 });
-    const open = await r.duck.waitFor(isOpen);
-    expect(open.wake_id).toBe("wake_00000001");
-    expect(r.wakes).toEqual([expect.objectContaining({ wakeId: "wake_00000001", keywordId: "hey_duck", doaDeg: -30, outcome: "open", mock: true })]);
+    r.duck.wake({ keyword_id: "hey_duck", doa_deg: -30 });
     await r.duck.stream(300, 0.3);
-    await r.duck.stream(200, 0);
-    await until(() => r.duck.playback.includes("drained"));
-    // 回放後端把聽到的 300 ms（加上尾端的靜音）以 24 kHz 放回來。
-    const bytes = r.duck.downlink.reduce((n, f) => n + f.bytes, 0);
+    await r.duck.stream(400, 0);
+    await until(() => r.duck.playback.includes("finished"));
+    expect(r.wakes).toEqual([expect.objectContaining({ turnId: 1, keywordId: "hey_duck", doaDeg: -30, outcome: "open", mock: true })]);
+    // 回放後端把聽到的聲音以 24 kHz 放回來；每框最多 100 ms。
+    const bytes = r.duck.downlink.reduce((n, b) => n + b, 0);
     expect(bytes).toBeGreaterThanOrEqual((300 / 1000) * DOWNLINK.rate * 2);
-    expect(r.duck.downlink.every((f) => f.bytes <= DOWNLINK.maxFrameBytes)).toBe(true);
-    expect(r.duck.downlink.map((f) => f.seq)).toEqual(r.duck.downlink.map((_f, i) => i));
+    expect(r.duck.downlink.every((b) => b <= DOWNLINK_MAX_BYTES && b % 2 === 0)).toBe(true);
     expect(pcmRms(Buffer.concat(r.duck.downlinkPcm))).toBeGreaterThan(0.1);
+    // 播完之後 Nous 請鴨子接著聽，鴨子開始第 2 輪（follow_up）。
+    await until(() => r.duck.turnId === 2);
+    expect(types(r).slice(0, 5)).toEqual(["hello_ack", "listen_stop", "speak_start", "speak_end", "listen"]);
+    expect(r.duck.sent).toEqual(["hello", "turn_start", "turn_end", "playback", "playback", "turn_start"]);
     await until(() => phases(r.presence).at(-1) === "listening");
     expect(phases(r.presence)).toEqual(["started:wake_word", "listening", "hearing", "thinking", "speaking", "listening"]);
-    r.duck.end("user");
+    // 第 2 輪一直沒有人說話：鴨子自己結束（no_speech），對話收掉。
+    await r.duck.stream(100, 0);
+    r.duck.endTurn("no_speech");
     await until(() => r.ended.length === 1);
-    expect(r.ended[0]).toMatchObject({ reason: "duck_user", heardSpeech: true, uplinkGaps: 0, mock: true });
-    expect(r.ended[0]!.uplinkFrames).toBe(25);
+    expect(r.ended[0]).toMatchObject({ reason: "duck_no_speech", turns: 2, replies: 1, heardSpeech: true, interruptions: 0, mock: true });
     expect(phases(r.presence).at(-1)).toBe("ended:ended");
-    // 鴨子自己說要結束的，不再回送 end。
-    expect(r.duck.messages.some(isEnd)).toBe(false);
+    expect(r.duck.messages.at(-1)).toEqual({ type: "session_end", reason: "done" });
   });
 
-  it("沒有語音後端：refused no_backend，不演 wake", async () => {
+  it("鴨子自己判斷說完了（turn_end silence）→ 後端收到 endTurn 並回話", async () => {
+    const r = await rig({ backend: new EchoVoiceBackend({ endSilenceMs: 60_000 }), followUp: false });
+    r.duck.wake();
+    await r.duck.stream(200, 0.3);
+    r.duck.endTurn("silence");
+    await until(() => r.duck.playback.includes("finished"));
+    // 鴨子已經自己停止上行，所以不需要 listen_stop。
+    expect(types(r)).not.toContain("listen_stop");
+    expect(phases(r.presence).slice(0, 5)).toEqual(["started:wake_word", "listening", "hearing", "thinking", "speaking"]);
+  });
+
+  it("沒有語音後端：session_end no_backend，不演 wake，上行全部丟掉", async () => {
     const r = await rig({ backend: null });
-    r.duck.wake("wake_00000002");
-    expect((await r.duck.waitFor(isRefused)).reason).toBe("no_backend");
+    r.duck.wake();
+    expect((await r.duck.waitFor(is("session_end"))).reason).toBe("no_backend");
+    expect(r.duck.state).toBe("idle");
     expect(r.wakes[0]).toMatchObject({ outcome: "no_backend" });
     expect(r.presence).toEqual([]);
     expect(r.voice.snapshot().counters).toMatchObject({ wakes: 1, sessions: 0, refused: 1 });
   });
 
-  it("後端開不起來或逾時：refused no_backend，presence 先 started 再以 connect_failed 結束", async () => {
+  it("後端開不起來或逾時：session_end no_backend，presence 先 started 再以 connect_failed 結束", async () => {
     for (const options of [{ failStart: true }, { hangStart: true }]) {
       const r = await rig({ backend: scripted(options).backend });
-      r.duck.wake("wake_00000003");
-      expect((await r.duck.waitFor(isRefused)).reason).toBe("no_backend");
+      r.duck.wake();
+      void r.duck.stream(400, 0.3);
+      expect((await r.duck.waitFor(is("session_end"))).reason).toBe("no_backend");
       expect(phases(r.presence)).toEqual(["started:wake_word", "ended:connect_failed"]);
       expect(r.voice.snapshot().session).toBeNull();
     }
   });
 
-  it("對話中再喚醒 → busy；60 秒內第 4 次喚醒 → rate_limited", async () => {
+  it("後端還在開的時候先到的上行音訊：暫放在記憶體，開好就補送，一框不少", async () => {
+    const s = scripted({ startDelayMs: 120 });
+    const r = await rig({ backend: s.backend, timing: { backendStartMs: 1_000 } });
+    r.duck.wake();
+    const sentFrames = await r.duck.stream(400, 0.3);
+    await until(() => s.state.pushed === sentFrames);
+    expect(sentFrames).toBe(20);
+    expect(s.state.pushedBytes).toBe(20 * UPLINK.frameBytes);
+    expect(r.voice.snapshot().counters.strayFrames).toBe(0);
+  });
+
+  it("60 秒內第 4 次喚醒 → rate_limited", async () => {
     const r = await rig({ backend: scripted().backend });
     for (let i = 1; i <= 3; i++) {
-      r.duck.messages.length = 0;
-      r.duck.wake(`wake_1000000${i}`);
-      await r.duck.waitFor(isOpen);
-      if (i === 1) {
-        r.duck.wake("wake_1000000x");
-        expect((await r.duck.waitFor(isRefused)).reason).toBe("busy");
-      }
-      r.duck.end("user");
+      r.duck.wake();
+      await until(() => r.voice.snapshot().session?.state === "listening");
+      r.duck.endTurn("cancelled");
       await until(() => r.voice.snapshot().session === null);
     }
     r.duck.messages.length = 0;
-    r.duck.wake("wake_10000004");
-    expect((await r.duck.waitFor(isRefused)).reason).toBe("rate_limited");
+    r.duck.wake();
+    expect((await r.duck.waitFor(is("session_end"))).reason).toBe("rate_limited");
+    expect(r.wakes.at(-1)).toMatchObject({ outcome: "rate_limited" });
+  });
+
+  it("鴨子本機的閘門不讓播（playback refused）→ 對話結束，不是錯誤", async () => {
+    const s = scripted();
+    const r = await rig({ backend: s.backend });
+    r.duck.wake();
+    await until(() => s.state.sink !== null);
+    r.duck.sendJson({ type: "playback", turn_id: 1, state: "refused", reason: "quiet_hours" });
+    await until(() => r.ended.length === 1);
+    expect(r.ended[0]!.reason).toBe("duck_playback_refused_quiet_hours");
+    expect(phases(r.presence).at(-1)).toBe("ended:ended");
   });
 });
 
-describe("未喚醒的音訊不進來", () => {
-  it("沒有工作階段時的上行框：丟棄並計數，後端完全沒收到", async () => {
+describe("沒有在收音的時候，音訊進不來", () => {
+  it("待命時的上行框：丟棄並計數，後端完全沒被啟動", async () => {
     const s = scripted();
     const r = await rig({ backend: s.backend });
     for (let i = 0; i < 5; i++) r.duck.sendUplinkFrame(synthTone(20, UPLINK.rate));
     await until(() => r.voice.snapshot().counters.strayFrames === 5);
     expect(s.state.starts).toBe(0);
-    expect(s.state.pushed).toBe(0);
     expect(r.voice.snapshot().connected).toBe(true);
   });
 
-  it("持續在工作階段外送音訊（鴨子端閘門壞了）→ 關閉連線", async () => {
+  it("持續在不該送的時候送音訊（鴨子端閘門壞了）→ 關閉連線", async () => {
     const r = await rig();
     for (let i = 0; i < 25; i++) r.duck.sendUplinkFrame(synthTone(20, UPLINK.rate));
     await until(() => r.duck.closeCode !== null);
     expect(r.duck.closeCode).toBe(VOICE_CLOSE.stray);
   });
 
-  it("wake 之後、open 之前送的音訊也不算", async () => {
-    const s = scripted({ hangStart: true });
-    const r = await rig({ backend: s.backend, timing: { backendStartMs: 150 } });
-    r.duck.wake("wake_20000001");
-    await sleep(20);
-    r.duck.sendUplinkFrame(synthTone(20, UPLINK.rate));
-    await r.duck.waitFor(isRefused);
-    expect(s.state.pushed).toBe(0);
-    expect(r.voice.snapshot().counters.strayFrames).toBe(1);
-  });
-
-  it("不合格的框（下行種類、太大）不交給後端", async () => {
+  it("回話期間（已經 listen_stop）送來的音訊不交給後端", async () => {
     const s = scripted();
     const r = await rig({ backend: s.backend });
-    r.duck.wake("wake_20000002");
-    await r.duck.waitFor(isOpen);
-    r.duck.sendRaw(encodeFrame(FRAME_DOWNLINK, 0, synthTone(20, UPLINK.rate)));
-    r.duck.sendRaw(encodeFrame(FRAME_UPLINK, 0, Buffer.alloc(8_000)));
+    r.duck.wake();
+    await r.duck.stream(60, 0.3);
+    await until(() => s.state.pushed === 3);
+    s.state.sink!.phase("thinking");
+    await r.duck.waitFor(is("listen_stop"));
+    r.duck.sendUplinkFrame(synthTone(20, UPLINK.rate));
+    await until(() => r.voice.snapshot().counters.strayFrames === 1);
+    expect(s.state.pushed).toBe(3);
+  });
+
+  it("Nous 沒辦法憑空叫鴨子收音：待命時送 listen，鴨子不理；沒有對話時的 follow_up 被回絕", async () => {
+    const s = scripted();
+    const r = await rig({ backend: s.backend });
+    // 這條規則在鴨子端（D 線的狀態機）；模擬的音訊端照同一條規則做。
+    (r.voice as unknown as { send(m: NousVoiceMessage): void }).send({ type: "listen" });
+    await r.duck.waitFor(is("listen"));
+    expect(r.duck.state).toBe("idle");
+    expect(r.duck.sent).toEqual(["hello"]);
+    r.duck.sendJson({ type: "turn_start", turn_id: 9, trigger: "follow_up", keyword_id: null, doa_deg: null });
+    expect((await r.duck.waitFor(is("session_end"))).reason).toBe("error");
+    expect(s.state.starts).toBe(0);
+  });
+
+  it("不合格的框（奇數長度、太大）不交給後端", async () => {
+    const s = scripted();
+    const r = await rig({ backend: s.backend });
+    r.duck.wake();
+    await until(() => s.state.sink !== null);
+    r.duck.sendUplinkFrame(Buffer.alloc(641));
+    r.duck.sendUplinkFrame(Buffer.alloc(8_000));
     r.duck.sendUplinkFrame(synthTone(20, UPLINK.rate));
     await until(() => s.state.pushed === 1);
     expect(r.voice.snapshot().counters.rxInvalid).toBe(2);
     expect(s.state.pushedBytes).toBe(UPLINK.frameBytes);
   });
 
-  it("hub 與通道的程式不碰檔案系統（音訊不可能被寫檔）", () => {
+  it("hub、通道與回放後端的程式不碰檔案系統（音訊不可能被寫檔）", () => {
     for (const file of ["../hub/duck-voice-hub.ts", "../shared/duck-voice.ts", "../mock/echo-voice-backend.ts"]) {
       const source = readFileSync(fileURLToPath(new URL(file, import.meta.url)), "utf8");
       expect(source, file).not.toMatch(/node:fs|writeFile|createWriteStream|appendFile/);
@@ -300,43 +344,43 @@ describe("未喚醒的音訊不進來", () => {
   });
 });
 
-describe("插話、逾時、中斷", () => {
-  it("回話播放中使用者插話：後端 interrupt → clear → 鴨子回 cleared → 不再是 speaking", async () => {
-    const r = await rig({ speed: 2 });
-    r.duck.wake("wake_30000001");
-    await r.duck.waitFor(isOpen);
+describe("打斷、逾時、中斷", () => {
+  it("回話播放中用喚醒詞打斷：鴨子回報 flushed 並開始新的一輪；後端被叫停；不再是 speaking", async () => {
+    const r = await rig({ speed: 2, backend: new EchoVoiceBackend({ endSilenceMs: 120 }) });
+    r.duck.wake();
     await r.duck.stream(600, 0.3);
-    await r.duck.stream(200, 0);
+    await r.duck.stream(300, 0);
     await until(() => r.duck.playback.includes("started"));
     await until(() => phases(r.presence).at(-1) === "speaking");
-    // 播放要 300 ms 以上（600 ms 的聲音、2 倍速）；這時候再說話。
-    await r.duck.stream(60, 0.3);
-    await r.duck.waitFor(isClear);
-    await until(() => r.duck.playback.includes("cleared"));
-    expect(r.duck.playback).not.toContain("drained");
-    await until(() => !phases(r.presence).slice(-2).includes("speaking"));
-    r.duck.end("user");
+    r.duck.wake();
+    await until(() => r.duck.turnId === 2 && r.voice.snapshot().session?.state === "listening");
+    expect(r.duck.playback).toEqual(["started", "flushed"]);
+    expect(phases(r.presence).at(-1)).toBe("listening");
+    expect(r.wakes).toHaveLength(2);
+    r.duck.endTurn("cancelled");
     await until(() => r.ended.length === 1);
-    expect(r.ended[0]!.interruptions).toBe(1);
+    expect(r.ended[0]).toMatchObject({ turns: 2, interruptions: 1 });
   });
 
-  it("喚醒後沒有人說話 → Nous 以 silence 結束（presence 正常結束，不是 error）", async () => {
-    const r = await rig({ backend: scripted().backend });
-    r.duck.wake("wake_30000002");
-    await r.duck.waitFor(isOpen);
-    void r.duck.stream(1_500, 0);
-    expect((await r.duck.waitFor(isEnd)).reason).toBe("silence");
-    expect(r.ended[0]).toMatchObject({ reason: "silence", heardSpeech: false });
-    expect(phases(r.presence).at(-1)).toBe("ended:ended");
+  it("後端要求清空（flush）→ 鴨子清掉播放並回報 flushed", async () => {
+    const s = scripted();
+    const r = await rig({ backend: s.backend, speed: 1, followUp: false });
+    r.duck.wake();
+    await until(() => s.state.sink !== null);
+    s.state.sink!.audio(synthTone(1_000, DOWNLINK.rate));
+    await until(() => r.duck.playback.includes("started"));
+    s.state.sink!.interrupt();
+    await until(() => r.duck.playback.includes("flushed"));
+    expect(s.state.playback).toEqual(["started", "flushed"]);
+    expect(r.duck.playback).not.toContain("finished");
   });
 
-  it("上行斷掉（鴨子不再送框）→ error；presence 以 connection_lost 結束", async () => {
+  it("聽的時候上行斷掉（鴨子不再送框）→ error；presence 以 connection_lost 結束", async () => {
     const s = scripted();
     const r = await rig({ backend: s.backend });
-    r.duck.wake("wake_30000003");
-    await r.duck.waitFor(isOpen);
+    r.duck.wake();
     await r.duck.stream(60, 0.3);
-    expect((await r.duck.waitFor(isEnd)).reason).toBe("error");
+    expect((await r.duck.waitFor(is("session_end"))).reason).toBe("error");
     expect(r.ended[0]!.reason).toBe("uplink_lost");
     expect(s.state.closed).toEqual(["uplink_lost"]);
     expect(phases(r.presence).at(-1)).toBe("ended:connection_lost");
@@ -345,8 +389,8 @@ describe("插話、逾時、中斷", () => {
   it("鴨子的音訊端斷線 → 後端被關閉、紀錄 client_lost", async () => {
     const s = scripted();
     const r = await rig({ backend: s.backend });
-    r.duck.wake("wake_30000004");
-    await r.duck.waitFor(isOpen);
+    r.duck.wake();
+    await until(() => s.state.sink !== null);
     r.duck.disconnect();
     await until(() => r.ended.length === 1);
     expect(r.ended[0]!.reason).toBe("client_lost");
@@ -354,42 +398,39 @@ describe("插話、逾時、中斷", () => {
     expect(r.voice.snapshot()).toMatchObject({ connected: false, session: null });
   });
 
-  it("後端結束（done、backend_lost）會告訴鴨子；單通上限 → max_duration", async () => {
+  it("後端結束（done、backend_lost）會告訴鴨子；單通上限 → max_duration；鴨子不接著聽 → idle 收掉", async () => {
     const s = scripted();
-    const r = await rig({ backend: s.backend, timing: { maxMs: 250, silenceMs: 10_000 } });
-    r.duck.wake("wake_30000005");
-    await r.duck.waitFor(isOpen);
+    const r = await rig({ backend: s.backend, timing: { maxMs: 300 }, followUp: false });
+    r.duck.wake();
+    await until(() => s.state.sink !== null);
     s.state.sink!.end("backend_lost");
-    expect((await r.duck.waitFor(isEnd)).reason).toBe("backend_lost");
+    expect((await r.duck.waitFor(is("session_end"))).reason).toBe("backend_lost");
     expect(phases(r.presence).at(-1)).toBe("ended:error");
     r.duck.messages.length = 0;
-    r.duck.wake("wake_30000006");
-    await r.duck.waitFor(isOpen);
-    void r.duck.stream(800, 0.3);
-    expect((await r.duck.waitFor(isEnd)).reason).toBe("max_duration");
-  });
+    r.duck.wake();
+    void r.duck.stream(900, 0.3);
+    expect((await r.duck.waitFor(is("session_end"))).reason).toBe("max_duration");
 
-  it("掉框會被數出來（序號不連續）", async () => {
-    const s = scripted();
-    const r = await rig({ backend: s.backend });
-    r.duck.wake("wake_30000007");
-    await r.duck.waitFor(isOpen);
-    for (const seq of [0, 1, 3, 4, 7]) r.duck.sendUplinkFrame(synthTone(20, UPLINK.rate), seq);
-    await until(() => s.state.pushed === 5);
-    r.duck.end("user");
-    await until(() => r.ended.length === 1);
-    expect(r.ended[0]).toMatchObject({ uplinkFrames: 5, uplinkGaps: 2 });
+    const s2 = scripted();
+    const r2 = await rig({ backend: s2.backend, followUp: false });
+    r2.duck.wake();
+    await until(() => s2.state.sink !== null);
+    s2.state.sink!.audio(synthTone(100, DOWNLINK.rate));
+    s2.state.sink!.audioEnd();
+    await until(() => r2.duck.playback.includes("finished"));
+    await until(() => r2.ended.length === 1, 3_000);
+    expect(r2.ended[0]!.reason).toBe("idle");
+    expect(phases(r2.presence).at(-1)).toBe("ended:ended");
   });
 
   it("log 只有數量與時間，沒有音訊內容", async () => {
     const r = await rig();
-    r.duck.wake("wake_30000008");
-    await r.duck.waitFor(isOpen);
+    r.duck.wake();
     await r.duck.stream(200, 0.3);
-    r.duck.end("user");
+    r.duck.endTurn("cancelled");
     await until(() => r.ended.length === 1);
     expect(r.logs.join("\n").length).toBeLessThan(600);
-    expect(r.logs.at(-1)).toMatch(/對話結束（duck_user）：.*上行 10 框/);
+    expect(r.logs.some((l) => /對話結束（duck_cancelled）：.*上行 10 框/.test(l))).toBe(true);
   });
 });
 
@@ -408,15 +449,13 @@ describe("接到 presence：鴨子的身體跟著真實的語音狀態（對 moc
     extras.push(() => driver.stop());
     driver.attach(r.voice);
     expect(driver.sources[0]).toMatchObject({ dev: false });
-    r.duck.wake("wake_40000001");
-    await r.duck.waitFor(isOpen);
+    r.duck.wake();
     await r.duck.stream(500, 0.3);
-    await r.duck.stream(200, 0);
+    await r.duck.stream(300, 0);
     await until(() => seen.includes("speaking"), 4_000);
-    expect(r.link.snapshot().state?.presence === "speaking" || r.duck.playback.includes("drained")).toBe(true);
-    await until(() => r.duck.playback.includes("drained"));
+    await until(() => r.duck.playback.includes("finished"));
     await until(() => seen.at(-1) === "listening", 4_000);
-    r.duck.end("user");
+    r.duck.endTurn("no_speech");
     await until(() => seen.at(-1) === "idle", 4_000);
     expect(seen).toContain("wake");
     expect(seen.indexOf("speaking")).toBeGreaterThan(seen.indexOf("wake"));

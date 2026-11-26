@@ -36,8 +36,8 @@ export interface TerminalEvent {
 
 /** DuckTerminal 需要語音通道提供的部分（hub/duck-voice-hub.ts 的 DuckVoiceHub 實作它）。 */
 export interface VoiceEvents extends PresenceSource {
-  onWake(listener: (wake: { wakeId: string; keywordId?: string; doaDeg?: number; at: number; outcome: string; mock: boolean }) => void): () => void;
-  onSessionEnd(listener: (stats: { reason: string; durationMs: number; uplinkFrames: number; uplinkGaps: number; downlinkFrames: number; heardSpeech: boolean; interruptions: number; mock: boolean }) => void): () => void;
+  onWake(listener: (wake: { turnId: number; keywordId?: string; doaDeg?: number; at: number; outcome: string; mock: boolean }) => void): () => void;
+  onSessionEnd(listener: (stats: { reason: string; durationMs: number; turns: number; replies: number; uplinkFrames: number; downlinkFrames: number; heardSpeech: boolean; interruptions: number; mock: boolean }) => void): () => void;
 }
 
 export interface DuckEventSink {
@@ -142,7 +142,7 @@ export class DuckTerminal {
           attention: wake.outcome === "open" ? "info" : "notify",
           mock: wake.mock,
           ...(wake.outcome === "open" ? {} : { reason: `voice_${wake.outcome}` }),
-          data: { wake_id: wake.wakeId, outcome: wake.outcome, ...(wake.keywordId ? { keyword_id: wake.keywordId } : {}), ...(wake.doaDeg !== undefined ? { doa_deg: wake.doaDeg } : {}) },
+          data: { turn_id: wake.turnId, outcome: wake.outcome, ...(wake.keywordId ? { keyword_id: wake.keywordId } : {}), ...(wake.doaDeg !== undefined ? { doa_deg: wake.doaDeg } : {}) },
         }),
       ),
       voice.onSessionEnd((stats) =>
@@ -155,7 +155,7 @@ export class DuckTerminal {
           mock: stats.mock,
           reason: stats.reason,
           // 只有數量與時間，沒有內容。
-          data: { duration_ms: Math.round(stats.durationMs), uplink_frames: stats.uplinkFrames, uplink_gaps: stats.uplinkGaps, downlink_frames: stats.downlinkFrames, heard_speech: stats.heardSpeech, interruptions: stats.interruptions },
+          data: { duration_ms: Math.round(stats.durationMs), turns: stats.turns, replies: stats.replies, uplink_frames: stats.uplinkFrames, downlink_frames: stats.downlinkFrames, heard_speech: stats.heardSpeech, interruptions: stats.interruptions },
         }),
       ),
     );
