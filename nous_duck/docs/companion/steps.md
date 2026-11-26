@@ -101,11 +101,12 @@
 
 | Step | 內容 | 負責 | 狀態 | 驗證層級 |
 |---|---|---|---|---|
-| T1 | 實機頭部：duckd 接手頭頸 4 顆，`look`、`gesture`、`presence` 真的動（I2） | A 線 | **等你**：舵機沒有電（11:42、11:46 掃描 14 顆都不回應）。檢查腳本 `robot/duckd/tools/head_check.sh` 備好 | 沒有實機；B 線正式 hub＋`duckctl` 經真實通道對 Pi 上的 duckd（模擬身體）通過 |
+| T1 | 實機頭部：duckd 接手頭頸 4 顆，`look`、`gesture`、`presence` 真的動（I2） | A 線 | 完成（2026-11-26 傍晚）：`look`、四個動作、`presence`、租約都在實機跑過；頭部視窗維持 ±15°、30°/s。迴圈偶有超時（最長一圈 247 ms），原因未查 | **實機**：數字是回讀；三軸方向與「四個動作有動」有人眼確認。[紀錄](../validation/duckd-head-hardware-2026-11-26.md) |
 | T2 | 語音命令轉頭：說話 → Nous → `app.duck.look`／`gesture` → 鴨子 | B 線 | 程式完成，**等你試**：[pcpcchen-coder/AIOS#156](https://github.com/pcpcchen-coder/AIOS/pull/156)（`NOUS_DUCK` 預設關閉，未合併） | AIOS fixture 測試 122 項；對 duckd 模擬身體的本機檢查。沒有真實語音、沒有實機 |
 | T3 | 語音互動時的動作：真實語音事件 → `presence` | B 線 | 粗略版完成（同一個 AIOS PR）；沒有 `speaking` 狀態 | 同上 |
-| T4 | XVF3800 接上 Pi：DOA 讀取、送 `sound` 方位 | A 線 | 程式與部署完成；實機**等你**（麥克風還沒接上） | 單元測試（模擬裝置 20 項） |
-| T5 | 聽聲辨位轉頭：`track sound` | A 線 | 程式完成；實機等 T1、T4 | 單元測試；真實通道上對模擬身體、模擬聲源 |
+| T4 | XVF3800 接上 Pi：DOA 讀取、送 `sound` 方位 | A 線 | 完成：`2886:001a`（韌體 2.06）讀得到；正前方已校正（值只留在 Pi）；角度是順時針為正 | **實機**：讀取與校正是回讀；角度方向有人眼確認。[紀錄](../validation/duckd-head-hardware-2026-11-26.md) |
+| T5 | 聽聲辨位轉頭：`track sound` | A 線 | 電視關時通過；有電視聲時**未確認**（回讀顯示頭被帶走 4 次，使用者說沒有）；能量門檻 2e5 未實機驗 | **實機**：安靜不動、轉向說話的人、回正、正前方不擺有人眼確認；其餘回讀。[紀錄](../validation/duckd-head-hardware-2026-11-26.md) |
 | T6 | 鴨子自己的喇叭與麥克風進行對話（Pi 上無螢幕跑 Nous 頁面） | B 線 | 準備完成；連 Nous 與出聲**等你**（也等麥克風） | Pi 4 上不連 Nous、不出聲的量測 |
+| T7 | 鴨子的喚醒詞叫醒 Nous：喚醒服務 → duckd → duck-link `wake_word`；presence 送回喚醒服務 | A 線（duckd 這一段） | duckd 這一段完成；頭部出力時的反應、真人喚醒、對真的 Nous **等你** | 單元測試；對假 hub 端到端；Pi 實機不出力（手動觸發）。[紀錄](../validation/duckd-wake-relay-2026-11-27.md) |
 
 2026-11-26 下午：PR #38（A 線）、#39（B 線）已合併進整合分支。使用者決定 **XVF3800 放頭頂**，`robot/audio/config/doa.json` 的 `mount` 改為 `head`（Pi 上已部署的 `~/duck/doa/config/doa.json` 要在下次部署時更新）。上表是兩條線自己回報的狀態；實機仍等舵機電源與麥克風接上。

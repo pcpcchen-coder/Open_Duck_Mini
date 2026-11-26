@@ -103,6 +103,8 @@ class ModelOptions:
     #: 用來試「Pi 4、鏡頭、觸點板裝上去之後」的影響。預設不加。
     extra_mass_kg: float = 0.0
     extra_mass_pos: tuple[float, float, float] = (-0.05, 0.0, 0.04)
+    #: 加裝件（`walk_sim.mass.MassItem`）：合進對應 body 的慣量，可加可減。見 `mass.py`。
+    mass_items: tuple = ()
     #: 是否加機身與頭的簡化碰撞外殼（給有牆的場景）。
     body_hull: bool = True
     #: 加場景內容（牆、標籤、相機）的掛勾：收到 `MjSpec`，在編譯前修改。
@@ -192,6 +194,11 @@ def build_spec(options: ModelOptions | None = None) -> mujoco.MjSpec:
             mass=o.extra_mass_kg,
             rgba=[1, 0, 0, 0.6],
         )
+
+    if o.mass_items:
+        from .mass import apply_mass_items  # 延遲匯入：mass.py 也匯入本模組
+
+        o.extras["mass_log"] = apply_mass_items(spec, o.mass_items)
 
     # 感測器。
     spec.add_sensor(

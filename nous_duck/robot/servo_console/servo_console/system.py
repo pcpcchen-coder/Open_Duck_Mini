@@ -1,6 +1,7 @@
 """Pi 狀態、BNO055、足底開關、音效。都是「讀不到就回報讀不到」，不顯示假值。
 
-- Pi 狀態：vcgencmd get_throttled、CPU 溫度、負載、記憶體。
+- Pi 狀態：vcgencmd get_throttled、CPU 溫度、核心與 SDRAM 電壓、ARM 時脈、負載、記憶體。
+  Pi 4 **沒有量 5V 輸入電壓的電路**（Pi 5 才有 pmic_read_adc），只能看 get_throttled 的電壓不足旗標。
 - BNO055：照上游的接法（I2C、位址 0x28），用 adafruit_bno055 讀；I2C 只在「連線」時打開。
 - 足底開關：上游 feet_contacts.py 的接法（GPIO 22 左、27 右，上拉，接 GND 算著地）。
   感測器沒接時腳位被上拉，**永遠讀成懸空**，畫面會註明。
@@ -32,15 +33,34 @@ def decode_throttled(value: int) -> list[str]:
     return [text for bit, text in THROTTLED_BITS.items() if value & (1 << bit)]
 
 
+def _vcgencmd(*args: str) -> str | None:
+    try:
+        return subprocess.run(["vcgencmd", *args], capture_output=True, text=True, timeout=2).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
 def pi_status() -> dict:
     out: dict = {}
     try:
-        raw = subprocess.run(["vcgencmd", "get_throttled"], capture_output=True, text=True, timeout=2).stdout
-        value = int(raw.strip().split("=")[1], 16)
+        value = int((_vcgencmd("get_throttled") or "").split("=")[1], 16)
         out["throttled"] = f"0x{value:x}"
+        out["throttled_value"] = value
         out["throttled_flags"] = decode_throttled(value)
-    except (OSError, ValueError, IndexError, subprocess.SubprocessError):
+    except (ValueError, IndexError):
         out["throttled"] = None
+        out["throttled_value"] = None
+    volts = {}
+    for rail in ("core", "sdram_c", "sdram_i", "sdram_p"):
+        try:
+            volts[rail] = float((_vcgencmd("measure_volts", rail) or "").split("=")[1].rstrip("V"))
+        except (ValueError, IndexError):
+            volts[rail] = None
+    out["volts"] = volts
+    try:
+        out["arm_mhz"] = round(int((_vcgencmd("measure_clock", "arm") or "").split("=")[1]) / 1e6)
+    except (ValueError, IndexError):
+        out["arm_mhz"] = None
     try:
         out["cpu_temp_c"] = round(int(Path("/sys/class/thermal/thermal_zone0/temp").read_text()) / 1000, 1)
     except (OSError, ValueError):

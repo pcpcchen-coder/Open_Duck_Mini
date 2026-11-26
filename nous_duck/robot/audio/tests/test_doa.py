@@ -224,3 +224,42 @@ def test_run_forever_reports_missing_device_then_starts_when_plugged_in():
     done.set()
     th.join(timeout=3)
     assert got_sound and len(attempts) >= 2
+
+
+class FakeEnergyDevice(FakeUsbDevice):
+    """假的 USB 裝置（mock）：語音能量與波束方位。"""
+
+    def __init__(self, energy, azimuth_rad):
+        super().__init__()
+        self.energy, self.azimuth_rad = energy, azimuth_rad
+
+    def ctrl_transfer(self, *args):
+        import struct
+
+        self.calls.append(args)
+        value = {80: self.energy, 75: self.azimuth_rad}[args[2] & 0x7F]
+        return bytes([0]) + struct.pack("<4f", 0.0, 0.0, 1.0, value)
+
+
+def test_energy_source_uses_auto_select_beam_and_is_the_default():
+    import math
+
+    dev = FakeEnergyDevice(5000.0, math.radians(90))
+    reader = doa.XVF3800Reader(usb_core=FakeUsbCore(dev))
+    raw, energy = reader.read_energy()
+    assert round(raw, 3) == 90.0 and energy == 5000.0
+    assert dev.calls[0][:5] == (0xC0, 0, 0x80 | 80, 33, 17) and dev.calls[1][:5] == (0xC0, 0, 0x80 | 75, 33, 17)
+    assert DoaConfig().speech_source == "energy"
+    assert doa.read_sample(reader, DoaConfig())[1] is True
+    assert doa.read_sample(reader, DoaConfig(min_speech_energy=1e4))[1] is False
+    dev.energy = 0.0
+    assert doa.read_sample(reader, DoaConfig())[1] is False  # 能量 0＝沒有語音
+    dev.azimuth_rad = float("nan")
+    assert reader.read_energy() == (0.0, 0.0)
+    # 模擬裝置沒有語音能量：退回 DOA_VALUE
+    assert doa.read_sample(MockDoaReader(30), DoaConfig()) == (30.0, True)
+    with pytest.raises(DoaError, match="speech_source"):
+        import json as _json, tempfile, pathlib as _p
+        f = _p.Path(tempfile.mkdtemp()) / "c.json"
+        f.write_text(_json.dumps({"speech_source": "x"}))
+        DoaConfig.load(f)

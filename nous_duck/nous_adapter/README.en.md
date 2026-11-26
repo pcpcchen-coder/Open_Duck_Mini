@@ -21,7 +21,7 @@ What has not been done and what cannot be claimed:
 - **It cannot yet be claimed that "the duck can be commanded by voice".** The AIOS-side code is on a branch, with the flag off by default, and not merged yet; nobody has tried it with real realtime voice. The steps for trying it are in §5 of `docs/validation/duck-link-2026-11-26.md` on the AIOS branch (starting a separate development instance, without affecting the running Nous), to be started by the user themselves.
 - **No command has been issued to the real duck.** All tool results come from a mock (the TypeScript mock here, or the mock body of line A's duckd). The real-hardware steps are written under "Against the real duck" below.
 - `presence` currently has only the **dev-only manual source** (`duckctl presence`), not events from a Nous voice session.
-- Voice is not here: for how Nous's voice reaches the duck see [`docs/voice-path.md`](docs/voice-path.en.md) (design, not implemented).
+- Voice is not here: on 2026-11-26 the user decided to take route 2 (Chromium on the duck's Pi opens the Nous page, and the duck's local wake words 「Hello 鴨子」 ("Hello duck") and 「Hey 鴨子」 ("Hey duck") tell the page to start a conversation). For the design and the things not yet solved see [`docs/voice-path.md` §8](docs/voice-path.en.md#8-the-2026-11-26-decision-route-2); the Nous-side changes are in AIOS ([pcpcchen-coder/AIOS#158](https://github.com/pcpcchen-coder/AIOS/pull/158), not merged). **Nobody has run it with a real microphone and speaker yet.** The other one, a native audio channel (`/duck-voice`), is an experiment; it has not been merged into `v2` and stays on the branch `claude/duck-b-voice-channel`.
 
 ## Try it yourself (no duck needed)
 
@@ -120,7 +120,7 @@ npm run typecheck
 npm test
 ```
 
-Results on 2026-11-26: 144 passed (`validator` 33, `hub` 24, `duck-adapter` 51, `terminal` 18, `cli` 18), about 4 seconds. The tests connect only to ephemeral local ports, do not touch 8791, and do not connect to the running Nous. The test tooling is the same as AIOS's: vitest 5.0.3, tsx 4.23.15, TypeScript 7.0.2.
+Results on 2026-11-26: 145 passed (`validator` 33, `hub` 25, `duck-adapter` 51, `terminal` 18, `cli` 18), about 4 seconds. The tests connect only to ephemeral local ports, do not touch 8791, and do not connect to the running Nous. The test tooling is the same as AIOS's: vitest 5.0.3, tsx 4.23.15, TypeScript 7.0.2.
 
 End-to-end check against line A's duckd (mock body):
 
@@ -197,6 +197,7 @@ Tools not done yet: `app.duck.announce` (whether to do it depends on the voice p
 | `tests/` | vitest tests |
 | `docs/aios-integration-plan.md` | The plan for moving into AIOS (file and function level) |
 | `docs/voice-path.md` | Voice path design |
+| `docs/voice-test.md` | Step-by-step voice test for the user to follow (telling the duck by voice to turn its head, nod and shake its head; §7 is route 2: say 「Hey 鴨子」 ("Hey duck") to the duck to start a conversation) |
 
 ## AIOS conventions followed
 

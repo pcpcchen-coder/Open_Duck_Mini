@@ -18,3 +18,5 @@ robot/perception/build/
 uv.lock
 walk_sim_out/
 nav_demo_out/
+# 鴨子設定頁：無頭瀏覽器檢查的截圖輸出
+robot/settings/dist/

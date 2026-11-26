@@ -21,7 +21,7 @@
 - **還不能宣稱「用語音叫得動鴨子」。** AIOS 那一端的程式在分支上、旗標預設關閉、還沒合併；沒有人用真實的即時語音試過。要試的步驟在 AIOS 分支的 `docs/validation/duck-link-2026-11-26.md` §5（另起開發實例，不影響正在跑的 Nous），由使用者自己啟動。
 - **沒有對真的鴨子下過指令。** 所有工具結果都來自 mock（這裡的 TypeScript mock，或 A 線 duckd 的 mock 身體）。實機步驟寫在下面的「對真的鴨子」。
 - `presence` 目前只有**開發用手動來源**（`duckctl presence`），不是 Nous 語音工作階段的事件。
-- 語音不在這裡：Nous 的聲音怎麼到鴨子見 [`docs/voice-path.md`](docs/voice-path.md)（設計，未實作）。
+- 語音不在這裡：使用者 2026-11-26 決定走路線 2（鴨子的 Pi 上跑 Chromium 開 Nous 頁面，鴨子本機的喚醒詞「Hello 鴨子」「Hey 鴨子」叫頁面開始對話）。設計與還沒解決的事見 [`docs/voice-path.md` §8](docs/voice-path.md#8-2026-11-26-的決定路線-2)；Nous 端的改動在 AIOS（[pcpcchen-coder/AIOS#158](https://github.com/pcpcchen-coder/AIOS/pull/158)，未合併）。**還沒有人用真的麥克風與喇叭跑過。** 另一條原生音訊通道（`/duck-voice`）是實驗，沒有併進 `v2`，留在分支 `claude/duck-b-voice-channel`。
 
 ## 親手試（不需要鴨子）
 
@@ -120,7 +120,7 @@ npm run typecheck
 npm test
 ```
 
-2026-11-26 的結果：144 項通過（`validator` 33、`hub` 24、`duck-adapter` 51、`terminal` 18、`cli` 18），約 4 秒。測試只連本機的臨時埠，不碰 8791，也不連執行中的 Nous。測試工具與 AIOS 相同：vitest 5.0.3、tsx 4.23.15、TypeScript 7.0.2。
+2026-11-26 的結果：145 項通過（`validator` 33、`hub` 25、`duck-adapter` 51、`terminal` 18、`cli` 18），約 4 秒。測試只連本機的臨時埠，不碰 8791，也不連執行中的 Nous。測試工具與 AIOS 相同：vitest 5.0.3、tsx 4.23.15、TypeScript 7.0.2。
 
 對 A 線 duckd（mock 身體）的端到端檢查：
 
@@ -197,6 +197,7 @@ npx tsx scripts/e2e-duckd.ts --port 18792
 | `tests/` | vitest 測試 |
 | `docs/aios-integration-plan.md` | 搬進 AIOS 的計畫（檔案與函式層級） |
 | `docs/voice-path.md` | 語音路徑設計 |
+| `docs/voice-test.md` | 給使用者照做的語音實測步驟（用說的讓鴨子轉頭、點頭、搖頭；§7 是路線 2：對鴨子說「Hey 鴨子」開始對話） |
 
 ## 沿用的 AIOS 慣例
 

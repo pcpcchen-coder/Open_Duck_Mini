@@ -38,6 +38,9 @@ RELEASE_TIMEOUT_S = 8.0
 TRACK_FRESH_S = 0.5  # 觀測超過這麼久就不拿來用
 TRACK_LOST_S = 2.0  # 這麼久沒有觀測 → tracking_lost
 TRACK_GAIN = 0.6
+WAKE_FRESH_S = 2.0  # 喚醒放超過這麼久就不轉給 Nous（控制迴圈卡住時不補送舊的）
+WAKE_BEARING_FRESH_S = 2.0  # 補方位時，聲音方位最多可以多舊
+WAKE_LOCAL_HOLD_S = 8.0  # Nous 沒有接手 presence 時，本機設的 wake 最多維持這麼久（同喚醒服務的退路時間）
 MISSION_ACTIONS = ("where", "places", "go_to", "find_person", "return_home", "follow_me", "wait_here")
 
 
@@ -51,6 +54,7 @@ class Duckd:
         *,
         eyes=None,
         percept=None,
+        voice=None,
         duck_id: str = "duck1",
         hardware_profile: str = "stock_head_direct_hold",
         allow_unverified_gestures: bool = False,
@@ -63,6 +67,7 @@ class Duckd:
         self.library = library
         self.eyes = eyes
         self.percept = percept
+        self.voice = voice  # 把 presence 送回喚醒服務（voice_out.PresenceRelay）；None＝不送
         self.duck_id = duck_id
         self.hardware_profile = hardware_profile
         self.allow_unverified_gestures = allow_unverified_gestures
@@ -74,13 +79,20 @@ class Duckd:
         self.player = GesturePlayer()
         self.presence = PresenceState()
         self.presence_motion = False
+        self._local_wake_until: float | None = None  # 本機因喚醒詞設的 wake，等 Nous 接手；到期回 idle
+        self.wake_stats = {"received": 0, "forwarded": 0, "dropped_no_link": 0, "dropped_stale": 0}
+        #: 鴨子設定（ADR-0019）給的功能開關與幅度；沒有設定來源時就是這些內建預設
+        self.features = {"track_sound": True, "gestures": True, "presence_head_motion": True, "speaking_bob": True}
+        self.presence_amplitude = 1.0
+        self.expression_map = dict(EXPRESSION)
         self.tracking = "none"
         self._track_until = math.inf
         self._track_acquired = False
         self._track_seen = -math.inf
         lo, hi = arbiter.limits.head_range["head_yaw"]
         base = sound_track or SoundTrackConfig()
-        self.sound = SoundTracker(SoundTrackConfig(**{**base.__dict__, "yaw_limit": min(base.yaw_limit, -lo, hi)}))
+        self._sound_yaw_limit = min(base.yaw_limit, -lo, hi)
+        self.sound = SoundTracker(SoundTrackConfig(**{**base.__dict__, "yaw_limit": self._sound_yaw_limit}))
         self.reading = BodyReading()
         self._home: dict[str, float] | None = None
         self._releasing_until: float | None = None
@@ -140,7 +152,9 @@ class Duckd:
         put("camera", "unsupported", "no camera")
         for kind in ("face", "sound"):
             src = self.percept.source(kind, 5.0) if self.percept else None
-            if src is None:
+            if kind == "sound" and not self.features["track_sound"]:
+                put("tracking_sound", "unsupported", "disabled in duck settings")
+            elif src is None:
                 put(f"tracking_{kind}", "unsupported", "no perception source is feeding duckd")
             elif not src.ok:
                 put(f"tracking_{kind}", "unsupported", f"source reports a fault: {src.detail}")
@@ -157,7 +171,7 @@ class Duckd:
         return caps
 
     def listed_gestures(self) -> list[str]:
-        if not self.reading.engaged:
+        if not self.reading.engaged or not self.features["gestures"]:
             return []
         return self.library.listed(self.hardware_profile, self.allow_unverified_gestures)
 
@@ -347,6 +361,8 @@ class Duckd:
         busy = self._busy_head()
         if busy:
             return busy
+        if not self.features["gestures"]:
+            return Decision(False, "unsupported", "gestures: disabled in duck settings")
         if not self.arbiter.head_enabled:
             return Decision(False, "unsupported", "head is not engaged")
         if name not in self.listed_gestures():
@@ -381,23 +397,30 @@ class Duckd:
     def _do_presence(self, params, ttl_ms, now, rid):
         if not self.arbiter.lease_ok:
             return Decision(False, "link_degraded", "no heartbeat lease")
-        changed = params["state"] != self.presence.state
-        self.presence.set(params["state"], params.get("speech_level"), now)
-        if changed:
-            self.presence_motion = True
-            if self.eyes is not None:
-                self.eyes.clear_express()
-        self._sync_eyes(now)
+        self._local_wake_until = None  # Nous 接手了對話狀態
+        self._set_presence(params["state"], params.get("speech_level"), now)
         applied = {"state": self.presence.state}
         if "speech_level" in params:
             applied["speech_level"] = params["speech_level"]
         return Decision(True, applied=applied)
+
+    def _set_presence(self, state: str, speech_level: float | None, now: float) -> None:
+        changed = state != self.presence.state
+        self.presence.set(state, speech_level, now)
+        if changed:
+            self.presence_motion = True
+            self._state_dirty = True
+            if self.eyes is not None:
+                self.eyes.clear_express()
+        self._sync_eyes(now)
 
     def _do_track(self, params, ttl_ms, now, rid):
         target = params["target"]
         if target == "none":
             self._end_tracking()
             return Decision(True, applied={"target": "none"})
+        if target == "sound" and not self.features["track_sound"]:
+            return Decision(False, "unsupported", "tracking_sound: disabled in duck settings")
         busy = self._busy_head()
         if busy:
             return busy
@@ -416,6 +439,9 @@ class Duckd:
         self._track_seen = now
         self.presence_motion = False  # 追蹤期間 presence 不搶頭；presence 狀態改變會再打開
         if target == "sound":
+            # 實際可用範圍要看接手後的視窗（例如 ±15°），不是只看靜態上限
+            lo, hi = self.arbiter.head_bounds("head_yaw")
+            self.sound.cfg = replace(self.sound.cfg, yaw_limit=max(0.0, min(self._sound_yaw_limit, -lo, hi)))
             self.sound.reset(now, self.arbiter.head_cmd.get("head_yaw", 0.0))
         wants_body = bool(params.get("body", False))
         # 轉身需要走路；走路還不支援，所以只動頭並回報被改掉
@@ -488,6 +514,54 @@ class Duckd:
                 self.body.reset_estop()
             return self.arbiter.clear_estop_local()
 
+    # ================================================================ 鴨子設定（本機；不在 duck-link 上）
+    def apply_settings(self, values: dict) -> dict:
+        """套用鴨子設定（ADR-0019）裡可以即時生效的項目，回傳實際在用的值（key 同設定的 key）。
+
+        值的範圍由 `duck_settings.schema` 檢查過；這裡只認得的 key 才用，其他忽略。安全上限不從這裡來。
+        """
+        with self.lock:
+            for name in self.features:
+                v = values.get(f"features.{name}")
+                if isinstance(v, bool):
+                    self.features[name] = v
+            amp = values.get("head.presence_amplitude")
+            if isinstance(amp, (int, float)) and not isinstance(amp, bool):
+                self.presence_amplitude = min(1.0, max(0.0, float(amp)))
+            cfg = self.sound.cfg
+            num = lambda key, cur: float(values[key]) if isinstance(values.get(key), (int, float)) and not isinstance(values.get(key), bool) else cur  # noqa: E731
+            self.sound.cfg = replace(
+                cfg,
+                deadzone=math.radians(num("hearing.deadzone_deg", math.degrees(cfg.deadzone))),
+                settle_s=num("hearing.settle_s", cfg.settle_s),
+                recenter_s=num("hearing.recenter_s", cfg.recenter_s),
+                min_confidence=num("hearing.min_confidence", cfg.min_confidence),
+            )
+            for state in self.expression_map:
+                name = values.get(f"eyes.presence.{state}")
+                if isinstance(name, str) and (self.eyes is None or self.eyes.known(name)):
+                    self.expression_map[state] = name
+            if not self.features["track_sound"] and self.tracking == "sound":
+                self._event("tracking_lost", reason="disabled", data={"target": "sound"})
+                self.tracking = "none"
+            if not self.features["gestures"]:
+                self._cancel_gesture("interrupted")
+            self._state_dirty = True
+            return self.settings_applied()
+
+    def settings_applied(self) -> dict:
+        cfg = self.sound.cfg
+        out = {f"features.{k}": v for k, v in self.features.items()}
+        out.update({
+            "head.presence_amplitude": self.presence_amplitude,
+            "hearing.deadzone_deg": round(math.degrees(cfg.deadzone), 6),
+            "hearing.settle_s": cfg.settle_s,
+            "hearing.recenter_s": cfg.recenter_s,
+            "hearing.min_confidence": cfg.min_confidence,
+        })
+        out.update({f"eyes.presence.{k}": v for k, v in self.expression_map.items()})
+        return out
+
     # ================================================================ 每圈
     def _cancel_gesture(self, reason: str) -> None:
         if self.player.active:
@@ -503,7 +577,7 @@ class Duckd:
     def _sync_eyes(self, now: float) -> None:
         if self.eyes is None:
             return
-        self.eyes.set_base(EXPRESSION[self.presence.state], camera_streaming=False)
+        self.eyes.set_base(self.expression_map[self.presence.state], camera_streaming=False)
         self.eyes.set_device(
             camera_streaming=False,  # 沒有鏡頭：真實狀態就是沒在串流
             conversation_active=self.arbiter.lease_ok and self.presence.state in ("wake", "listening", "thinking", "speaking"),
@@ -562,6 +636,64 @@ class Duckd:
             self._event("tracking_lost", reason="quiet", data={"target": "sound", "recentered": True})
         return {"head_yaw": yaw, "head_pitch": 0.0, "head_roll": 0.0, "neck_pitch": 0.0}
 
+    def _sound_bearing(self, max_age_s: float) -> tuple[float, str, bool] | None:
+        """最新的聲音方位：（rad、座標 "body"｜"head"、是不是合成的）。沒有夠新的就 None。
+
+        麥克風在頭上、又不知道頭在哪（沒接手）時，只能照實回報相對頭部的方位。
+        """
+        obs = self.percept.get("sound", max_age_s) if self.percept else None
+        if obs is None:
+            return None
+        if obs.frame != "head":
+            return obs.yaw, "body", obs.mock
+        head = self.reading.head or (self.arbiter.head_cmd if self.arbiter.head_enabled else None)
+        if not head:
+            return obs.yaw, "head", obs.mock
+        return (obs.yaw + head["head_yaw"] + math.pi) % (2 * math.pi) - math.pi, "body", obs.mock
+
+    def _wake_step(self, now: float) -> None:
+        """喚醒服務偵測到喚醒詞 → duck-link 的 `wake_word` 事件，加上本機的反應（presence: wake）。
+
+        連不上 Nous 時不轉送、也不補送：晚到的喚醒會讓 Nous 在沒有人叫的時候開始對話。
+        """
+        take = getattr(self.percept, "take_wakes", None)  # 感知來源是鴨子型別；測試用的假來源可以沒有
+        for w in take() if take else ():
+            self.wake_stats["received"] += 1
+            if now - w.received > WAKE_FRESH_S:
+                self.wake_stats["dropped_stale"] += 1
+                continue
+            if not (self.connected and self.arbiter.lease_ok):
+                self.wake_stats["dropped_no_link"] += 1
+                log.warning("喚醒詞 %s：連不上 Nous，沒有轉送", w.keyword_id)
+                continue
+            data: dict = {"keyword_id": w.keyword_id, "doa_deg": None, "mock": w.mock}
+            face_yaw = None
+            if w.doa_deg is not None:
+                data.update(doa_deg=round(w.doa_deg, 1), doa_frame="body", doa_source="wake_service")
+                face_yaw = math.radians(w.doa_deg)
+            else:
+                bearing = self._sound_bearing(WAKE_BEARING_FRESH_S)
+                if bearing is not None:
+                    yaw, frame, mock = bearing
+                    data.update(doa_deg=round(math.degrees(yaw), 1), doa_frame=frame, doa_source="duck_doa")
+                    if mock:
+                        data["doa_mock"] = True
+                    if frame == "body":
+                        face_yaw = yaw
+            self._event("wake_word", data=data)
+            self.wake_stats["forwarded"] += 1
+            if self.presence.state in ("idle", "sleeping", "error"):
+                # 本機先反應（真的聽到喚醒詞了）；之後的 listening／thinking… 由 Nous 的 presence 接手
+                self._set_presence("wake", None, now)
+                self._local_wake_until = now + WAKE_LOCAL_HOLD_S
+                if face_yaw is not None and self.features["track_sound"]:
+                    lim = self._sound_yaw_limit
+                    self.presence.face_yaw = max(-lim, min(lim, face_yaw))
+        if self._local_wake_until is not None and now >= self._local_wake_until:
+            self._local_wake_until = None
+            if self.presence.state == "wake":  # Nous 沒有接手（例如 NOUS_DUCK 關著）：回到 idle
+                self._set_presence("idle", None, now)
+
     def tick(self, now: float) -> list[dict]:
         with self.lock:
             dt = 0.02 if self._last_tick is None else min(max(now - self._last_tick, 0.0), 0.1)
@@ -573,6 +705,7 @@ class Duckd:
                 self._cancel_gesture("estop")
                 self._end_tracking()
             a.set_block(*(r.block or (None, "")))
+            self._wake_step(now)
 
             if r.engaged and a.head_enabled:
                 if self._releasing_until is not None:
@@ -598,7 +731,10 @@ class Duckd:
                     if targets:
                         a.stream_head(targets, now)
                 elif self.presence_motion:  # look 會把它關掉；presence 狀態改變才再打開
-                    a.stream_head(head_target(self.presence, now), now)
+                    a.stream_head(head_target(
+                        self.presence, now, amplitude=self.presence_amplitude,
+                        motion=self.features["presence_head_motion"], speaking_bob=self.features["speaking_bob"],
+                    ), now)
 
             out = a.update(now, dt)
             for name, fields in out.events:
@@ -607,6 +743,7 @@ class Duckd:
                     self._end_tracking()
                     self.presence.set("idle", None, now)
                     self.presence_motion = False
+                    self._local_wake_until = None
                 self._event(name, **fields)
                 self._state_dirty = True
             self.body.step(out.head, out.velocity, now)
@@ -615,6 +752,8 @@ class Duckd:
                 self._latency_from = None
             self._prev_head_out = out.head
             self._sync_eyes(now)
+            if self.voice is not None:
+                self.voice.presence(self.presence.state, now)
 
             self._hz_n += 1
             if self._hz_t0 is None:

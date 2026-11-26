@@ -3,6 +3,7 @@
 - 分支：`claude/duck-a-body-8fca8a`；對象：[`robot/duckd/`](../../robot/duckd/README.md)（T1、T5）、[`robot/audio/duck_audio/doa.py`](../../robot/audio/README.md#聲源方向doat4)（T4）
 - **驗證層級**：單元測試（Mac、Pi）；Mac↔Pi 真實 SSH 通道，用 **B 線的正式 hub 與 `duckctl`**，對 Pi 上的 duckd（**模擬身體、模擬 DOA，都是 mock**）。
 - **實機頭部沒有做、真的麥克風沒有接過。** 原因在 §1。
+- 同一天傍晚的實機紀錄在 [`duckd-head-hardware-2026-11-26.md`](duckd-head-hardware-2026-11-26.md)。
 
 ## 1. Pi 與硬體現況（唯讀檢查）
 

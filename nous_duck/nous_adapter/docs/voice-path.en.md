@@ -2,7 +2,7 @@
 
 # Voice path: how Nous's voice reaches the duck, and how the duck listens
 
-Status: **design (no listening test; for route A's terminal only the "not connected to Nous, no sound" preparation and measurement have been done)**. Date: 2026-11-25; updated 2026-11-26 in line with the revised ADR-0003, ADR-0005 and ADR-0010 (see §7).
+Status: **on 2026-11-26 the user decided to take route 2 (Chromium on the duck's Pi opens the Nous page); see §8.** The Nous-side changes are in an AIOS PR ([pcpcchen-coder/AIOS#158](https://github.com/pcpcchen-coder/AIOS/pull/158), flag off by default, not merged); **nobody at all has run it with a real microphone, speaker and voice model yet.** Date: 2026-11-25; updated twice on 2026-11-26 (§7, §8). §2–§5 are the comparison made before the decision, kept as a record.
 
 This document lines up the current state of AIOS (facts) against the duck's current hardware and answers four questions: the shortest workable conversation path today, how it changes once the microphone array arrives, what AIOS has to change, and what can be done on the duck side.
 
@@ -136,3 +136,66 @@ In line with the revised ADRs and that day's progress, the sections above are to
 | Approach 0 (talk at the Mac, the duck does the motions) | AIOS batches D1, D2 and D4a **have been implemented on the AIOS branch `claude/duck-link` and a PR has been opened** (flag `NOUS_DUCK` off by default; fixture tests and a local check against duckd's simulated body, no real hardware, no real voice). See [`aios-integration-plan.md` §0](aios-integration-plan.en.md#0-2026-11-26-update-d1-d2-and-d4a-implemented-on-an-aios-branch) |
 | The route A spike | For the preparation work (the script for running Chromium without a screen on the Pi, and measurements) see [`../../robot/deploy/pi4/terminal/`](../../robot/deploy/pi4/terminal/) and the [validation record](../../docs/validation/duck-terminal-spike-2026-11-26.md). The step that actually connects to Nous and makes sound is **waiting for you** to be present |
 | `speaking` | The presence in this AIOS batch has only `wake`／`thinking`／`listening`／`working`／`error`／`idle`; there is **no `speaking`** (the core does not know the model is speaking). Nodding while speaking has to wait for the page to report phase (D4b), or for the duck itself to measure the sound being played (the recommendation in §4) |
+
+## 8. The 2026-11-26 decision: route 2
+
+The user's decision (2026-11-26, verbatim; English gloss added):
+
+- 「我要路線2」 ("I want route 2") — Chromium on the duck's Raspberry Pi opens the Nous page (`?terminal=duck`); the conversation's capture, playback and connection to the cloud model are all in that page; the duck's wake tells the page to start a conversation.
+- 「喚醒詞要用另一個，先用 “Hello 鴨子” & "hey 鴨子"」 ("The wake word should be a different one; for now use 'Hello duck' & 'hey duck'") — the duck detects these two phrases locally. Nous's own "Hello Nous" and "Hey Nous" are not changed.
+
+The user did not say which billing method (which realtime voice path) to use, and this document does not assume one; route 2 works with both.
+
+### 8.1 The whole path
+
+```text
+人：「Hey 鴨子」
+  └► 鴨子的音訊服務（D 線，Pi 上原生）：本機喚醒詞偵測
+        └► duckd（A 線）──duck-link 事件 wake_word──► Nous 核心（AIOS，NOUS_DUCK=on）
+                                                        └► SSE voice.request（一次性權杖）
+                                                              └► Pi 上的 Chromium：Nous 頁面 ?terminal=duck
+                                                                    ├► 以 wake_word 開始即時語音（麥克風、喇叭都在這個頁面）
+                                                                    │     ⇅ WebRTC，直接連雲端模型
+                                                                    └► 每次狀態改變回報核心：聽／想／說
+Nous 核心 ──duck-link presence（wake／listening／thinking／speaking／idle）──► duckd：頭與眼睛
+模型呼叫 app.duck.look／gesture… ──► Nous 核心 ──duck-link 指令──► duckd
+```
+
+### 8.2 Where each segment lives and how far it has got
+
+| Segment | Whose | Status (2026-11-26) |
+|---|---|---|
+| Local wake word (「Hello 鴨子」 ("Hello duck"), 「Hey 鴨子」 ("Hey duck")) | Line D, `robot/audio/` | In progress (line D) |
+| Wake → the duck-link `wake_word` event | Line D notifies duckd; duckd (line A) sends the event | **Not connected yet**: line D's service has an option to hand its state to duckd, but the duckd end has not been done. Until this segment works, the duck's wake cannot reach Nous **Update 2026-11-27 (line A)**: the duckd segment is now wired (branch `claude/duckd-wake-relay`); tested on the Pi with a manual trigger and no servo torque; no real spoken wake, not against the real Nous. See the [record](../../docs/validation/duckd-wake-relay-2026-11-27.md) (Chinese) |
+| The core receives `wake_word` → asks the page to start a conversation; the page reports listening／thinking／speaking → `presence` | Line B, in AIOS | Code complete, PR awaiting review ([pcpcchen-coder/AIOS#158](https://github.com/pcpcchen-coder/AIOS/pull/158)). The server side has fixture tests; **the page side has not been run in a browser** |
+| Chromium on the Pi, without a screen, opens the Nous page | Line B, `robot/deploy/pi4/terminal/` | The script exists (`run_nous_terminal.sh`); only the "not connected to Nous, no sound, no microphone" case has been measured |
+| The head and eyes follow `presence` | Line A, duckd | The real head has already been confirmed by eye (T1); `speaking` had no source before and only has one as of this change |
+| Telling the duck by voice to do motions (`app.duck.*`) | Line B, already in AIOS main | Not tried with real voice |
+
+### 8.3 How the duck terminal's page differs from an ordinary terminal
+
+- **A conversation is started only by the duck's wake.** This page does not start the page's built-in wake listening (even if Nous has `NOUS_WAKE` turned on), so it will not start because someone says "Hey Nous", and it will not compete with the duck's wake detection for the microphone.
+- The duck's wake does not need `NOUS_WAKE=on`: the core issues a one-time token for every `wake_word` event, the page starts with that token, and only then does the core treat this call as wake-started.
+- The existing rate limit applies as usual: at most 3 wake-started conversations per 60 seconds.
+- If nobody speaks within 5 seconds after the wake, the call ends by itself.
+- The page reports listening／thinking／speaking to the core, so the duck has a real "speaking" state.
+
+### 8.4 Things not yet solved, which only a real test will answer
+
+None of these has ever been verified. Late on 2026-11-26 line D replied with results measured on the Pi (no sound, not connected to Nous); the rows marked "measured by line D" below are their measurements and line B has not rerun them; the rest is still unverified.
+
+| Question | Current situation and plan |
+|---|---|
+| Who gets the microphone | **ALSA shared capture (dsnoop); measured by line D to work.** Line D's configuration file `nous_duck/robot/audio/alsa/duck-audio.conf` (on the Pi: `~/duck/voice/alsa/duck-audio.conf`) defines the shared device `duck_mic` (the XVF3800's two channels as they are, 16 kHz); it does not change `~/.asoundrc` or `/etc`, and is loaded through an environment variable for the Chromium process only. `run_nous_terminal.sh` gained three options: `--alsa-config`, `--mic`, `--speaker`. Measured by line D (headless, the enumerate-only probe): `getUserMedia` succeeds and the track is live, while wake detection keeps reading the same microphone. Do not open `hw:Array` directly. **Not yet used in a real call** |
+| Delay from wake to the start of capture | Event → core → SSE → page starts → WebRTC connection; not measured. The page cannot hear what is said during this time |
+| Speaker | Chromium plays to the ALSA default output. The first version plays directly (**not through voice changing or the gates**); voice changing needs an extra loopback stage, to be done later. This is a gap from ADR-0010's "the duck's timbre = Nous's voice plus voice changing", and you need to know about it |
+| Echo cancellation | The first version relies on Chromium's software echo cancellation only; **whether it is enough has not been tested**. The speaker (CD002, 48 kHz) and the microphone (XVF3800, 16 kHz) are two cards on different clocks, and line D has no reliable configuration-only way to feed the played sound to the XVF3800 as a reference. Measured by line D: when a program sends the same sound to the XVF3800 at the same time, the feedback on the processed channel drops from −19 dBFS to −52 to −58 dBFS, so it is worth doing later (for example by wiring the speaker to the XVF3800's output) |
+| The duck's own voice triggering the wake | Line D's wake service receives `presence` over UDP on `127.0.0.1:8794`; it does not detect while the state is not `idle` (30 seconds without an update counts as ended). If nobody sends it, the fallback is a fixed 8 seconds without detection after a wake. **Who sends it has not been decided**: line B suggests duckd forwards it (it already receives `presence` from duck-link, and the terminal script does not know the call phase); line A has to decide. Measured by line D: with synthetic speech played by the speaker and returning to the microphone through the air, the wake engine reported 1 of 15 sentences, so the risk is low but not zero **Update 2026-11-27 (line A)**: duckd relays it (on every presence change, and again every 5 seconds); checked on the Pi with the real wake service and a manual trigger that no wake is sent during a conversation. See the [record](../../docs/validation/duckd-wake-relay-2026-11-27.md) (Chinese) |
+| Consent to realtime voice and the microphone permission | They are stored in that Chromium profile, and the duck has no screen to press on. You have to connect from the Mac with DevTools and press once (`run_nous_terminal.sh --debug-port`); the steps are in [`voice-test.md` §7](voice-test.en.md#7-route-2-the-duck-as-a-voice-terminal-say-hey-鴨子-to-start-a-conversation) |
+| Load on the Pi 4 (2 GB) | Measured by line D (page idle, microphone open, no call): wake detection takes about 16–17% of one core, Chromium about 6% with a PSS of about 440 MB, available memory at its lowest 1301 MB, 52 °C. **There are no numbers for the load during a call yet**: in call mode the probe script adds `--disable-audio-output`, which makes Chromium list no input devices at all, so this can only be measured in a real call |
+| How the wake event reaches duck-link | When line D's wake service detects a wake, it sends UDP to duckd's perception port `127.0.0.1:8793` (`kind: "wake_word"`, with `keyword_id`). **duckd currently ignores this kind**; line A has to add "on receipt, emit the duck-link `wake_word` event". Until this is connected, the duck cannot wake the page **Update 2026-11-27 (line A)**: added; when Nous is unreachable duckd drops the wake and does not send it later. See the [record](../../docs/validation/duckd-wake-relay-2026-11-27.md) (Chinese) |
+| Privacy switch | During a call the microphone's sound is sent by the browser straight to the cloud, without passing through the duck's audio service. When "always-on wake listening" on the settings page is turned off, the page will not be woken, but a call that has already started can only be stopped by ending the call |
+
+### 8.5 What happens to the native audio channel `/duck-voice`
+
+Before the decision, line B built a native PCM channel (capture and playback on the duck side, connected to the voice backend on the Nous side), and it had interoperated with line D's state machine. Route 2's conversation does not go through it, so it **has not been merged into `v2`**: it stays on the branch `claude/duck-b-voice-channel` (pushed, no PR) as an experiment record. If later the conversation's sound should pass through the duck's voice changing and gates, or running a browser on the Pi is not wanted, come back and look at it; that route needs the AIOS core itself to exchange audio with the voice model.

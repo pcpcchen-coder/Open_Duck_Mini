@@ -1,7 +1,12 @@
 """舵機匯流排：真的（pypot FeetechSTS3215IO）與模擬（MockBus）。
 
 角度單位：舵機角度（degree），2048 = 0°，跟 pypot 的換算一致；換成關節角度由 controller 處理。
-pypot 讀取失敗時回傳空 tuple，不丟例外；這裡一律檢查長度，讀不到就丟 BusError。
+pypot 讀取失敗時有時回傳空 tuple、有時丟 DxlCommunicationError／DxlTimeoutError（封包損壞，
+2026-11-25 實機觀察到）；這裡一律轉成 BusError，並清掉序列埠緩衝區，讓上層的安全規則能接手。
+
+電流：STS3215 位址 69「目前電流」，每單位 6.5 mA（Waveshare ST 舵機記憶表）；**沒有用電表校正**。
+狀態：位址 65，位元 1 電壓、2 角度感測器、4 溫度、8 電流、32 過載（pypot 與 Waveshare 表；
+STS3215 官方表沒有找到，未驗證）。
 """
 from __future__ import annotations
 
@@ -11,6 +16,19 @@ import threading
 
 class BusError(RuntimeError):
     pass
+
+
+CURRENT_MA_PER_UNIT = 6.5
+STATUS_BITS = {1: "電壓", 2: "角度感測器", 4: "溫度", 8: "電流", 32: "過載"}
+
+
+def decode_current_ma(raw: int) -> float:
+    """位元 15 是方向；只取大小。"""
+    return (raw & 0x7FFF) * CURRENT_MA_PER_UNIT
+
+
+def decode_status(raw: int) -> list[str]:
+    return [text for bit, text in STATUS_BITS.items() if raw & bit]
 
 
 def decode_load(raw: int) -> float:
@@ -41,18 +59,28 @@ class FeetechBus:
             finally:
                 self.io = None
 
-    def _get(self, fn, ids: list[int], what: str) -> list:
+    def _call(self, fn, *args):
+        """呼叫 pypot；任何例外都轉成 BusError，並清掉序列埠緩衝區（避免下一次讀到殘留的封包）。"""
         if self.io is None:
             raise BusError("匯流排沒有開")
         with self._lock:
-            values = list(fn(ids))
+            try:
+                return fn(*args)
+            except Exception as exc:  # noqa: BLE001 pypot 的通訊錯誤種類很多
+                try:
+                    self.io.flush()
+                except Exception:  # noqa: BLE001
+                    pass
+                raise BusError(f"{type(exc).__name__}: {str(exc)[:120]}") from exc
+
+    def _get(self, fn, ids: list[int], what: str) -> list:
+        values = list(self._call(fn, ids))
         if len(values) != len(ids):
             raise BusError(f"讀{what}失敗（回應 {len(values)}／{len(ids)}）")
         return values
 
     def ping(self, ids: list[int]) -> list[int]:
-        with self._lock:
-            return [i for i in ids if self.io.ping(i)]
+        return [i for i in ids if self._call(self.io.ping, i)]
 
     def read_positions(self, ids: list[int]) -> list[float]:
         return [float(v) for v in self._get(self.io.get_present_position, ids, "位置")]
@@ -63,24 +91,22 @@ class FeetechBus:
             "voltage": [v / 10.0 for v in self._get(self.io.get_present_voltage, ids, "電壓")],
             "load": [decode_load(int(v)) for v in self._get(self.io.get_present_load, ids, "負載")],
             "torque": [bool(v) for v in self._get(self.io.is_torque_enabled, ids, "扭力狀態")],
+            "current_ma": [decode_current_ma(int(v)) for v in self._get(self.io.get_present_current, ids, "電流")],
+            "status": [decode_status(int(v)) for v in self._get(self.io.get_status, ids, "狀態")],
         }
 
     def read_kp(self, ids: list[int]) -> list[int]:
         return [int(v) for v in self._get(self.io.get_P_coefficient, ids, "kp")]
 
     def write_goals(self, goals: dict[int, float]) -> None:
-        if not goals:
-            return
-        with self._lock:
-            self.io.set_goal_position(goals)
+        if goals:
+            self._call(self.io.set_goal_position, goals)
 
     def set_torque(self, ids: list[int], on: bool) -> None:
-        with self._lock:
-            (self.io.enable_torque if on else self.io.disable_torque)(ids)
+        self._call(self.io.enable_torque if on else self.io.disable_torque, ids)
 
     def set_kp(self, values: dict[int, int]) -> None:
-        with self._lock:
-            self.io.set_P_coefficient(values)
+        self._call(self.io.set_P_coefficient, values)
 
 
 class MockBus:
@@ -138,6 +164,8 @@ class MockBus:
             "voltage": [self.voltage for _ in ids],
             "load": [(self.goal[i] - self.pos[i]) * 2.0 if self.torque[i] else 0.0 for i in ids],
             "torque": [self.torque[i] for i in ids],
+            "current_ma": [round(abs(self.goal[i] - self.pos[i]) * 40 + (13.0 if self.torque[i] else 0.0), 1) for i in ids],
+            "status": [[] for _ in ids],
         }
 
     def read_kp(self, ids: list[int]) -> list[int]:

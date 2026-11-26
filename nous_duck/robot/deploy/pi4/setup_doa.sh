@@ -59,7 +59,8 @@ Description=Nous Duck XVF3800 direction of arrival -> duckd (nous_duck/robot/aud
 [Service]
 User=$PI_USER
 WorkingDirectory=$PI_HOME/duck/doa
-ExecStart=$PI_HOME/duck/duckd-venv/bin/python -m duck_audio.doa --run --config $PI_HOME/duck/doa/config/doa.json
+# 參數從鴨子設定讀（ADR-0019，改了約 1 秒內生效）；還沒跑 deploy_settings.sh 時退回 --config 的 doa.json
+ExecStart=$PI_HOME/duck/duckd-venv/bin/python -m duck_audio.doa --run --settings-dir $PI_HOME/duck/settings --config $PI_HOME/duck/doa/config/doa.json
 Restart=on-failure
 RestartSec=5
 
@@ -72,8 +73,9 @@ cat <<'MSG'
 
 安裝完成。服務沒有 enable、沒有啟動。麥克風接上後：
   看裝置：      ssh duck-pi4 'cd ~/duck/doa && ~/duck/duckd-venv/bin/python -m duck_audio.doa --probe'
-  校準正前方：  ssh duck-pi4 'cd ~/duck/doa && ~/duck/duckd-venv/bin/python -m duck_audio.doa --calibrate 5 --write-config --config ~/duck/doa/config/doa.json'
+  校準正前方：  ssh duck-pi4 'cd ~/duck/doa && ~/duck/duckd-venv/bin/python -m duck_audio.doa --calibrate 5 --write-config --settings-dir ~/duck/settings --config ~/duck/doa/config/doa.json'
                 （執行後 5 秒內，站在鴨子正前方約 1 m 處說話）
   啟動：        ssh duck-pi4 'sudo systemctl start duck-doa'
-  麥克風裝在哪（head／body／desk）改 ~/duck/doa/config/doa.json 的 "mount"，改完重啟服務。
+  麥克風裝在哪、門檻、正前方校正值：跑過 deploy_settings.sh 之後在設定頁改（http://duck-pi4.local:8081/），不用重啟。
+  還沒裝設定頁時才改 ~/duck/doa/config/doa.json，改完重啟服務。
 MSG

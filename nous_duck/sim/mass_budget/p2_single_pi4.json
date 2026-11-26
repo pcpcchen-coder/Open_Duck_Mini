@@ -1,0 +1,406 @@
+{
+  "budget": "p2_single_pi4",
+  "version": 2,
+  "date": "2026-11-26",
+  "description": "單板 Pi 4（ADR-0008）＋ADR-0005 的加裝件（麥克風依 2026-11-16 的決定：標準版 XVF3800 裝在頭頂），相對於上游 CAD 模型的增減。全部是估計值，沒有一件秤過；位置是依上游 CAD 的空間推估，Pi 4 的實際安裝位置尚未決定（ADR-0008 §5.1）。",
+  "frame": "pos_base_m 是起始姿勢時的 base 座標：x 向前、y 向左、z 向上（m）。base 原點在髖部附近，機身外殼約 x −0.154～0.046、y ±0.055、z −0.035～0.108；頭殼約 x −0.099～0.101、y ±0.099、z 0.175～0.234。",
+  "components": [
+    {
+      "id": "pi_zero_2w",
+      "label": "上游頭裡的 Pi Zero 2 W（拿掉）",
+      "action": "remove",
+      "body": "head_assembly",
+      "mass_g": {
+        "low": 10,
+        "nominal": 15,
+        "high": 18
+      },
+      "pos_base_m": [
+        0.036,
+        0.048,
+        0.224
+      ],
+      "size_base_m": [
+        0.065,
+        0.03,
+        0.005
+      ],
+      "source": {
+        "kind": "retailer",
+        "note": "官方頁面沒寫重量；零售與部落格標 10～18 g。位置取上游 CAD 的 raspberrypizerow 網格中心",
+        "urls": [
+          "https://picockpit.com/raspberry-pi/?p=928",
+          "https://www.desertcart.lk/products/564361912"
+        ]
+      }
+    },
+    {
+      "id": "pi4_board",
+      "label": "Raspberry Pi 4 Model B 2 GB（裝機身）",
+      "action": "add",
+      "body": "trunk_assembly",
+      "mass_g": {
+        "low": 46,
+        "nominal": 50,
+        "high": 60
+      },
+      "pos_base_m": [
+        -0.045,
+        0.0,
+        0.095
+      ],
+      "size_base_m": [
+        0.085,
+        0.056,
+        0.017
+      ],
+      "source": {
+        "kind": "retailer",
+        "note": "官方 product brief 搜尋結果沒有重量；零售標 50～60 g（含連接器）。位置是假設：平放在 trunk_top 上方，實際位置待量（ADR-0008 §5.1）",
+        "urls": [
+          "https://heltec.org/?p=81049",
+          "https://galaxus.at/en/s1/product/raspberry-pi-4-4gb-model-b-development-boards-kits-11267867"
+        ]
+      }
+    },
+    {
+      "id": "pi4_heatsink",
+      "label": "Pi 4 散熱片（可能加風扇）",
+      "action": "add",
+      "body": "trunk_assembly",
+      "mass_g": {
+        "low": 5,
+        "nominal": 10,
+        "high": 25
+      },
+      "pos_base_m": [
+        -0.045,
+        0.0,
+        0.104
+      ],
+      "size_base_m": [
+        0.04,
+        0.04,
+        0.008
+      ],
+      "source": {
+        "kind": "guess",
+        "note": "型號未定（ADR-0008 §5.3）；high 含小風扇"
+      }
+    },
+    {
+      "id": "ubec_5v",
+      "label": "5 V UBEC（給 Pi 4）",
+      "action": "add",
+      "body": "trunk_assembly",
+      "mass_g": {
+        "low": 10,
+        "nominal": 15,
+        "high": 25
+      },
+      "pos_base_m": [
+        -0.095,
+        0.035,
+        0.03
+      ],
+      "size_base_m": [
+        0.04,
+        0.02,
+        0.01
+      ],
+      "source": {
+        "kind": "guess",
+        "note": "上游 BOM 有 5V regulator，但上游 CAD 沒有（交接摘要 §5），所以算加上去；手上的 3 A UBEC 沒秤過。high 對應 5 A 以上的型號"
+      }
+    },
+    {
+      "id": "mic_xvf3800_std",
+      "label": "reSpeaker XVF3800 USB 4-Mic Array 標準版裸板＋支架（水平裝在頭頂）",
+      "action": "add",
+      "body": "head_assembly",
+      "mass_g": {
+        "low": 25,
+        "nominal": 40,
+        "high": 60
+      },
+      "pos_base_m": [
+        0.0,
+        0.0,
+        0.24
+      ],
+      "size_base_m": [
+        0.1,
+        0.1,
+        0.008
+      ],
+      "source": {
+        "kind": "guess",
+        "note": "官方沒有重量（hardware/sensors/mic_array_selection.md：要秤）；不含外殼的裸板零售標約 50 g（1.76 oz，可能含包裝）；Ø100 mm、總高約 6.2 mm。high 含支架。位置依 ADR-0005 §2.3.1 與 mic-placement 驗證紀錄：頭頂平坦區中央",
+        "urls": [
+          "https://www.amazon.com/NGW-Electronics-reSpeaker-XVF3800-Without/dp/B0H2DHRRZC",
+          "https://files.seeedstudio.com/wiki/respeaker_xvf3800_usb/respeaker_xvf3800_2d_mechanical_drawing.pdf"
+        ]
+      }
+    },
+    {
+      "id": "speaker",
+      "label": "喇叭與功放（裝機身下前方，遠離頂面麥克風）",
+      "action": "add",
+      "body": "trunk_assembly",
+      "mass_g": {
+        "low": 10,
+        "nominal": 20,
+        "high": 40
+      },
+      "pos_base_m": [
+        0.015,
+        0.0,
+        0.0
+      ],
+      "size_base_m": [
+        0.03,
+        0.03,
+        0.015
+      ],
+      "source": {
+        "kind": "guess",
+        "note": "方案未定（ADR-0010 §8）；上游 CAD 沒有喇叭。位置是假設"
+      }
+    },
+    {
+      "id": "dock_contact_plate",
+      "label": "背後充電觸點板＋黃銅片",
+      "action": "add",
+      "body": "trunk_assembly",
+      "mass_g": {
+        "low": 35,
+        "nominal": 42,
+        "high": 55
+      },
+      "pos_base_m": [
+        -0.158,
+        0.0,
+        0.04
+      ],
+      "size_base_m": [
+        0.02,
+        0.068,
+        0.076
+      ],
+      "source": {
+        "kind": "repo_estimate",
+        "note": "hardware/dock/README.md：板約 35 g＋黃銅片 7 g（切片估算）；high 含導線與電路"
+      }
+    },
+    {
+      "id": "wiring_trunk",
+      "label": "機身內新增線材（USB、電源）",
+      "action": "add",
+      "body": "trunk_assembly",
+      "mass_g": {
+        "low": 5,
+        "nominal": 10,
+        "high": 25
+      },
+      "pos_base_m": [
+        -0.04,
+        0.0,
+        0.07
+      ],
+      "size_base_m": [
+        0.08,
+        0.06,
+        0.03
+      ],
+      "source": {
+        "kind": "guess",
+        "note": "粗估"
+      }
+    },
+    {
+      "id": "ar0144_stereo",
+      "label": "Waveshare AR0144 Stereo USB Camera (A)（頭前方）",
+      "action": "add",
+      "body": "head_assembly",
+      "mass_g": {
+        "low": 15,
+        "nominal": 15,
+        "high": 27
+      },
+      "pos_base_m": [
+        0.09,
+        0.0,
+        0.205
+      ],
+      "size_base_m": [
+        0.018,
+        0.066,
+        0.03
+      ],
+      "source": {
+        "kind": "datasheet",
+        "note": "Waveshare 產品頁 0.015 kg、66×30×17.72 mm；Amazon 標 20～27 g（可能含包裝）當上限",
+        "urls": [
+          "https://www.waveshare.com/ar0144-stereo-usb-camera-a.htm",
+          "https://www.amazon.com/Waveshare-AR0144-Synchronized-Same-Frame-Distortion-Free/dp/B0G5MPMHN2"
+        ]
+      }
+    },
+    {
+      "id": "ir_illuminator",
+      "label": "850 nm 紅外線補光燈與驅動（頭前方，鏡頭旁）",
+      "action": "add",
+      "body": "head_assembly",
+      "mass_g": {
+        "low": 3,
+        "nominal": 5,
+        "high": 10
+      },
+      "pos_base_m": [
+        0.095,
+        0.0,
+        0.225
+      ],
+      "size_base_m": [
+        0.01,
+        0.02,
+        0.01
+      ],
+      "source": {
+        "kind": "guess",
+        "note": "型號未定（ADR-0005 表）"
+      }
+    },
+    {
+      "id": "eyes_gc9a01_left",
+      "label": "左眼 GC9A01 1.28 吋圓形螢幕",
+      "action": "add",
+      "body": "head_assembly",
+      "mass_g": {
+        "low": 8,
+        "nominal": 8.4,
+        "high": 15
+      },
+      "pos_base_m": [
+        0.085,
+        0.05,
+        0.205
+      ],
+      "size_base_m": [
+        0.005,
+        0.038,
+        0.045
+      ],
+      "source": {
+        "kind": "datasheet",
+        "note": "一般 1.28 吋 TFT 規格書 8.4 g、38×45.5×4.5 mm；Elecrow 版標 15 g 當上限",
+        "urls": [
+          "https://cdn.shopify.com/s/files/1/1509/1638/files/1_28inchTFT_datasheet.pdf",
+          "https://Robotshop.com/products/elecrow-128-inch-round-lcd-module-gc9a01-240x240-lcd-display"
+        ]
+      }
+    },
+    {
+      "id": "eyes_gc9a01_right",
+      "label": "右眼 GC9A01 1.28 吋圓形螢幕",
+      "action": "add",
+      "body": "head_assembly",
+      "mass_g": {
+        "low": 8,
+        "nominal": 8.4,
+        "high": 15
+      },
+      "pos_base_m": [
+        0.085,
+        -0.05,
+        0.205
+      ],
+      "size_base_m": [
+        0.005,
+        0.038,
+        0.045
+      ],
+      "source": {
+        "kind": "datasheet",
+        "note": "同左眼",
+        "urls": [
+          "https://cdn.shopify.com/s/files/1/1509/1638/files/1_28inchTFT_datasheet.pdf"
+        ]
+      }
+    },
+    {
+      "id": "wiring_head",
+      "label": "頭部新增線材（鏡頭 USB、螢幕 SPI、穿過頸部）",
+      "action": "add",
+      "body": "head_assembly",
+      "mass_g": {
+        "low": 5,
+        "nominal": 10,
+        "high": 20
+      },
+      "pos_base_m": [
+        0.0,
+        0.0,
+        0.195
+      ],
+      "size_base_m": [
+        0.08,
+        0.04,
+        0.01
+      ],
+      "source": {
+        "kind": "guess",
+        "note": "粗估"
+      }
+    },
+    {
+      "id": "head_shell_delta",
+      "label": "新頭殼與舊頭殼的重量差（AR0144 要重新設計頭殼）",
+      "action": "add",
+      "body": "head_assembly",
+      "mass_g": {
+        "low": 0,
+        "nominal": 0,
+        "high": 30
+      },
+      "pos_base_m": [
+        0.02,
+        0.0,
+        0.205
+      ],
+      "size_base_m": [
+        0.18,
+        0.18,
+        0.05
+      ],
+      "source": {
+        "kind": "guess",
+        "note": "新頭殼還沒設計；nominal 假設和原版一樣重，high 假設多 30 g"
+      }
+    }
+  ],
+  "placements": {
+    "pi4_board": {
+      "top_mid": [
+        -0.045,
+        0.0,
+        0.095
+      ],
+      "top_front": [
+        -0.005,
+        0.0,
+        0.095
+      ],
+      "top_back": [
+        -0.085,
+        0.0,
+        0.095
+      ],
+      "low_mid": [
+        -0.06,
+        0.0,
+        0.0
+      ]
+    }
+  }
+}

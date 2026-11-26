@@ -116,7 +116,7 @@ def main() -> int:
         dt = (time.perf_counter() - t) * 1000
         chunk_ms.append(dt)
         for e in evs:
-            events.append({"keyword_id": e.keyword_id, "t_stream_s": e.t_stream_s, "compute_ms": dt})
+            events.append({"keyword_id": eng.group_of(e.keyword_id), "t_stream_s": e.t_stream_s, "compute_ms": dt})
     wall = time.perf_counter() - w0
     cpu_fast = (time.process_time() - c0) / wall * 100
 

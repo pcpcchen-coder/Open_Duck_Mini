@@ -20,6 +20,7 @@ import math
 import os
 import re
 import shutil
+import statistics
 import threading
 import time
 from collections import deque
@@ -66,6 +67,8 @@ class Joint:
     voltage: float | None = None
     load: float | None = None
     kp: int | None = None
+    current_ma: float | None = None
+    status: list[str] | None = None  # 舵機自己回報的異常旗標
 
 
 def scan_port_users(paths: list[str]) -> list[tuple[int, str]]:
@@ -467,6 +470,10 @@ class Controller:
             j.voltage = status["voltage"][i]
             j.load = status["load"][i]
             j.torque = status["torque"][i]
+            if "current_ma" in status:
+                j.current_ma = status["current_ma"][i]
+            if "status" in status:
+                j.status = status["status"][i]
         self._check_limits()
 
     def _set_alarm(self, key: str, level: str | None, message: str = "") -> None:
@@ -497,6 +504,11 @@ class Controller:
                 self._set_alarm("volt", "warn", f"ID {sid} 電壓 {v:.1f} V < {VOLT_WARN_V} V")
             else:
                 self._set_alarm("volt", None)
+        flagged = [f"ID {j.info.servo_id}（{'、'.join(j.status)}）" for j in self.joints.values() if j.status]
+        if flagged:
+            self._set_alarm("servo_status", "warn", "舵機回報異常旗標：" + "、".join(flagged))
+        else:
+            self._set_alarm("servo_status", None)
         stops = [msg for level, msg in self.alarms.values() if level == "stop"]
         if stops and not self.estop_reason:
             self.estop("自動：" + "；".join(stops))
@@ -551,6 +563,36 @@ class Controller:
             if goals:
                 self._write(goals)
 
+    # ------------------------------------------------------------------ 電力
+    def power_summary(self) -> dict:
+        """舵機回報的電壓、電流彙總。電池電壓用舵機電壓的中位數推估（舵機直接吃 2S 電池，經驅動板）。"""
+        with self.lock:
+            if not self.connected:
+                return {"available": False}
+            volts = [j.voltage for j in self.joints.values() if j.voltage]
+            currents = [j.current_ma for j in self.joints.values() if j.current_ma is not None]
+            temps = [j.temperature for j in self.joints.values() if j.temperature is not None]
+            watts = [
+                j.voltage * j.current_ma / 1000.0
+                for j in self.joints.values()
+                if j.voltage and j.current_ma is not None
+            ]
+            if not volts:
+                return {"available": False}
+            battery = statistics.median(volts)
+            return {
+                "available": True,
+                "battery_v": round(battery, 2),
+                "cell_v": round(battery / 2, 3),
+                "servo_v_min": min(volts),
+                "servo_v_max": max(volts),
+                "current_a": round(sum(currents) / 1000.0, 3) if currents else None,
+                "power_w": round(sum(watts), 2) if watts else None,
+                "temp_max_c": max(temps) if temps else None,
+                "torque_on": sum(1 for j in self.joints.values() if j.torque),
+                "flagged": [j.info.servo_id for j in self.joints.values() if j.status],
+            }
+
     # ------------------------------------------------------------------ 狀態
     def snapshot(self) -> dict:
         def deg(v):
@@ -575,6 +617,8 @@ class Controller:
                         "voltage": j.voltage,
                         "load": None if j.load is None else round(j.load, 1),
                         "kp": j.kp,
+                        "current_ma": j.current_ma,
+                        "status": j.status or [],
                         "offset_deg": round(math.degrees(self.offsets[name]), 3),
                         "offset_saved_deg": round(math.degrees(self.offsets_saved.get(name, 0.0)), 3),
                     }

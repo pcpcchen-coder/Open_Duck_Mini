@@ -131,6 +131,12 @@ ssh -t duck-pi4 'cd ~/duck/Open_Duck_Mini_Runtime/scripts && ~/duck/runtime-venv
 
 ## 舵機控制台（網頁）
 
+[`deploy_settings.sh`](deploy_settings.sh) 把[鴨子設定頁](../../settings/README.md)（[ADR-0019](../../../docs/adr/ADR-0019-duck-settings-page.md)）裝成 systemd 服務 `duck-settings`（埠 8081）。預設**不 enable、不啟動**；`--start` 啟動、`--enable` 開機自動啟動。服務看不到硬體裝置（`PrivateDevices=true`），不會啟動或停止其他服務。2026-11-26 在 Pi 上跑過 `--start`（[紀錄 §4](../../../docs/validation/settings-2026-11-26.md)）；`--enable` 與 `--uninstall` 還沒跑過。duckd 與 duck-doa 要重新部署並重啟後才會讀這份設定：
+
+```bash
+bash nous_duck/robot/deploy/pi4/deploy_settings.sh --start
+```
+
 [`deploy_console.sh`](deploy_console.sh) 把 [舵機控制台](../../servo_console/README.md) 裝成 Pi 上的 systemd 服務 `duck-console`（開機自動啟動、啟動時不碰硬體），印出 `http://duck-pi4.local:8080/`。預設不需要 token（區網內任何人都能操作）；要開 token 檢查用 `CONSOLE_REQUIRE_TOKEN=1`：
 
 ```bash

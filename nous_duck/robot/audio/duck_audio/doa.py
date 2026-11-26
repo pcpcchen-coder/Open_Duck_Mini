@@ -19,6 +19,11 @@ FamilyRecorder 只在 macOS 上對標準版 XVF3800（VID `0x2886`、PID `0x001A
     python -m duck_audio.doa --calibrate 5           # 你站在鴨子正前方說話 5 秒 → 印出該填的 front_angle_deg
     python -m duck_audio.doa --run                   # 讀 DOA 並送給 duckd（UDP 127.0.0.1:8793）
     python -m duck_audio.doa --run --mock-angle 30   # 沒有裝置時用模擬資料（訊息帶 mock: true）
+
+設定來源：加 `--settings-dir <資料夾>` 時，門檻、視窗、安裝位置、正前方校正值都從「鴨子設定」讀
+（`robot/settings`，ADR-0019），每秒看一次有沒有變，變了立刻套用，不用重啟；`--config` 的 `doa.json` 就不讀了。
+設定裡的「讀取聲源方向」（`privacy.sound_direction`）關掉時，服務**不開也不讀麥克風**，只回報自己被關掉。
+`duck_settings` 匯入不了時退回 `--config`，並在 log 說明。
 """
 from __future__ import annotations
 
@@ -38,8 +43,17 @@ KNOWN_PRODUCT_IDS = {0x001A: "reSpeaker XVF3800 (USB firmware)"}
 USB_VENDOR_DEVICE_IN = 0xC0
 DOA_RESOURCE_ID = 20
 DOA_COMMAND_ID = 18
+#: 語音能量與各波束方位（Seeed 公開的 `python_control/xvf_host.py` 參數表：`AEC_SPENERGY_VALUES` resource 33、command 80；
+#: `AEC_AZIMUTH_VALUES` resource 33、command 75；各回 4 個 little-endian float，索引 3＝自動選擇的波束）。
+#: 能量大於 0 才算有語音；方位是弧度，和 DOA_VALUE 的角度同一個基準（2026-11-26 實機對照）。
+AEC_RESOURCE_ID = 33
+AEC_AZIMUTH_COMMAND_ID = 75
+AEC_SPENERGY_COMMAND_ID = 80
+AUTO_SELECT_BEAM = 3
 CONTROL_SUCCESS = 0
 CONTROL_RETRY = 64
+#: 回「重試」時最多試幾次。2026-11-26 實機：兩個程式同時讀時 4 次不夠。
+CONTROL_ATTEMPTS = 10
 DEFAULT_ADDR = ("127.0.0.1", 8793)
 DEFAULT_CONFIG = Path(__file__).resolve().parents[1] / "config" / "doa.json"
 
@@ -56,6 +70,15 @@ def decode_doa(response: bytes) -> tuple[float, bool]:
         raise DoaError(f"DOA 回應狀態異常：{response[0]}")
     angle, speech = struct.unpack("<2H", response[1:])
     return float(angle % 360), bool(speech)
+
+
+def decode_floats(response: bytes, count: int = 4) -> tuple[float, ...]:
+    """1 byte 狀態 + count 個 little-endian float。"""
+    if len(response) != 1 + 4 * count:
+        raise DoaError(f"回應長度不對：{len(response)}")
+    if response[0] != CONTROL_SUCCESS:
+        raise DoaError(f"回應狀態異常：{response[0]}")
+    return struct.unpack(f"<{count}f", response[1:])
 
 
 class XVF3800Reader:
@@ -94,16 +117,28 @@ class XVF3800Reader:
             "known_pid": KNOWN_PRODUCT_IDS.get(self.product_id),
         }
 
-    def read(self) -> tuple[float, bool]:
+    def _control_in(self, resource: int, command: int, length: int) -> bytes:
         response = b""
-        for attempt in range(4):
-            raw = self._dev.ctrl_transfer(USB_VENDOR_DEVICE_IN, 0, 0x80 | DOA_COMMAND_ID, DOA_RESOURCE_ID, 5, self._timeout_ms)
+        for attempt in range(CONTROL_ATTEMPTS):
+            raw = self._dev.ctrl_transfer(USB_VENDOR_DEVICE_IN, 0, 0x80 | command, resource, length, self._timeout_ms)
             response = bytes(raw)
-            if response and response[0] == CONTROL_RETRY and attempt < 3:
+            if response and response[0] == CONTROL_RETRY and attempt < CONTROL_ATTEMPTS - 1:
                 time.sleep(0.01)
                 continue
             break
-        return decode_doa(response)
+        return response
+
+    def read(self) -> tuple[float, bool]:
+        """DOA_VALUE：角度與語音旗標。**旗標和角度在聲音停止後會停留 2–3 秒**（2026-11-26 實機），追蹤用 `read_energy`。"""
+        return decode_doa(self._control_in(DOA_RESOURCE_ID, DOA_COMMAND_ID, 5))
+
+    def read_energy(self) -> tuple[float, float]:
+        """自動選擇波束的（方位 0–359°, 語音能量）。能量 0＝這一刻沒有語音，不會停留。"""
+        energy = decode_floats(self._control_in(AEC_RESOURCE_ID, AEC_SPENERGY_COMMAND_ID, 17))[AUTO_SELECT_BEAM]
+        azimuth = decode_floats(self._control_in(AEC_RESOURCE_ID, AEC_AZIMUTH_COMMAND_ID, 17))[AUTO_SELECT_BEAM]
+        if math.isnan(azimuth) or math.isnan(energy):
+            return 0.0, 0.0
+        return math.degrees(azimuth) % 360.0, float(energy)
 
     def close(self) -> None:
         try:
@@ -178,12 +213,18 @@ class DoaConfig:
     #: 麥克風回報的哪個原始角度（度）對應到**鴨子身體的正前方**。麥克風不管裝在鴨子身上還是放在桌上，
     #: 都用 `--calibrate` 量這個值（人站在鴨子正前方說話）。預設 0＝沒校準。
     front_angle_deg: float = 0.0
-    #: 原始角度增加的方向。True＝從上面看逆時針（往左為正，FamilyRecorder 的標示方式）；實機確認後再改。
+    #: 原始角度增加的方向。True＝往鴨子的左為正（FamilyRecorder 的標示方式）。
+    #: 2026-11-26 實機：麥克風平放在頭頂、USB 接頭朝後時要設 **False**（設定檔已改；人眼確認）。換安裝方向要重新確認。
     counterclockwise: bool = True
     #: 麥克風裝在哪：`head`（裝在頭上，會跟著頭轉；ADR-0005 的規劃）、`body`（裝在身體上）、`desk`（放在桌上、不在鴨子身上）。
     #: `head` 時送出的方位是**相對頭部**（訊息帶 `"frame":"head"`），由 duckd 加上當下的頭部 yaw 換成相對身體；
     #: `body`／`desk` 時是相對身體正前方（`"frame":"body"`）。`desk` 只在聲源夠遠、麥克風離鴨子很近時才近似正確。
     mount: str = "body"
+    #: 怎麼判斷「有語音」：`energy`＝自動選擇波束的語音能量大於 `min_speech_energy`（即時，預設）；
+    #: `flag`＝DOA_VALUE 的語音旗標（聲音停了還會停留 2–3 秒，頭一轉動就會被自己的舵機聲帶著跑，只留作對照）。
+    speech_source: str = "energy"
+    #: 語音能量門檻。0＝晶片認為有語音就算；調高可以濾掉遠處或小聲的聲音。**初始值，待實測修訂。**
+    min_speech_energy: float = 0.0
     sample_hz: float = 20.0
     window_s: float = 0.5
     min_speech_samples: int = 4
@@ -200,7 +241,64 @@ class DoaConfig:
         cfg = cls(**known)
         if cfg.mount not in ("head", "body", "desk"):
             raise DoaError(f"mount 只能是 head／body／desk，不是 {cfg.mount!r}")
+        if cfg.speech_source not in ("energy", "flag"):
+            raise DoaError(f"speech_source 只能是 energy／flag，不是 {cfg.speech_source!r}")
         return cfg
+
+
+#: 鴨子設定的 key → DoaConfig 的欄位（ADR-0019；值的範圍由 duck_settings.schema 檢查）
+SETTINGS_FIELDS = {
+    "hearing.min_speech_energy": "min_speech_energy",
+    "hearing.speech_source": "speech_source",
+    "hearing.window_s": "window_s",
+    "hearing.min_speech_samples": "min_speech_samples",
+    "hearing.cluster_tolerance_deg": "cluster_tolerance_deg",
+    "calibration.mic.mount": "mount",
+    "calibration.mic.front_angle_deg": "front_angle_deg",
+    "calibration.mic.counterclockwise": "counterclockwise",
+    "calibration.mic.calibrated": "calibrated",
+}
+ENABLE_KEY = "privacy.sound_direction"
+SETTINGS_SERVICE = "duck-doa"
+
+
+def config_from_settings(values: dict, base: DoaConfig | None = None) -> tuple[DoaConfig, bool]:
+    """鴨子設定的值 →（DoaConfig, 可不可以讀麥克風）。"""
+    fields = {field_name: values[key] for key, field_name in SETTINGS_FIELDS.items() if key in values}
+    cfg = DoaConfig(**{**(base or DoaConfig()).__dict__, **fields})
+    return cfg, bool(values.get(ENABLE_KEY, True))
+
+
+class DoaSettings:
+    """從鴨子設定讀 DOA 的參數；檔案有變才重新讀，並回報實際在用的值（設定頁顯示「已生效」用）。"""
+
+    def __init__(self, directory: Path | None, watcher=None):
+        if watcher is None:
+            sibling = Path(__file__).resolve().parents[2] / "settings"  # repo 裡的 robot/settings；Pi 上由 .pth 接進來
+            if (sibling / "duck_settings").is_dir() and str(sibling) not in sys.path:
+                sys.path.append(str(sibling))
+            from duck_settings.reader import Watcher  # noqa: PLC0415
+
+            watcher = Watcher(directory, SETTINGS_SERVICE)
+        self.watcher = watcher
+        self.watcher.poll(force=True)
+
+    def current(self) -> tuple[DoaConfig, bool]:
+        return config_from_settings(self.watcher.view.values)
+
+    def poll(self) -> tuple[DoaConfig, bool] | None:
+        return None if self.watcher.poll() is None else self.current()
+
+    def report(self, cfg: DoaConfig, enabled: bool) -> None:
+        self.watcher.report({**{key: getattr(cfg, name) for key, name in SETTINGS_FIELDS.items()}, ENABLE_KEY: enabled})
+
+
+def read_sample(reader, cfg: DoaConfig) -> tuple[float, bool]:
+    """依設定讀一筆（原始角度, 有沒有語音）。讀不到語音能量的裝置（例如模擬裝置）用 DOA_VALUE。"""
+    if cfg.speech_source == "energy" and hasattr(reader, "read_energy"):
+        raw, energy = reader.read_energy()
+        return raw, energy > cfg.min_speech_energy
+    return reader.read()
 
 
 def to_bearing_rad(raw_deg: float, cfg: DoaConfig) -> float:
@@ -261,11 +359,16 @@ class DoaService:
         self._last_status = -math.inf
         self.last_raw: float | None = None
 
+    def set_config(self, cfg: DoaConfig) -> None:
+        """執行中換設定（鴨子設定改了）。視窗裡已經收到的樣本留著，用新的規則重新判斷。"""
+        self.cfg = cfg
+        self.estimator.cfg = cfg
+
     def step(self) -> None:
         now = self.clock()
         ok = True
         try:
-            raw, speech = self.reader.read()
+            raw, speech = read_sample(self.reader, self.cfg)
             self.last_raw = raw
             self.estimator.add(now, raw, speech)
             self.last_error = ""
@@ -296,7 +399,7 @@ def calibrate(reader, seconds: float, cfg: DoaConfig, clock=time.monotonic, slee
     """人站在鴨子正前方說話；回傳這段時間語音樣本的主要原始角度。"""
     angles, total, end = [], 0, clock() + seconds
     while clock() < end:
-        raw, speech = reader.read()
+        raw, speech = read_sample(reader, cfg)
         total += 1
         if speech:
             angles.append(raw)
@@ -310,13 +413,40 @@ def calibrate(reader, seconds: float, cfg: DoaConfig, clock=time.monotonic, slee
     return {"ok": True, "front_angle_deg": round(front, 1), "share": round(len(main) / len(angles), 2), "spread_deg": round(spread, 1), "speech_samples": len(angles), "total_samples": total}
 
 
-def run_forever(cfg: DoaConfig, addr: tuple[str, int], open_reader=None, retry_s: float = 3.0, max_errors: int = 40, stop=lambda: False) -> int:
-    """常駐模式：裝置沒接就每秒回報「不在」，接上後自動開始；連續讀取失敗就重開裝置。不送任何假方位。"""
+def run_forever(cfg: DoaConfig, addr: tuple[str, int], open_reader=None, retry_s: float = 3.0, max_errors: int = 40, stop=lambda: False, settings=None) -> int:
+    """常駐模式：裝置沒接就每秒回報「不在」，接上後自動開始；連續讀取失敗就重開裝置。不送任何假方位。
+
+    `settings`（`DoaSettings`）有給時：每秒看一次鴨子設定，變了就換；「讀取聲源方向」關掉時放開裝置、不再讀。
+    """
     open_reader = open_reader or XVF3800Reader
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     send = lambda data: sock.sendto(data, addr)  # noqa: E731
     announced = None
+    enabled = True
+    if settings is not None:
+        cfg, enabled = settings.current()
+        settings.report(cfg, enabled)
+
+    def refresh() -> bool:
+        nonlocal cfg, enabled
+        new = settings.poll() if settings is not None else None
+        if new is None:
+            return False
+        cfg, enabled = new
+        settings.report(cfg, enabled)
+        print(f"鴨子設定變了：enabled={enabled}，mount={cfg.mount}，front={cfg.front_angle_deg}°，min_speech_energy={cfg.min_speech_energy:g}", file=sys.stderr, flush=True)
+        return True
+
     while not stop():
+        refresh()
+        if not enabled:
+            # 隱私設定在資料產生處執行：不開裝置、不讀任何東西，只說自己被關掉
+            if announced != "disabled":
+                print("「讀取聲源方向」在鴨子設定裡關掉了：不讀麥克風", file=sys.stderr, flush=True)
+                announced = "disabled"
+            send(status_message(False, False, "disabled in duck settings"))
+            time.sleep(1.0)
+            continue
         try:
             reader = open_reader()
         except (DoaError, ImportError, OSError) as exc:
@@ -324,18 +454,27 @@ def run_forever(cfg: DoaConfig, addr: tuple[str, int], open_reader=None, retry_s
                 print(f"等麥克風：{exc}", file=sys.stderr, flush=True)
                 announced = "missing"
             end = time.monotonic() + retry_s
-            while time.monotonic() < end and not stop():
+            while time.monotonic() < end and not stop() and enabled:
                 send(status_message(False, False, "XVF3800 not found"))
                 time.sleep(1.0)
+                refresh()
             continue
         print(f"DOA 開始：{reader.describe()} → udp://{addr[0]}:{addr[1]}（mount={cfg.mount}，front={cfg.front_angle_deg}°，calibrated={cfg.calibrated}）", file=sys.stderr, flush=True)
         announced = "ok"
         svc = DoaService(reader, cfg, send)
         base = 0
+        next_poll = time.monotonic() + 1.0
         try:
             period = 1.0 / cfg.sample_hz
             while not stop():
                 t0 = time.monotonic()
+                if settings is not None and t0 >= next_poll:
+                    next_poll = t0 + 1.0
+                    if refresh():
+                        if not enabled:
+                            break  # 放開裝置，回到外圈回報「被關掉」
+                        svc.set_config(cfg)
+                        period = 1.0 / cfg.sample_hz
                 before = svc.read_errors
                 svc.step()
                 base = base + 1 if svc.read_errors > before else 0
@@ -358,14 +497,26 @@ def main() -> int:
     p.add_argument("--run", action="store_true")
     p.add_argument("--watch", type=float, metavar="秒", help="只印讀值（不送給 duckd），驗證用")
     p.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    p.add_argument("--settings-dir", type=Path, default=None, help="從鴨子設定讀參數（ADR-0019）；有給就不讀 --config")
     p.add_argument("--write-config", action="store_true", help="--calibrate 成功後把結果寫進 --config")
     p.add_argument("--mock-angle", type=float, default=None, help="用模擬裝置（訊息帶 mock: true）")
     p.add_argument("--host", default=DEFAULT_ADDR[0])
     p.add_argument("--port", type=int, default=DEFAULT_ADDR[1])
     args = p.parse_args()
     cfg = DoaConfig.load(args.config)
-    if args.run and args.mock_angle is None:
-        return run_forever(cfg, (args.host, args.port))
+    settings = None
+    if args.settings_dir is not None:
+        try:
+            settings = DoaSettings(args.settings_dir)
+            cfg, _ = settings.current()
+            for problem in settings.watcher.view.problems:
+                print(f"設定檔有問題：{problem}", file=sys.stderr)
+        except Exception as exc:  # noqa: BLE001 設定讀不到不能讓服務起不來
+            print(f"讀不到鴨子設定（{type(exc).__name__}: {exc}）；改用 {args.config}", file=sys.stderr, flush=True)
+    if args.run:
+        # 模擬裝置也走常駐迴圈（訊息帶 mock: true），這樣鴨子設定的即時套用在沒有麥克風時也能試
+        open_reader = None if args.mock_angle is None else (lambda: MockDoaReader(args.mock_angle))
+        return run_forever(cfg, (args.host, args.port), open_reader=open_reader, settings=settings)
     try:
         reader = MockDoaReader(args.mock_angle) if args.mock_angle is not None else XVF3800Reader()
     except (DoaError, ImportError) as exc:
@@ -378,7 +529,16 @@ def main() -> int:
         elif args.calibrate:
             result = calibrate(reader, args.calibrate, cfg)
             print(json.dumps(result, ensure_ascii=False, indent=1))
-            if result["ok"] and args.write_config:
+            if result["ok"] and args.write_config and settings is not None:
+                # 量測值寫進鴨子設定的 calibration.json（來源：本機指令），執行中的 duck-doa 一秒內就會用到
+                from duck_settings.store import Store  # noqa: PLC0415
+
+                Store(settings.watcher.directory).apply(
+                    {"calibration.mic.front_angle_deg": result["front_angle_deg"] % 360.0, "calibration.mic.calibrated": True},
+                    "local_cli", note="doa --calibrate",
+                )
+                print(f"已寫入鴨子設定（{settings.watcher.directory}）", file=sys.stderr)
+            elif result["ok"] and args.write_config:
                 data = {**cfg.__dict__, "front_angle_deg": result["front_angle_deg"], "calibrated": True}
                 args.config.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
                 print(f"已寫入 {args.config}", file=sys.stderr)
@@ -387,16 +547,11 @@ def main() -> int:
             est, end = DoaEstimator(cfg), time.monotonic() + args.watch
             while time.monotonic() < end:
                 now = time.monotonic()
-                raw, speech = reader.read()
+                raw, speech = read_sample(reader, cfg)
                 est.add(now, raw, speech)
                 e = est.estimate(now)
                 print(json.dumps({"raw": raw, "speech": speech, "bearing_deg": None if e is None else round(math.degrees(e[1]), 1), "confidence": None if e is None else round(e[2], 2)}), flush=True)
                 time.sleep(1.0 / cfg.sample_hz)
-        elif args.run:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            addr = (args.host, args.port)
-            print(f"DOA → udp://{addr[0]}:{addr[1]}（{'模擬裝置 mock' if reader.mock else reader.describe()}）", file=sys.stderr)
-            DoaService(reader, cfg, lambda data: sock.sendto(data, addr)).run()
         else:
             p.print_help()
     except KeyboardInterrupt:

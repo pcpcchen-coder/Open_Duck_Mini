@@ -14,13 +14,23 @@ face 的方位相對頭部鏡頭光軸（左為正、上為正）；sound 的方
     {"v":1,"kind":"status","source":"sound"|"face","ok":布林,"mock":布林,"detail":"..."}
 
 聲音來源只在偵測到語音時才送方位，安靜時 duckd 要靠這個知道麥克風還在不在。
+
+喚醒詞（2026-11-27 加的，喚醒服務 `duck-voice` 送）：
+
+    {"v":1,"kind":"wake_word","keyword_id":"HELLO_YAZI","doa_deg":數字或null,"t_ms":整數,"mock":布林}
+
+只有關鍵詞代號與時間，沒有音訊。`doa_deg` 有給的話是相對身體正前方、往鴨子的左邊為正（度）；
+喚醒服務目前一律送 null，方位由 duckd 用自己手上最新的聲音方位補（`core.py`）。
+喚醒是一次性的事實，不是「最新值」：排進佇列，由控制迴圈每圈取走；放太久的由取用端丟掉。
 """
 from __future__ import annotations
 
 import json
 import math
+import re
 import socket
 import threading
+from collections import deque
 from dataclasses import dataclass
 
 DEFAULT_ADDR = ("127.0.0.1", 8793)
@@ -54,7 +64,7 @@ def parse(data: bytes, now: float) -> Observation | None:
         if frame not in ("body", "head"):
             return None
         return Observation(m["kind"], yaw, pitch, dist, conf, m["mock"], now, frame)
-    except (ValueError, KeyError, TypeError, UnicodeDecodeError):
+    except (ValueError, KeyError, TypeError, UnicodeDecodeError, AttributeError):
         return None
 
 
@@ -79,6 +89,35 @@ def parse_status(data: bytes, now: float) -> SourceStatus | None:
         return None
 
 
+@dataclass(frozen=True)
+class WakeWord:
+    keyword_id: str
+    doa_deg: float | None  # 相對身體正前方、往左為正；None＝來源沒有方位
+    mock: bool
+    received: float
+
+
+_KEYWORD_ID = re.compile(r"^[A-Za-z0-9_]{1,48}$")
+
+
+def parse_wake(data: bytes, now: float) -> WakeWord | None:
+    try:
+        m = json.loads(data.decode("utf-8"))
+        if m.get("v") != 1 or m.get("kind") != "wake_word" or not isinstance(m.get("mock"), bool):
+            return None
+        keyword = m.get("keyword_id")
+        if not isinstance(keyword, str) or not _KEYWORD_ID.match(keyword):
+            return None
+        doa = m.get("doa_deg")
+        if doa is not None:
+            if isinstance(doa, bool) or not isinstance(doa, (int, float)) or not math.isfinite(doa) or abs(doa) > 180.0:
+                return None
+            doa = float(doa)
+        return WakeWord(keyword, doa, m["mock"], now)
+    except (ValueError, TypeError, UnicodeDecodeError, AttributeError):
+        return None
+
+
 class PerceptInput:
     def __init__(self, clock, addr: tuple[str, int] = DEFAULT_ADDR):
         self.clock = clock
@@ -86,6 +125,8 @@ class PerceptInput:
         self.latest: dict[str, Observation] = {}
         self.status: dict[str, SourceStatus] = {}
         self.dropped = 0
+        self.wakes_received = 0
+        self._wakes: deque[WakeWord] = deque(maxlen=8)
         self._sock: socket.socket | None = None
         self._thread: threading.Thread | None = None
         self._lock = threading.Lock()
@@ -94,13 +135,24 @@ class PerceptInput:
         now = self.clock()
         obs = parse(data, now)
         st = parse_status(data, now) if obs is None else None
+        wake = parse_wake(data, now) if obs is None and st is None else None
         with self._lock:
             if obs is not None:
                 self.latest[obs.kind] = obs
             elif st is not None:
                 self.status[st.source] = st
+            elif wake is not None:
+                self.wakes_received += 1
+                self._wakes.append(wake)
             else:
                 self.dropped += 1
+
+    def take_wakes(self) -> list[WakeWord]:
+        """取走還沒處理的喚醒（每一則只會被取走一次）。"""
+        with self._lock:
+            out = list(self._wakes)
+            self._wakes.clear()
+        return out
 
     def source(self, kind: str, max_age_s: float = 3.0) -> SourceStatus | None:
         """這個來源最近有沒有報到（狀態訊息或方位都算）。"""

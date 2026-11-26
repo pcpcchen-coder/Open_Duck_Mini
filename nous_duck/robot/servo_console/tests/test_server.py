@@ -96,3 +96,18 @@ def test_state_and_commands(server):
     _, state = call(base, "/api/state")
     assert state["estop"] and state["imu"]["ok"]
     assert math.isclose(state["joints"][0]["lo_deg"], -28.0)
+
+
+def test_history_and_power(server):
+    base, app, bus = server
+    app.sample()  # 沒連線：沒有電力資料
+    call(base, "/api/connect", {})
+    app.controller.tick()
+    app.sample()
+    status, hist = call(base, "/api/history")
+    assert status == 200 and hist["period_s"] == 1 and len(hist["samples"]) == 2
+    assert hist["samples"][0]["battery_v"] is None and hist["samples"][1]["battery_v"] == 8.1
+    _, state = call(base, "/api/state")
+    assert state["power"]["available"] and state["power"]["battery_v"] == 8.1
+    assert "current_ma" in state["joints"][0]
+

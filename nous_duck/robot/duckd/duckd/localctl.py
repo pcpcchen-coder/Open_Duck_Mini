@@ -46,7 +46,25 @@ def handle(core, link, request: dict) -> dict:
                 "motion_latency_ms": list(getattr(core, "motion_latency_ms", [])),
                 "eyes": core.eyes.stats() if core.eyes else None,
                 "gestures_rejected": core.library.rejected,
+                "can_express": core.eyes is not None,
+                "settings": getattr(core, "settings_status", None),
+                "wake": dict(getattr(core, "wake_stats", {})),
+                "voice_relay": core.voice.stats() if getattr(core, "voice", None) else None,
             }
+    if cmd == "express":
+        # 本機預覽表情（設定頁的「在鴨子上預覽」）：最多 10 秒，之後回到 presence 決定的表情。
+        # 這是站在鴨子旁邊的人在看樣子，不是 Nous 的要求，所以不套用「Nous 能叫哪些表情」的限制。
+        if core.eyes is None:
+            return {"ok": False, "error": "eyes renderer is not running"}
+        name = request.get("name")
+        if not isinstance(name, str) or not core.eyes.known(name):
+            return {"ok": False, "error": f"unknown expression {name!r}"}
+        try:
+            seconds = min(10.0, max(0.5, float(request.get("duration_s", 5.0))))
+        except (TypeError, ValueError):
+            return {"ok": False, "error": "duration_s is not a number"}
+        core.eyes.express(name, seconds)
+        return {"ok": True, "expression": name, "seconds": seconds, "panel": core.eyes.panel_kind}
     try:
         if cmd == "engage":
             actual = core.engage(now)

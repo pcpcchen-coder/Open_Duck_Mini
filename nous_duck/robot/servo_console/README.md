@@ -16,6 +16,7 @@
 | 選取 | 選取舵機的角度、指令、範圍、偏移、溫度、電壓、負載、kp；±1／5／10° 微調；這顆出力／放鬆；這顆的 kp |
 | 姿勢 | 內建「零點」「站姿（上游 `init_pos`）」；儲存目前目標成自訂姿勢（存在 Pi 的 `~/duck/console_poses.json`）、套用、刪除 |
 | 偏移 | 14 顆的零點偏移 ±0.2／±1° 微調（關節角度不變，舵機轉同樣角度），存入上游 `~/duck_config.json`（先備份）、還原 |
+| 電力 | 電池電壓（由 14 顆舵機回報電壓的中位數推估）、每顆電芯電壓、電壓條（停止／警告門檻）；舵機總電流與估計功率；每顆舵機的電壓、電流、功率、溫度、負載、異常旗標；Pi 4 的 `get_throttled`、核心／SDRAM 電壓、ARM 時脈、CPU 溫度；最近 15 分鐘的電池電壓、總電流、溫度趨勢圖（每秒一筆，只在記憶體） |
 | 感測 | BNO055（尤拉角、加速度與合力、角速度、校準狀態）、足底開關（GPIO 22／27）、Pi 4（`get_throttled`、CPU 溫度、負載、記憶體、開機時間） |
 | 音效 | 播放上游 runtime 附的 9 個 wav（ALSA 預設輸出） |
 | 紀錄 | 連線、扭力、姿勢、偏移、警報、緊急停止的事件 |
@@ -30,7 +31,8 @@
 | 緊急停止 | 全部關扭力並鎖住；沒連線時也會臨時開序列埠關扭力。要按「解除」才能再出力，解除後扭力維持關閉 |
 | 溫度 | 任一顆 ≥ 55 °C 警告、≥ 65 °C 自動緊急停止（**暫定值**） |
 | 電壓 | 任一顆 < 6.6 V 警告、< 6.0 V 自動緊急停止（2S 每顆 3.3／3.0 V，**暫定值**） |
-| 讀取失敗 | 連續 5 次失敗：停止移動並警告；恢復後自動解除 |
+| 讀取失敗 | 連續 5 次失敗：停止移動並警告；恢復後自動解除。pypot 的通訊例外（封包損壞）也算失敗，並清掉序列埠緩衝區 |
+| 舵機異常旗標 | 舵機自己回報的電壓、溫度、電流、過載等旗標：警告（不自動停止） |
 | 瀏覽器斷線 | 超過 2 秒沒有任何請求：停止移動、**維持出力**（避免懸空時摔下來） |
 | 釋放／服務重啟 | 只釋放序列埠、I2C、GPIO，**不改扭力狀態** |
 | 硬體衝突 | 連線前檢查 `/dev/ttyACM0`、`/dev/i2c-1`、`/dev/gpiochip*` 有沒有被其他程式開著（例如上游走路程式），有就拒絕 |
@@ -96,7 +98,7 @@ cd nous_duck/robot/servo_console && python3 -m servo_console --mock --bind 127.0
 
 ## API
 
-`GET /api/state`；`POST /api/<動作>`（JSON）：`connect`、`release`、`estop`、`reset_estop`、`torque {joints, on}`、`targets {targets_deg}`、`hold`、`speed {deg_s}`、`kp {joints, kp}`、`offset {joint, delta_deg}`、`offsets_save`、`offsets_reload`、`pose_apply {key}`、`pose_save {name}`、`pose_delete {name}`、`sound {name}`。`joints` 是關節名稱清單或 `"all"`。指令不能執行時回 409 與中文原因。
+`GET /api/state`、`GET /api/history`（電力歷史）；`POST /api/<動作>`（JSON）：`connect`、`release`、`estop`、`reset_estop`、`torque {joints, on}`、`targets {targets_deg}`、`hold`、`speed {deg_s}`、`kp {joints, kp}`、`offset {joint, delta_deg}`、`offsets_save`、`offsets_reload`、`pose_apply {key}`、`pose_save {name}`、`pose_delete {name}`、`sound {name}`。`joints` 是關節名稱清單或 `"all"`。指令不能執行時回 409 與中文原因。
 
 ## 還沒做
 

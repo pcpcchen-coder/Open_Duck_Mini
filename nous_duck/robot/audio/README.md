@@ -1,9 +1,8 @@
 # robot/audio：喇叭、本機音效、變聲、喚醒詞
 
-狀態：**D5 播放路徑與音效可用到「送到裝置」；D6 變聲與 D7 喚醒詞是 spike**（2026-11-25，D 線）。
-驗證層級：單元測試（77 項）＋ Pi 4 上的運算量測（輸入是合成語音檔）＋不出聲的裝置路徑檢查。
-**沒有人聽過任何聲音；沒有麥克風，喚醒率與誤喚醒率沒有量。**
-紀錄：[`docs/validation/audio-2026-11-25.md`](../../docs/validation/audio-2026-11-25.md)；設計：[ADR-0010](../../docs/adr/ADR-0010-duck-voice.md)、[ADR-0017](../../docs/adr/ADR-0017-audio-playback-path-v1.md)（草案）。
+狀態（2026-11-26）：**喚醒服務 `duck-voice` 在 Pi 上可以跑**（XVF3800 收音 → 本機喚醒詞 → 提示音＋送出 `wake_word`）；**喚醒詞「Hello 鴨子／Hey 鴨子」還沒有用真人聲音測過**；`wake_word` 要 duckd 轉成 duck-link 事件（A 線還沒接）。語音對話走路線 2（Pi 上的 Chromium，B 線）：對話的聲音不經過這個模組。
+驗證層級：單元測試（131 項，其中 2 項需要 `aplay`）＋ Pi 4 實機：麥克風底噪與喇叭回授量測、和無螢幕 Chromium 共用麥克風、環境誤喚醒計數、喚醒服務的無聲端到端。合成語音的喚醒數字**不是喚醒率**。
+紀錄：[`voice-duck-side-2026-11-26.md`](../../docs/validation/voice-duck-side-2026-11-26.md)（喚醒服務、麥克風、Chromium 共用）、[`audio-2026-11-25.md`](../../docs/validation/audio-2026-11-25.md)（音效、變聲、喚醒引擎的運算量測）；設計：[ADR-0003](../../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md)、[ADR-0010](../../docs/adr/ADR-0010-duck-voice.md)、[ADR-0017](../../docs/adr/ADR-0017-audio-playback-path-v1.md)。
 
 ## 職責
 
@@ -65,6 +64,57 @@ ssh duck-pi4 'cd ~/duck/d-line/audio && ~/duck/audio-venv/bin/python -m duck_aud
 
 `--volume` 是要求的音量（0～1），會被夾到本機上限（白天 0.5）。先從 0.1 開始；硬體混音器目前是 75%。
 
+## 喚醒服務 duck-voice（路線 2）
+
+使用者 2026-11-26 的決定：語音對話由鴨子 Pi 上的 Chromium 開 Nous 頁面來做（路線 2）；喚醒詞先用「**Hello 鴨子**」與「**Hey 鴨子**」。所以這個服務只做一件事：
+
+```text
+XVF3800（共用裝置 duck_mic，ch0）─► 喚醒引擎（本機；音訊不離開這個行程）
+        └─ 聽到喚醒詞 ─► 播本機提示音 listen_on（喇叭 CD002）
+                      └► UDP 127.0.0.1:8793  {"v":1,"kind":"wake_word","keyword_id":"HELLO_YAZI","doa_deg":null,"t_ms":…,"mock":false}
+                               └─ duckd 轉成 duck-link 的 wake_word 事件（**A 線還沒接**）─► Nous ─► Pi 上的 Nous 頁面開始對話
+Chromium 語音終端（B 線）同時讀 duck_mic、直接播到 CD002；對話期間這個服務不偵測喚醒詞
+```
+
+| 檔案 | 內容 |
+|---|---|
+| `duck_audio/voice_service.py` | 常駐服務。`--mode wake`（預設）＝上面這條；`--mode native`＝實驗的原生上下行通道（未採用，見下） |
+| `duck_audio/capture.py` | `arecord` 收音（只經管線進記憶體） |
+| `alsa/duck-audio.conf` | ALSA dsnoop 的共用麥克風 `duck_mic`：喚醒服務與 Chromium 同時讀 |
+| `config/wake_keywords.json` | 喚醒詞清單與組合（`YAZI_EN`＝Hello 鴨子＋Hey 鴨子）；用哪一組由設定頁決定 |
+| `tools/measure_mic.py`、`tools/acoustic_wake_test.py` | 實機量測（底噪、回授、合成語音經喇叭、環境誤觸發） |
+| [`../deploy/pi4/deploy_voice.sh`](../deploy/pi4/deploy_voice.sh) | 部署到 Pi、裝 systemd 服務 `duck-voice`（不 enable、不啟動） |
+
+規則：
+
+- **音訊不離開這個行程**：喚醒前後的音訊都只經過喚醒引擎，不寫檔、不進 log、不上網。送出去的只有「哪一句、什麼時候」。
+- **`privacy.wake_listening` 或 `features.wake_word` 關掉時不開麥克風。**
+- 叫醒一次後先不偵測：有人把對話狀態送到 `127.0.0.1:8794`（`{"v":1,"kind":"presence","state":"speaking"}`）時，非 `idle` 就不偵測；沒人送就固定 8 秒（`audio.wake_holdoff_s`）。
+- systemd 單元另外限制：整個檔案系統唯讀（只有 `~/duck/settings/applied` 可寫）、網路只允許 loopback。
+- 手動觸發（測事件有沒有送出）：`sudo systemctl kill -s USR1 duck-voice`。
+- 設定都在「鴨子設定」：`audio.wake_keyword`、`audio.wake_sensitivity`、`audio.wake_holdoff_s`、`audio.volume`／`volume_cap_day`／`mute`（**只管本機提示音**，管不到 Chromium 播的對話聲音）、`features.wake_word`、`features.sound_effects`、`privacy.wake_listening`。變聲的三項標成「路線 2 不適用」。
+
+在 Pi 上試：
+
+```bash
+bash nous_duck/robot/deploy/pi4/deploy_voice.sh
+ssh duck-pi4 'sudo systemctl start duck-voice && journalctl -u duck-voice -f'
+```
+
+對鴨子說「Hello 鴨子」或「Hey 鴨子」：應該聽到往上的「嘟嘟」，log 出現「喚醒詞 HELLO_YAZI（第 n 次）」。
+
+Chromium 語音終端要共用麥克風：啟動時設 `ALSA_CONFIG_PATH=/usr/share/alsa/alsa.conf:$HOME/duck/voice/alsa/duck-audio.conf`，加 `--alsa-input-device=duck_mic --alsa-output-device=plughw:CARD=CD002,DEV=0`。
+
+還沒做、要別的線配合的：
+
+- **duckd（A 線）**：2026-11-27 已接上（分支 `claude/duckd-wake-relay`）——收到 `kind:"wake_word"` 發 duck-link 的 `wake_word` 事件、用最新的聲音方位補 `doa_deg`、把 presence 轉送到 `127.0.0.1:8794`。Pi 上不出力的實測通過（手動觸發）；頭部出力時的反應、頭在動時舵機聲會不會誤觸發喚醒詞**還沒測**（可能需要這個服務加「頭在動時不偵測」）。見 [`duckd-wake-relay-2026-11-27.md`](../../docs/validation/duckd-wake-relay-2026-11-27.md)。
+- **Chromium 語音終端的啟動與服務化、真的連 Nous 出聲**（B 線＋使用者在場）。
+- **回音消除的參考訊號**：Chromium 直接播到 CD002 時，XVF3800 拿不到參考；第一版靠 Chromium 的 `echoCancellation`。
+
+### 實驗：原生上下行通道（未採用）
+
+路線 2 定案前寫的：`--mode native` 會在喚醒後把語音送到 Nous 端的 `/duck-voice`，把回話變聲後播出（`session.py`、`playback.StreamPlayer`／`RefSink`、`mock_nous.py`，介面 [duck-voice v0](../../protocol/proposals/d-duck-voice-media-channel.md)）。對模擬的 Nous 在 Pi 上跑通過，測試也還在跑，但**Nous 端沒有採用、不是鴨子現有的能力**；systemd 服務不用這個模式。留著的理由：之後若要讓對話的聲音經過變聲或鴨子的音量閘門，這是現成的起點。
+
 ## 播放路徑（D5）
 
 ```text
@@ -102,12 +152,18 @@ Nous 的語音 ─► play_voice ─► 閘門 ─► 變聲 ─┐
 
 ## 聲源方向（DOA，T4）
 
-狀態（2026-11-26，A 線接手這一塊）：**程式與測試完成，還沒有接過真的麥克風**。驗證層級：單元測試（模擬裝置，20 項）＋ Pi 上用模擬角度經真實通道讓 duckd（模擬身體）轉頭。USB ID、韌體版本、指令在 Pi（Linux）上能不能用、角度方向，都要等麥克風接上才知道。
+狀態（2026-11-26 傍晚）：**實機讀得到**（Pi 4＋頭頂的 XVF3800，`2886:001a`、`bcdDevice` 2.06）。正前方校正、角度方向、聽聲轉頭在一個房間裡由使用者目視確認過；有電視聲時的表現與能量門檻 2e5 **還沒確認**。紀錄：[`docs/validation/duckd-head-hardware-2026-11-26.md`](../../docs/validation/duckd-head-hardware-2026-11-26.md)。
+
+實機量到、和原本假設不同的三件事：
+
+- `DOA_VALUE` 的角度與語音旗標在聲音停後會停留 2–3 秒，不適合拿來追蹤。現在預設用語音能量（`speech_source: energy`）：自動選擇波束的能量大於 `min_speech_energy` 才算有語音。
+- 頭一轉動，舵機聲就被判成語音，而且比人聲還大。能量門檻擋不掉，靠 duckd 在頭停穩 1.0 秒內丟掉方位。
+- 麥克風平放在頭頂、USB 接頭朝後時，原始角度是順時針為正：`counterclockwise` 要設 `false`。
 
 | 路徑 | 內容 |
 |---|---|
 | `duck_audio/doa.py` | XVF3800 經 USB 控制介面讀角度與語音旗標、環狀分群、正前方校準、只在有語音時把方位送給 duckd（UDP `127.0.0.1:8793`）；每秒送一次存活訊息 |
-| `config/doa.json` | `mount`（`head`／`body`／`desk`）、`front_angle_deg`、`counterclockwise`、`calibrated` |
+| `config/doa.json` | `mount`（`head`／`body`／`desk`）、`front_angle_deg`、`counterclockwise`、`speech_source`、`min_speech_energy`、`calibrated`。**校正值不進 repo**：`front_angle_deg` 是每次安裝的量測值，只留在 Pi 的 `~/duck/doa/config/doa.json`（部署不會覆蓋）。**服務帶 `--settings-dir` 時改從[鴨子設定](../settings/README.md)讀**（ADR-0019）：門檻、視窗、安裝位置、校正值都在設定頁改，約 1 秒內生效、不用重啟；設定裡的「讀取聲源方向」關掉時服務不開也不讀麥克風。這時 `doa.json` 只在設定讀不到時當備援，校正值存在 Pi 的 `~/duck/settings/calibration.json` |
 | `requirements-doa.txt` | pyusb 1.3.1（Pi 上沿用 runtime-venv 的） |
 | [`../deploy/pi4/setup_doa.sh`](../deploy/pi4/setup_doa.sh) | 複製到 `~/duck/doa/`、udev 規則（VID 2886 給 plugdev）、服務 `duck-doa`（不 enable、不啟動） |
 
@@ -130,10 +186,10 @@ ssh duck-pi4 'cd ~/duck/doa && ~/duck/duckd-venv/bin/python -m duck_audio.doa --
 校準正前方（指令開始後 5 秒內，站在鴨子正前方約 1 m 說話）：
 
 ```bash
-ssh duck-pi4 'cd ~/duck/doa && ~/duck/duckd-venv/bin/python -m duck_audio.doa --calibrate 5 --write-config --config ~/duck/doa/config/doa.json'
+ssh duck-pi4 'cd ~/duck/doa && ~/duck/duckd-venv/bin/python -m duck_audio.doa --calibrate 5 --write-config --settings-dir ~/duck/settings --config ~/duck/doa/config/doa.json'
 ```
 
-看即時讀值（在不同方向說話，確認左邊是正的；不對就把 `counterclockwise` 改成 `false`）：
+看即時讀值（在不同方向說話，確認左邊是正的；不對就把 `counterclockwise` 反過來。`duck-doa` 在跑時兩個程式會互相要求重試，讀值變慢）：
 
 ```bash
 ssh duck-pi4 'cd ~/duck/doa && ~/duck/duckd-venv/bin/python -m duck_audio.doa --watch 20 --config ~/duck/doa/config/doa.json'

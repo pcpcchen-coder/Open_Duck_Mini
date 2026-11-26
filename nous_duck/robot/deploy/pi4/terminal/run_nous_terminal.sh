@@ -7,6 +7,7 @@
 # 用法（先在 Mac 上開好通道，讓 Pi 的 localhost:<埠> 通到 Mac 的 Nous）：
 #   I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh [--display headless|xvfb]
 #                                                               [--auto-accept-mic] [--debug-port 9333]
+#                                                               [--alsa-config 檔案] [--mic 裝置] [--speaker 裝置]
 #
 # 環境變數：
 #   AIOS_PORT          Nous 的埠，預設 8787。Nous 核心會檢查 Host 標頭，所以 Pi 這邊的埠要和 Nous 的埠相同。
@@ -21,6 +22,17 @@
 #                      預設不加，要明講才加。這支腳本**不會**加 --use-fake-device-for-media-stream。
 #   --debug-port N     在 127.0.0.1:N 開 DevTools（Mac 上用 ssh -L N:127.0.0.1:N duck-pi4 再開 chrome://inspect）。
 #                      Pi 上任何行程都能透過這個埠操控瀏覽器，用完就關。預設不開。
+#   --alsa-config F    額外載入一份 ALSA 設定檔（只對這個 Chromium 行程：設
+#                      ALSA_CONFIG_PATH=/usr/share/alsa/alsa.conf:F；不改 ~/.asoundrc、不改 /etc）。
+#   --mic NAME         Chromium 的輸入裝置（--alsa-input-device=NAME）。
+#   --speaker NAME     Chromium 的輸出裝置（--alsa-output-device=NAME）。
+#                      路線 2 要和鴨子本機的喚醒偵測共用麥克風時，用 D 線的共用裝置（dsnoop）：
+#                        --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic \
+#                        --speaker plughw:CARD=CD002,DEV=0
+#                      不要直接開 hw:Array（會和喚醒偵測搶麥克風）。
+#                      驗證層級：D 線 2026-11-26 在 Pi 上用 run_local_probe.sh --enumerate-only 確認過
+#                      duck_mic 能被 Chromium 開啟、同時喚醒偵測照常；這支腳本帶這三個選項**還沒有執行過**，
+#                      --speaker 那個值也還沒有實際出聲驗證。
 #
 # 不做的事：不開通道（通道由你在 Mac 上開）、不碰舵機匯流排／I2C／GPIO、不動 systemd、不改 /etc 與音訊設定。
 set -euo pipefail
@@ -32,12 +44,18 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 DISPLAY_MODE=headless
 AUTO_ACCEPT=0
 DEBUG_PORT=""
+ALSA_CONFIG=""
+MIC_DEVICE=""
+SPEAKER_DEVICE=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --display) DISPLAY_MODE="$2"; shift 2 ;;
     --auto-accept-mic) AUTO_ACCEPT=1; shift ;;
     --debug-port) DEBUG_PORT="$2"; shift 2 ;;
-    -h|--help) sed -n '2,26p' "$0"; exit 0 ;;
+    --alsa-config) ALSA_CONFIG="$2"; shift 2 ;;
+    --mic) MIC_DEVICE="$2"; shift 2 ;;
+    --speaker) SPEAKER_DEVICE="$2"; shift 2 ;;
+    -h|--help) sed -n '2,38p' "$0"; exit 0 ;;
     *) echo "不認得的參數：$1" >&2; exit 2 ;;
   esac
 done
@@ -60,6 +78,13 @@ if ! valid_terminal_id "$TERMINAL_ID"; then
   exit 2
 fi
 case "$DEBUG_PORT" in *[!0-9]*) echo "--debug-port 要是數字" >&2; exit 2 ;; esac
+if [ -n "$ALSA_CONFIG" ] && [ ! -r "$ALSA_CONFIG" ]; then
+  echo "--alsa-config 指的檔案不存在或讀不到：$ALSA_CONFIG" >&2
+  exit 2
+fi
+for dev in "$MIC_DEVICE" "$SPEAKER_DEVICE"; do
+  case "$dev" in *[!A-Za-z0-9_:=,.-]*) echo "--mic／--speaker 的裝置名稱有不允許的字元：$dev" >&2; exit 2 ;; esac
+done
 
 CHROMIUM="$(find_chromium)"
 # 只看本機有沒有人在聽這個埠，不送任何請求
@@ -90,12 +115,17 @@ if [ "$AUTO_ACCEPT" = 1 ]; then
   echo "!! --auto-accept-mic：麥克風權限提示會被自動同意（裝置是真的，不是假裝置）。"
 fi
 [ -n "$DEBUG_PORT" ] && EXTRA+=(--remote-debugging-port="$DEBUG_PORT")
+[ -n "$MIC_DEVICE" ] && EXTRA+=(--alsa-input-device="$MIC_DEVICE")
+[ -n "$SPEAKER_DEVICE" ] && EXTRA+=(--alsa-output-device="$SPEAKER_DEVICE")
+# 只影響這個 Chromium 行程；系統的 ALSA 設定不動
+[ -n "$ALSA_CONFIG" ] && export ALSA_CONFIG_PATH="/usr/share/alsa/alsa.conf:$ALSA_CONFIG"
 URL="http://localhost:$PORT/?terminal=$TERMINAL_ID"
 
 cat <<MSG
 == 開啟 $URL
    顯示：$DISPLAY_MODE　設定檔：$UDD
-   音訊輸出走系統預設（~/.asoundrc）；這支腳本沒有靜音。
+   麥克風：${MIC_DEVICE:-系統預設}　喇叭：${SPEAKER_DEVICE:-系統預設（~/.asoundrc）}　額外 ALSA 設定：${ALSA_CONFIG:-無}
+   這支腳本沒有靜音。
 
 量測（另開一個 ssh 視窗）：
    bash $HERE/measure.sh -i 5 -d 300 | tee $SPIKE_HOME/runs/nous-\$(date +%H%M%S).csv
