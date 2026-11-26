@@ -113,6 +113,8 @@ Nous Agent 收到完成事件後接續下一步，需要 AIOS 支援（見 [路�
 | `app.duck.return_home` | `reversible_write` | 回充電座並確認開始充電 | 無 | 同上；「已充電」以電氣訊號為準 |
 | `app.duck.cancel_mission` | `reversible_write` | 取消目前任務並停下 | `mission_id`（可省略） | state 無進行中任務 → `confirmed` |
 | `app.duck.announce` | `reversible_write` | 用鴨子的喇叭播一段話（不開啟對話） | `text` | 待定；若 AIOS 能把語音工作階段指定到鴨子終端，可能不需要這個工具 |
+| `app.duck.follow_me` | `reversible_write` | 跟著剛才叫醒鴨子的人走（2026-11-19 新增，[ADR-0007](ADR-0007-follow-me-and-wait-here.md)） | `target`（目前只有 `speaker`）、`distance_m`（選填） | 接受並開始鎖定 → `confirmed`＋`mission_id`（代表「開始找你」，不是「已跟上」） |
+| `app.duck.wait_here` | `reversible_write` | 停止目前任務，原地站好等待（2026-11-19 新增，ADR-0007） | `timeout_min`（選填） | state 為 `waiting` 且站好 → `confirmed`；任何時候都接受 |
 | `app.duck.privacy_tighten` | `reversible_write` | **只能收緊**隱私設定（切到更嚴格的模式或關掉某項）；沒有給模型放寬的工具（[ADR-0006](ADR-0006-privacy-settings.md)） | `mode` 或 `switch` | 鴨子回讀目前隱私設定版本 |
 
 刻意不提供給模型的操作，新增：

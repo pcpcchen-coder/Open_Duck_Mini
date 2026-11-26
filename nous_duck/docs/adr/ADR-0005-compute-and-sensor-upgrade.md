@@ -1,6 +1,7 @@
 # ADR-0005：運算與感測硬體升級
 
 - 狀態：**部分採用**（2026-11-12 使用者決定：雙板＝Pi Zero 2 W＋**Pi 4**、鏡頭沿用 **AR0144** 並**裝在頭上**、麥克風陣列買 **reSpeaker Flex XVF3800 Circular-4** 並**裝在身體上**、加裝實體隱私開關、眼燈改 RGB 用顏色提示鏡頭狀態）；2026-11-13 決定頭上鏡頭旁加**紅外線補光燈**（沒開燈時的備案，ADR-0002 §4.1）；2026-11-17 眼燈改為**兩片 1.28 吋 GC9A01 圓形螢幕**，由 Pi 4 驅動（ADR-0006 §4.2）；其餘仍為草案
+- **2026-11-22 更新**：§2.1 的雙板決定被 [ADR-0008](ADR-0008-single-board-pi4.md) 取代，改成 **Pi 4 單板**（不用 Pi Zero 2 W）。§2.2 以後的感測器、鏡頭與麥克風位置照舊。
 - 日期：2026-11-12
 - 相關：[R-001](../requirements/R-001-mobile-companion.md)、[ADR-0002](ADR-0002-indoor-localization-and-navigation.md)、[ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md)、[ADR-0004](ADR-0004-docking-and-charging.md)、[雙目視覺規劃](../stereo_vision_plan.md)（AR0144 的用途清單，2026-11-16）
 
