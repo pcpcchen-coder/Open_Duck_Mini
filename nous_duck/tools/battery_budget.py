@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """低電量回充的名目推算：回家要多少電、四個電量等級的門檻、各等級還能撐多久（只用標準函式庫）。
 
-用途：[`docs/adr/ADR-0009-low-battery-return-interaction.md`](../docs/adr/ADR-0009-low-battery-return-interaction.md)
+用途：[`docs/adr/ADR-0012-low-battery-return-interaction.md`](../docs/adr/ADR-0012-low-battery-return-interaction.md)
 裡的數字都由這支腳本算出，方法與輸出記錄在 `docs/validation/battery-budget-2026-11-26.md`。
 
 **全部是名目推算，不是量測。** 鴨子還沒走過路，耗電、速度、電池可用容量都沒量過；
 下面每個輸入都是假設值，量到實際數字後要換掉再重算。
 
-模型（ADR-0009 §3）：
+模型（ADR-0012 §3）：
 
     E_home  = P_walk × (d / v) + n_dock × P_walk × t_dock     走回家＋對位重試要的電
     E_need  = E_home + E_reserve                               再加固定保留（安全停機、估算誤差以外的餘量）
@@ -50,7 +50,7 @@ UNCERTAINTY = {
     "加裝電流感測（INA219／INA226）": 0.05,
 }
 
-# ---- 等級門檻（ADR-0009 §3.2；餘裕倍數 m） ----
+# ---- 等級門檻（ADR-0012 §3.2；餘裕倍數 m） ----
 LEVELS = (
     ("L1 提醒", 3.0),
     ("L2 請求回家", 2.0),
