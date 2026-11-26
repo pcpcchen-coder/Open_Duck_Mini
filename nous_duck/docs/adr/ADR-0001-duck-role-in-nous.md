@@ -46,7 +46,7 @@ Pi Zero 2 W 的算力只夠跑步態策略與基本 I/O，不適合跑語音或�
 | `app.duck.look` | `reversible_write` | 頭部看向目標姿態 | `neck_pitch`、`head_pitch`、`head_yaw`、`head_roll`（rad）、`duration_s` | ack＋state 回讀頭部目標 |
 | `app.duck.gesture` | `reversible_write` | 執行鴨子端白名單內的預錄動作（例如點頭、搖頭、歪頭） | `name`（列舉，來自鴨子回報的清單） | ack accepted → `confirmed`（代表已開始） |
 | `app.duck.antennas` | `reversible_write` | 天線位置或擺動 | `left`、`right`（−1～1）或 `pattern` | ack＋state |
-| `app.duck.express` | `reversible_write` | 眼燈、投影燈、音效 | `eyes`、`projector`、`sound`（列舉） | 依上游 `expression_features` 推導；硬體不存在 → capability `unsupported` |
+| `app.duck.express` | `reversible_write` | 眼睛螢幕（2026-11-17 由眼燈改，ADR-0006 §4.2）、投影燈、音效 | `eyes`、`projector`、`sound`（列舉） | 依上游 `expression_features` 推導；硬體不存在 → capability `unsupported` |
 
 設計說明：
 
@@ -106,7 +106,7 @@ Nous Agent 收到完成事件後接續下一步，需要 AIOS 支援（見 [路�
 | 工具 ID | effect | 說明（草案） | 參數草案 | 回讀確認方式 |
 |---|---|---|---|---|
 | `app.duck.where` | `read` | 目前所在房間／地點、定位不確定度、是否在充電座 | 無 | 最新 state（附時間戳） |
-| `app.duck.places` | `read` | 地圖上已命名的地點清單（ID 與本機顯示名稱） | 無 | 鴨子回報的地圖版本 |
+| `app.duck.places` | `read` | 地圖上已命名的地點清單。鴨子只回地點 ID，顯示名稱由 DuckAdapter 從 Nous 本機的名稱表補上（2026-11-26 依 [ADR-0011 §7.1](ADR-0011-duck-memory.md#71-地點-id-一定要能對應回名稱2026-11-26-使用者要求) 修訂） | 無 | 鴨子回報的地圖版本 |
 | `app.duck.mission_status` | `read` | 目前任務的狀態與進度 | `mission_id`（可省略） | 最新 state |
 | `app.duck.go_to` | `reversible_write` | 導航到某個地點 | `place`（地點 ID，來自 `places`） | 接受並開始 → `confirmed`＋`mission_id` |
 | `app.duck.find_person` | `reversible_write` | 在附近找人（可指定是誰），找到後面向對方 | `person`（家人 ID，可省略） | 同上 |

@@ -13,8 +13,8 @@ This directory holds all of this fork's own development. Upstream files are neve
 | Printing | All 51 original parts printed ([progress](docs/build_log/print_status.md)) |
 | Procurement | Sourcing hardware ([checklist and suppliers](docs/build_log/README.md)) |
 | Assembly | Not started |
-| Software | The first version of the assembly viewer is usable ([download the HTML](assembly_viewer/release/duck_viewer.html)): a single HTML file that opens offline and shows 138 parts, the 14 servo IDs, and the 15 assembly steps from the upstream CAD, with exploded and X-ray views ([pipeline record](docs/validation/viewer-pipeline-2026-11-13.md), [front-end record](docs/validation/viewer-web-2026-11-15.md), Traditional Chinese only; validated by unit tests and a headless browser). The BOM and all other modules are still "Planned" |
-| Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0006 (including switchable privacy settings) are drafts or partly accepted; the "follow me / wait here" requirement [R-002](docs/requirements/R-002-follow-me.md) and [ADR-0007](docs/adr/ADR-0007-follow-me-and-wait-here.md) are drafts (design only; implementation comes later); [ADR-0009](docs/adr/ADR-0009-docked-interaction.md) (still talking and interacting while charging: head motion and eye-light expressions on the dock; Traditional Chinese only) is a draft; phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
+| Software | The first version of the assembly viewer is usable ([download the HTML](assembly_viewer/release/duck_viewer.html)): a single HTML file that opens offline and shows 138 parts, the 14 servo IDs, and the 15 assembly steps from the upstream CAD, with exploded and X-ray views ([pipeline record](docs/validation/viewer-pipeline-2026-11-13.md), [front-end record](docs/validation/viewer-web-2026-11-15.md), Traditional Chinese only; validated by unit tests and a headless browser). The head controller for V3 "look at the person who is talking" is done and passes unit tests and a MuJoCo simulation ([record](docs/validation/look-at-sim-2026-11-16.md), Traditional Chinese only; not on hardware). The BOM and all other modules are still "Planned" |
+| Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0006 (including switchable privacy settings) are drafts or partly accepted; the "follow me / wait here" requirement [R-002](docs/requirements/R-002-follow-me.md) and [ADR-0007](docs/adr/ADR-0007-follow-me-and-wait-here.md) are drafts (design only; implementation comes later); the duck's voice (Nous's voice with a voice changer) is in [ADR-0010](docs/adr/ADR-0010-duck-voice.md) (design only, Traditional Chinese only); the memory system [ADR-0011](docs/adr/ADR-0011-duck-memory.md) is accepted (reuses the Nous memory layer, and you can say "remember" next to the duck; design only, Traditional Chinese only); [ADR-0018](docs/adr/ADR-0018-docked-interaction.md) (still talking and interacting while charging: head motion and eye expressions on the dock; Traditional Chinese only) is a draft; phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
 | Hardware validation | None |
 
 ## Division of work
@@ -34,14 +34,14 @@ See the [architecture](docs/architecture.md) and [ADR-0001](docs/adr/ADR-0001-du
 | [`docs/architecture.md`](docs/architecture.md) | Division of work and data flow between the duck and Nous | Draft |
 | [`docs/roadmap.md`](docs/roadmap.md) | Phases and gates, decisions waiting for the owner | Draft |
 | [`docs/stereo_vision_plan.md`](docs/stereo_vision_plan.md) | Stereo vision plan: what the duck can do with the AR0144 camera, limits, and order of work (Traditional Chinese only) | Planned (draft) |
-| [`docs/adr/`](docs/adr/README.md) | Architecture decision records | ADR-0001 to 0009 |
+| [`docs/adr/`](docs/adr/README.md) | Architecture decision records | ADR-0001 to 0011, 0013, 0018 |
 | [`docs/build_log/`](docs/build_log/README.md) | Printing, procurement, assembly, and calibration progress | Printing complete, procurement underway |
-| [`docs/validation/`](docs/validation/README.md) | Hardware and test records | 5 records (none on hardware) |
+| [`docs/validation/`](docs/validation/README.md) | Hardware and test records | 10 records (3 include hardware runs on the Pi 4 and servos; the duck is not assembled or walking yet) |
 | [`assembly_viewer/`](assembly_viewer/README.md) | ① Offline single-HTML 3D assembly viewer (first deliverable) | First version usable (pipeline, steps, front end); BOM planned |
 | [`protocol/`](protocol/README.en.md) | ② duck-link protocol (JSON Schema) | Planned |
-| [`robot/`](robot/README.md) | ③ On-board software (single Pi 4 on trial, Python) | Planned |
+| [`robot/`](robot/README.md) | ③ On-board software (single Pi 4 on trial, Python) | Mostly planned; `servo_console/` and `behaviors/look_at.py` (simulation only) exist |
 | [`nous_adapter/`](nous_adapter/README.en.md) | ④ `app.duck.*` adapter and terminal to move into AIOS (TypeScript) | Planned |
-| [`sim/`](sim/README.md) | ⑤ MuJoCo simulation | Planned |
+| [`sim/`](sim/README.md) | ⑤ MuJoCo simulation | Mostly planned; `look_at_sim/` exists |
 | [`hardware/`](hardware/README.md) | ⑥ Modifications: MG995 head prototype, expression modules, wiring, sensor head, perception board, charging dock | Planned; the [charging dock](hardware/dock/README.md) is design v0 (STL files generated; not printed, not tested on hardware; docs in Traditional Chinese) |
 | [`tools/`](tools/README.md) | Development tools (upstream-untouched check, ChatGPT share-page converter, ChatGPT viewer comparison) | Usable |
 
@@ -52,7 +52,7 @@ Documents other than this README and the `protocol/` and `nous_adapter/` READMEs
 - Feetech STS3215-C001 (7.4 V, 1:345) × 14. IDs: right leg 10–14, left leg 20–24, neck and head 30–33.
 - Raspberry Pi Zero 2 W, Waveshare Bus Servo Adapter, BNO055 IMU, 2S 18650 battery (per the [upstream BOM](docs/handoff/upstream_bom.csv)).
 - The five MG995 servos on hand are used only for a head prototype.
-- R-001 additions (planned): a Raspberry Pi 4 perception board, a Waveshare AR0144 stereo camera, a reSpeaker Flex XVF3800 Circular-4 microphone array (camera on the head, microphone array on the body), a physical privacy switch, RGB eye lights, rear charging contacts, and a charging dock.
+- R-001 additions (planned): a Raspberry Pi 4 perception board, a Waveshare AR0144 stereo camera, a standard reSpeaker XVF3800 USB 4-Mic Array (the same model FamilyRecorder uses; camera and microphone array both on the head), a physical privacy switch, two 1.28-inch round displays as eyes, rear charging contacts, and a charging dock.
 
 ## Dependencies
 
