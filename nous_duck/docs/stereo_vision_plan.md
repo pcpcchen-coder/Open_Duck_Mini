@@ -2,7 +2,7 @@
 
 - 狀態：**規劃（草案）**，2026-11-16。全部是設計與名目規格推算，**沒有程式、沒有硬體、沒有實機驗證**。
 - 2026-11-16 使用者決定：鴨子**另買一台 AR0144**（Nous 螢幕上那台不拆）；第一個視覺成果做 **V3「說話時看著對方」**（§8）。
-- 鏡頭：**Waveshare AR0144 Stereo USB Camera (A)**，跟 Nous 目前用的是同一款（[ADR-0005 §2.2](adr/ADR-0005-compute-and-sensor-upgrade.md#22-感測器)），裝在頭上，接感知板 Pi 4。
+- 鏡頭：**Waveshare AR0144 Stereo USB Camera (A)**，跟 Nous 目前用的是同一款（[ADR-0005 §2.2](adr/ADR-0005-compute-and-sensor-upgrade.md#22-感測器)），裝在頭上，接 Pi 4（2026-11-22 起單板，ADR-0008）。
 - 相關：[R-001](requirements/R-001-mobile-companion.md)、[ADR-0002 導航](adr/ADR-0002-indoor-localization-and-navigation.md)、[ADR-0003 找人](adr/ADR-0003-mobile-terminal-wake-and-find.md)、[ADR-0004 回充](adr/ADR-0004-docking-and-charging.md)、[ADR-0006 隱私](adr/ADR-0006-privacy-settings.md)、[路線圖](roadmap.md)
 - AIOS 參考（唯讀，main `7b0257d`）：`docs/11_Stereo_Camera_Interaction_2026-10.md`（Nous 怎麼用這台鏡頭）、`docs/Current_Implementation_Status.md`、`prototype/ambient-shell/src/sense/`
 - 數字來源：[`tools/stereo_geometry.py`](../tools/stereo_geometry.py)，方法與完整輸出見[驗證紀錄](validation/stereo-geometry-2026-11-16.md)（層級：**名目幾何推算**，不是量測）
@@ -174,7 +174,7 @@ Pi 4 同時要解碼 2560×720 MJPG、跑 AprilTag、視覺里程計、深度、
 | 對準 | 最後 1 m 回充 | 充電座標籤、深度 | AprilTag 15 Hz |
 
 - 頻率與解析度都是目標，P2 spike 實際量 CPU、記憶體與延遲後再調。
-- 模式由感知板決定；身體板（Pi Zero 2 W）只收速度指令與安全旗標，**不因為視覺當掉而倒下**（ADR-0005 §2.1）。
+- 模式由感知服務決定；步態＋安全服務只收速度指令與安全旗標，**不因為視覺當掉而倒下**。2026-11-22 起改單板 Pi 4（[ADR-0008](adr/ADR-0008-single-board-pi4.md)），兩者是同一片板子上的不同服務，2 GB 記憶體會讓視覺模式的取捨更緊。
 - 如果還是不夠：降解析度、降頻率、把人臉特徵移到 Mac（只送裁切後的臉部特徵，不送影像），或把終端改成路線 B 省下 Chromium。
 
 ## 6. 隱私對照
@@ -197,7 +197,7 @@ ADR-0006 的固定規則全部適用（原始影像不寫檔、不進 trace、�
 | V0 鏡頭到手驗證 | P2 | Pi 4 上 UVC 能開、2560×720 實際幀率與解碼 CPU；遙控器測 IR-cut；量重量與尺寸 | 驗證紀錄寫明實測值 |
 | V1 雙目校正 | P2 | D1 校正；在 0.5／1／2／3 m 量深度誤差；量「最近能量到多近」 | 實測誤差表，跟 §1.1 的推算比較 |
 | V2 裝上頭 | P2 | 新頭殼、D2 手眼校正、低頭 20° 的實際可見範圍；模擬中檢查頸部扭力與步態 | 實機站立與行走穩定 |
-| V3 第一個看得到的成果 | P3 | **P2 說話時看著對方**＋張掌停：只需要人臉偵測與頭部控制，不需要導航，最快看到「鴨子活了」 | 人在 1～2 m 內移動，頭能跟上；張掌後停止說話 |
+| V3 第一個看得到的成果 | P3 | **P2 說話時看著對方**＋張掌停：只需要人臉偵測與頭部控制，不需要導航，最快看到「鴨子活了」。**2026-11-16 進度**：控制器 [`robot/behaviors/look_at.py`](../robot/behaviors/look_at.py) 完成，單元測試與 MuJoCo 模擬通過（[驗證](validation/look-at-sim-2026-11-16.md)）；人臉偵測器、感知服務與步態服務之間的介面、張掌停、平衡模擬、實機未做 | 人在 1～2 m 內移動，頭能跟上；張掌後停止說話 |
 | V4 安全與導航 | P4 | S1～S4、N1～N6；`go_to` | 併入 P4 gate |
 | V5 回充 | P5 | N5 | 併入 P5 gate |
 | V6 找人 | P6 | P1、P3、P8 | 併入 P6 gate |

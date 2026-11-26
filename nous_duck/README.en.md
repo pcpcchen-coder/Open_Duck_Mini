@@ -13,7 +13,7 @@ This directory holds all of this fork's own development. Upstream files are neve
 | Printing | All 51 original parts printed ([progress](docs/build_log/print_status.md)) |
 | Procurement | Sourcing hardware ([checklist and suppliers](docs/build_log/README.md)) |
 | Assembly | Not started |
-| Software | The first version of the assembly viewer is usable ([download the HTML](assembly_viewer/release/duck_viewer.html)): a single HTML file that opens offline and shows 138 parts, the 14 servo IDs, and the 15 assembly steps from the upstream CAD, with exploded and X-ray views ([pipeline record](docs/validation/viewer-pipeline-2026-11-13.md), [front-end record](docs/validation/viewer-web-2026-11-15.md), Traditional Chinese only; validated by unit tests and a headless browser). The BOM and all other modules are still "Planned" |
+| Software | The first version of the assembly viewer is usable ([download the HTML](assembly_viewer/release/duck_viewer.html)): a single HTML file that opens offline and shows 138 parts, the 14 servo IDs, and the 15 assembly steps from the upstream CAD, with exploded and X-ray views ([pipeline record](docs/validation/viewer-pipeline-2026-11-13.md), [front-end record](docs/validation/viewer-web-2026-11-15.md), Traditional Chinese only; validated by unit tests and a headless browser). The head controller for V3 "look at the person who is talking" is done and passes unit tests and a MuJoCo simulation ([record](docs/validation/look-at-sim-2026-11-16.md), Traditional Chinese only; not on hardware). The BOM and all other modules are still "Planned" |
 | Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0006 (including switchable privacy settings) are drafts or partly accepted; the "follow me / wait here" requirement [R-002](docs/requirements/R-002-follow-me.md) and [ADR-0007](docs/adr/ADR-0007-follow-me-and-wait-here.md) are drafts (design only; implementation comes later); phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
 | Hardware validation | None |
 
@@ -36,12 +36,12 @@ See the [architecture](docs/architecture.md) and [ADR-0001](docs/adr/ADR-0001-du
 | [`docs/stereo_vision_plan.md`](docs/stereo_vision_plan.md) | Stereo vision plan: what the duck can do with the AR0144 camera, limits, and order of work (Traditional Chinese only) | Planned (draft) |
 | [`docs/adr/`](docs/adr/README.md) | Architecture decision records | ADR-0001 to 0007 |
 | [`docs/build_log/`](docs/build_log/README.md) | Printing, procurement, assembly, and calibration progress | Printing complete, procurement underway |
-| [`docs/validation/`](docs/validation/README.md) | Hardware and test records | 5 records (none on hardware) |
+| [`docs/validation/`](docs/validation/README.md) | Hardware and test records | 10 records (3 include hardware runs on the Pi 4 and servos; the duck is not assembled or walking yet) |
 | [`assembly_viewer/`](assembly_viewer/README.md) | ① Offline single-HTML 3D assembly viewer (first deliverable) | First version usable (pipeline, steps, front end); BOM planned |
 | [`protocol/`](protocol/README.en.md) | ② duck-link protocol (JSON Schema) | Planned |
-| [`robot/`](robot/README.md) | ③ On-board software (single Pi 4 on trial, Python) | Planned |
+| [`robot/`](robot/README.md) | ③ On-board software (single Pi 4 on trial, Python) | Mostly planned; `servo_console/` and `behaviors/look_at.py` (simulation only) exist |
 | [`nous_adapter/`](nous_adapter/README.en.md) | ④ `app.duck.*` adapter and terminal to move into AIOS (TypeScript) | Planned |
-| [`sim/`](sim/README.md) | ⑤ MuJoCo simulation | Planned |
+| [`sim/`](sim/README.md) | ⑤ MuJoCo simulation | Mostly planned; `look_at_sim/` exists |
 | [`hardware/`](hardware/README.md) | ⑥ Modifications: MG995 head prototype, expression modules, wiring, sensor head, perception board, charging dock | Planned; the [charging dock](hardware/dock/README.md) is design v0 (STL files generated; not printed, not tested on hardware; docs in Traditional Chinese) |
 | [`tools/`](tools/README.md) | Development tools (upstream-untouched check, ChatGPT share-page converter, ChatGPT viewer comparison) | Usable |
 
