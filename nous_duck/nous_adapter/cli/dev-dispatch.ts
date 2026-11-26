@@ -1,4 +1,6 @@
-import { isToolResult, toolResult, type InputSchema, type IntegrationAdapter, type IntegrationToolId, type ToolResult } from "../shared/aios-contracts.ts";
+import { isToolResult, toolResult, type IntegrationToolId, type ToolResult } from "../shared/aios-integrations.ts";
+import type { InputSchema } from "../shared/aios-schema.ts";
+import type { IntegrationAdapter } from "../shared/aios-contracts.ts";
 
 // 開發用的最小 Dispatcher：duckctl 不經過 AIOS，但仍照 AIOS Dispatcher 的順序做三件事，
 // 讓這裡試到的行為接近之後在 AIOS 裡的行為：驗證參數（inputSchema）→ 執行並套工具的時限 → 檢查結果格式。
@@ -32,6 +34,7 @@ let counter = 0;
 export async function devExecute(adapter: IntegrationAdapter, toolId: string, args: Record<string, unknown>): Promise<ToolResult> {
   const tool = adapter.tools().find((t) => t.id === toolId);
   if (!tool) return toolResult("refused", "沒有這個工具。", { reason: "not_registered" });
+  if (!tool.enabled) return toolResult("refused", "這個工具目前沒有啟用。", { reason: "disabled" });
   const problem = validateArgs(tool.inputSchema, args);
   if (problem) return toolResult("refused", `參數不正確：${problem}。沒有送出。`, { reason: "invalid_arguments" });
   const controller = new AbortController();

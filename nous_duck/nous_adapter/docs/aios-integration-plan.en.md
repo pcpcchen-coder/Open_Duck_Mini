@@ -2,12 +2,42 @@
 
 # AIOS integration plan: connecting the duck to Nous
 
-Status: **plan (no work has started in AIOS yet)**. Date: 2026-11-25. This document is the basis for opening batches in the AIOS repo later; until it is completed and verified in AIOS, nowhere is it claimed that "the duck is integrated into Nous".
+Status: **D1, D2 and D4a have been implemented on an AIOS branch and a PR has been opened (2026-11-26; flag off by default, not merged yet, not tried with real voice); D3, D4b and D5–D7 are still a plan.** Date: 2026-11-25, updated 2026-11-26 (§0). Until it is merged and verified in AIOS, nowhere is it claimed that "the duck is integrated into Nous".
 
 - AIOS consulted: `pcpcchen-coder/AIOS` `main`, commit `c85307861f7562803fb3776407493da49cdc8a83` (2026-11-24), `git clone`d into a temporary directory and inspected **read-only**; nothing was run, nothing was modified, and no request was sent to the running Nous.
 - Unless noted otherwise, paths are relative to AIOS's `prototype/ambient-shell/`; `file:line` are line numbers at that commit.
 - A "fact" is read directly from the code; a "recommendation" or "inference" is this document's judgement and is marked explicitly.
 - For the current state of this repo's side see [`../README.md`](../README.en.md); for how voice reaches the duck see also [`voice-path.md`](voice-path.en.md).
+
+## 0. 2026-11-26 update: D1, D2 and D4a implemented on an AIOS branch
+
+On 2026-11-26 the user agreed to open a branch, implement, and open a PR in a **separate clone** of the AIOS repo (not the checkout that is running Nous). The result:
+
+- Branch `claude/duck-link` (based on AIOS main `c853078`; on 2026-11-26 `origin/main` was confirmed to still be this commit), PR: [pcpcchen-coder/AIOS#156](https://github.com/pcpcchen-coder/AIOS/pull/156). **Not merged**; the running Nous was not restarted, switched or changed.
+- Flag `NOUS_DUCK` (off by default). When it is off there is no endpoint, no adapter and no observer; AIOS's own full check (`node scripts/verify-aios.mjs`) passes.
+- Verification level: AIOS's fixture tests (5 new test files, 122 tests, with a fake duck marked mock on the other end) plus one local check of "the AIOS branch's hub and Dispatcher against duckd's simulated body" (0 messages not conforming to the schema in either direction). **No real hardware, no real voice.** The details are in `docs/validation/duck-link-2026-11-26.md` on the AIOS branch.
+- How the user can try it (starting a separate development instance: a different port and configuration directory, without affecting the running Nous) is written in §5 of the same document. Those steps connect to the cloud model and make sound; they have **not been run by anyone**, and the user has to start them themselves.
+
+Where what was actually done differs from the plan in §3–§6 of this document:
+
+| Plan | Actual | Reason |
+|---|---|---|
+| The hub goes in `server/duck-link.ts`, the rest scattered in `server/` | Everything is in `server/duck/`: `link.ts` (hub), `schema.ts`, `exec.ts`, `text.ts`, `presence.ts`, `session-bridge.ts`; the adapter is in `server/integrations/adapters/duck.ts`; the types are in `shared/duck-link.ts` and `shared/duck-capabilities.ts` | One folder is easy to find and easy to remove as a whole |
+| The schema is read from file with `fs` | A JSON import (`with { type: "json" }`), consistent with the rest of AIOS | No dependence on file paths at run time |
+| Register all 17 tools, then decide which to turn on | All 17 are defined, **only 6 are enabled**: `status`, `stop`, `look`, `gesture`, `express`, `track`; the rest have `enabled: false` and `catalog.hidden: true` | The user's decision on 2026-11-26. The ones not enabled do not go into the model's tool table and are not listed in the human-readable command table |
+| `presence` is sent by DuckTerminal | The core uses `sendDuckPresence()` directly; DuckTerminal's event entry point (D3) was not moved in this batch | D3 is not in this batch; presence should not depend on whether the adapter is registered |
+| D4a's observation point is wired to `PresenceDriver.handle()` | There is one more layer in between, `createPresenceBridge()`: it handles "start was decided but the connection never came up" (back to idle after 60 seconds), two sessions existing at once, and the session ID changing when the path changes; when a delegation starts it switches to working by itself | The core's events are coarser than the page's phase, so there has to be a place to fill in these cases |
+| The observation point field is called something like `onSessionChange` | `RealtimeSessionsOptions.onSessionEvent`, with event type `SessionLifecycleEvent` (`started`／`connected`／`delegation`／`ended`); the `createApp` option is `voiceSessionObserver` | `RealtimeSessions` is created inside `createApp` (`server/app.ts:285`), not in `nous.ts` |
+| Whether to add Ajv was pending | `ajv` 8.20.0 was added (`package.json` and the lock) | Both ends have to validate against the same schema file; the standalone generator was not tried |
+
+Item-by-item comparison against the AIOS contracts: this repo's `shared/aios-integrations.ts`, `aios-schema.ts` and `aios-contracts.ts` are minimal re-declarations. After the adapter was moved into AIOS as is and its imports were pointed at AIOS's original files, `tsc --noEmit` reported no errors at all — the types used (`ToolResult`, `toolResult`, `IntegrationToolId`, `ToolDefinition`, `AdapterCatalog`, `ExecutionContext`, `HealthReport`, `IntegrationAdapter`, `InputSchema`) are compatible with the real declarations at AIOS `c853078`. What AIOS has and this repo does not declare: `ToolDefinition.legacyName`, `AdapterCatalog.builtin`, the `scalar` of `PropertySchema`, `ToolCapability`, `IntegrationFunctionSpec`, `CAPABILITY_STATUSES`, `fromWireName`, `serviceOf`, and the types of the page state; DuckAdapter uses none of them.
+
+Things discovered only during the move, which the earlier plan did not cover:
+
+- AIOS's English command table (`README.en.md`) is not generated automatically; rows have to be added by hand.
+- The baseline file of AIOS's `tests/commands-from-catalog.test.ts` contains local time, and running it directly in Asia/Taipei fails (unrelated to the duck); both regenerating the baseline file and running the tests need `TZ=UTC`.
+- AIOS's bilingual check requires the code blocks of the two language versions to be **byte-for-byte identical** (Chinese comments inside code blocks must not be translated).
+- The fake adapter dependency used in tests cannot be a Proxy that "throws as soon as it is touched": `DuckAdapter.mock` reads the connection state, and the catalogue and the commands page read it.
 
 ## 1. Summary
 

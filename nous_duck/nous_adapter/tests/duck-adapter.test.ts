@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { DUCK_CATALOG, DUCK_TOOL, DUCK_TOOLS } from "../adapters/duck.ts";
+import { DUCK_CATALOG, DUCK_STAGE1_TOOLS, DUCK_TOOL, DUCK_TOOLS, DuckAdapter } from "../adapters/duck.ts";
 import { DUCK_REJECT_TEXT, DUCK_REJECT_TEXT_EN, DUCK_TEXT, DUCK_TEXT_EN } from "../adapters/duck-text.ts";
-import { INTEGRATION_TOOL_ID, isToolResult, toWireName, WIRE_NAME_MAX } from "../shared/aios-contracts.ts";
+import { INTEGRATION_TOOL_ID, isToolResult, toWireName, WIRE_NAME_MAX } from "../shared/aios-integrations.ts";
 import { ACK_REASONS } from "../shared/duck-link.ts";
 import { ctx, rig, sleep, until, type Rig } from "./helpers.ts";
 
@@ -36,6 +36,14 @@ describe("工具定義符合 AIOS 契約", () => {
     expect(ids.size).toBe(17);
     expect(Object.values(DUCK_TOOL).sort()).toEqual([...ids].sort());
     expect(DUCK_CATALOG).toMatchObject({ id: "duck", service: "duck", mock: "config" });
+  });
+
+  it("第一階段只啟用六個工具；開發用選項才全開", async () => {
+    expect(DUCK_TOOLS.filter((t) => t.enabled).map((t) => t.id).sort()).toEqual(["app.duck.express", "app.duck.gesture", "app.duck.look", "app.duck.status", "app.duck.stop", "app.duck.track"]);
+    expect([...DUCK_STAGE1_TOOLS].every((id) => DUCK_TOOLS.some((t) => t.id === id))).toBe(true);
+    r = await rig({ connect: false });
+    expect(new DuckAdapter(r.hub).tools().filter((t) => t.enabled)).toHaveLength(6);
+    expect(new DuckAdapter(r.hub, { enableAllTools: true }).tools().every((t) => t.enabled)).toBe(true);
   });
 
   it("沒有 external_commit，也沒有 presence／sound／resume／關扭力這類工具", () => {

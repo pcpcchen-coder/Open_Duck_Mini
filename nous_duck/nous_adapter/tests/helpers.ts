@@ -27,7 +27,7 @@ export async function rig(options: { duck?: Partial<MockDuckOptions>; hub?: Duck
     await duck.connect();
     await until(() => hub.snapshot().connected && hub.snapshot().state !== null);
   }
-  const adapter = new DuckAdapter(hub, { timing: FAST });
+  const adapter = new DuckAdapter(hub, { timing: FAST, enableAllTools: true });
   return {
     hub,
     duck,

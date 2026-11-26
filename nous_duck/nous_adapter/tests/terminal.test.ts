@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { toolResult, type ToolResult } from "../shared/aios-contracts.ts";
+import { toolResult, type ToolResult } from "../shared/aios-integrations.ts";
 import type { PresenceState } from "../shared/duck-link.ts";
 import { DuckTerminal, type TerminalEvent } from "../terminal/duck-terminal.ts";
 import { ManualPresenceSource } from "../terminal/manual-presence-source.ts";

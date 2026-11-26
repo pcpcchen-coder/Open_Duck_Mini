@@ -2,7 +2,7 @@
 
 # ④ Nous adapter (nous_adapter)
 
-Status (2026-11-25): **the code is complete and verified up to "unit/integration tests" and "end-to-end against line A's duckd in mock mode"; it has not been moved into AIOS yet, and no command has been issued to the real duck yet.**
+Status (2026-11-26): **the code is complete and verified up to "unit/integration tests" and "end-to-end against duckd's simulated body". D1, D2 and D4a have been moved into the AIOS branch `claude/duck-link` and a PR has been opened (flag off by default, not merged yet); it has not been tried with real voice yet, and no command has been issued to the real duck yet.**
 
 This directory holds code that **will later be moved back into AIOS**: it lets Nous use the duck through duck-link. Right now it can run standalone (without AIOS), for development and hands-on testing.
 
@@ -13,11 +13,12 @@ This directory holds code that **will later be moved back into AIOS**: it lets N
 | DuckTerminal ([`terminal/`](terminal/duck-terminal.ts)) | The entry point for duck events; the source interface and throttling for `presence` | Complete (AIOS's real events are not wired up yet; there is only the dev-only manual source) | Unit/integration tests (mock duck) |
 | `duckctl` ([`cli/`](cli/duckctl.ts)) | Issues `app.duck.*` from the terminal, without going through AIOS | Complete | Integration tests; tried by hand (against the mock) |
 | mock duck ([`mock/`](mock/mock-duck.ts)) | A **simulated** duck, for tests and trying things out only; `hello` and `state` carry `mock: true` | Complete | — |
-| Moving into AIOS | Registering the adapter, the `/duck-link` endpoint, real `presence` events | **Not started** (AIOS is read-only; for the plan see [`docs/aios-integration-plan.md`](docs/aios-integration-plan.en.md)) | — |
+| Dev-only text command ([`cli/text-command.ts`](cli/text-command.ts)) | `duckctl say-command "往左看"` ("look left"): fixed keyword rules map one sentence of text to one tool. **It is not Nous, not speech recognition, and not a language model** | Complete | Unit/integration tests (mock duck) |
+| Moving into AIOS | The `/duck-link` endpoint (D1), registering the adapter (D2, 6 tools in the first stage), session events → `presence` (D4a) | **Implemented on the AIOS branch `claude/duck-link`, PR awaiting review** (the user agreed on 2026-11-26; see [`docs/aios-integration-plan.md` §0](docs/aios-integration-plan.en.md#0-2026-11-26-update-d1-d2-and-d4a-implemented-on-an-aios-branch)) | AIOS's fixture tests (122) plus a local check against duckd's simulated body; no real hardware, no real voice |
 
 What has not been done and what cannot be claimed:
 
-- **Not integrated into Nous.** Right now voice cannot be used to tell the duck to do anything; that has to wait for the AIOS batches ([`docs/aios-integration-plan.md` §8](docs/aios-integration-plan.en.md#8-aios-batch-list-and-recommended-order)).
+- **It cannot yet be claimed that "the duck can be commanded by voice".** The AIOS-side code is on a branch, with the flag off by default, and not merged yet; nobody has tried it with real realtime voice. The steps for trying it are in §5 of `docs/validation/duck-link-2026-11-26.md` on the AIOS branch (starting a separate development instance, without affecting the running Nous), to be started by the user themselves.
 - **No command has been issued to the real duck.** All tool results come from a mock (the TypeScript mock here, or the mock body of line A's duckd). The real-hardware steps are written under "Against the real duck" below.
 - `presence` currently has only the **dev-only manual source** (`duckctl presence`), not events from a Nous voice session.
 - Voice is not here: for how Nous's voice reaches the duck see [`docs/voice-path.md`](docs/voice-path.en.md) (design, not implemented).
@@ -53,6 +54,7 @@ bin/duckctl gesture nod               # nod
 bin/duckctl express happy             # eye expression
 bin/duckctl presence speaking --level 0.4   # manually send interaction state (dev-only, not a Nous event)
 bin/duckctl go_to brother_room        # mission: confirmed only means "has set off"
+bin/duckctl say-command "往左看"      # dev-only: text → tool (fixed rules, not Nous; not sent if not recognised)
 bin/duckctl events --follow           # watch the events the duck reports
 bin/duckctl help                      # full usage
 ```
@@ -118,7 +120,7 @@ npm run typecheck
 npm test
 ```
 
-Results on 2026-11-25: 137 passed (`validator` 33, `hub` 23, `duck-adapter` 50, `terminal` 18, `cli` 13), about 4 seconds. The tests connect only to ephemeral local ports, do not touch 8791, and do not connect to the running Nous. The test tooling is the same as AIOS's: vitest 5.0.3, tsx 4.23.15, TypeScript 7.0.2.
+Results on 2026-11-26: 144 passed (`validator` 33, `hub` 24, `duck-adapter` 51, `terminal` 18, `cli` 18), about 4 seconds. The tests connect only to ephemeral local ports, do not touch 8791, and do not connect to the running Nous. The test tooling is the same as AIOS's: vitest 5.0.3, tsx 4.23.15, TypeScript 7.0.2.
 
 End-to-end check against line A's duckd (mock body):
 
@@ -154,6 +156,8 @@ Each tool's `effect`, parameters and description are as defined in [`adapters/du
 | `app.duck.follow_me` | reversible_write | Has started looking for you (not already following) | `walk`, `camera` |
 | `app.duck.wait_here` | reversible_write | state shows `mode: waiting` | — |
 
+**Only 6 are enabled in the first stage** (`DUCK_STAGE1_TOOLS`, decided by the user on 2026-11-26): `status`, `stop`, `look`, `gesture`, `express`, `track`. The definitions of the other 11 are all there, but with `enabled: false` and hidden from the human-readable catalogue; AIOS's Dispatcher returns `refused`／`disabled` for them. `duckctl` is the development entry point and has all 17 enabled (`enableAllTools`).
+
 When the duck reports a capability as `unsupported`, the corresponding tool is not sent and returns `refused` directly (`data.duck_reason: "unsupported"`, `data.capability`). With the duck's current hardware (only head servos and a speaker), the only ones that will move anything on the real duck are `status`, `stop`, `look` and `gesture`.
 
 duck-link commands not given to the model, and why:
@@ -174,14 +178,15 @@ Tools not done yet: `app.duck.announce` (whether to do it depends on the voice p
 
 | Path | Contents |
 |---|---|
-| `hub/duck-link-hub.ts` | duck-link hub and the `DuckLink` interface |
+| `hub/duck-link-hub.ts` | duck-link hub and the `DuckLink` interface; `start()` runs standalone, `attach(server)` attaches to an existing http server (the way the AIOS core connects it) |
 | `adapters/duck.ts` | Tool definitions and `DuckAdapter` |
 | `adapters/duck-exec.ts` | The shared flow: one command → ack → read-back → `ToolResult` |
 | `adapters/duck-text.ts` | Fixed sentences for results (Chinese and English) |
 | `terminal/duck-terminal.ts` | Event entry point (classification, mission records, sink) |
 | `terminal/presence.ts` | `PresenceDriver`: voice session events → `presence`, debouncing and throttling |
 | `terminal/manual-presence-source.ts` | The **dev-only** manual presence source |
-| `shared/aios-contracts.ts` | Minimal re-declaration of the AIOS contracts (source commit noted; delete when moving back into AIOS) |
+| `shared/aios-integrations.ts`, `aios-schema.ts`, `aios-contracts.ts` | Minimal re-declaration of the AIOS contracts, one file per AIOS module (source commit noted; the AIOS side imports the original files directly and does not need these three files) |
+| `cli/text-command.ts` | The **dev-only** text command rules (not Nous) |
 | `shared/duck-link.ts`, `shared/capabilities.ts` | duck-link message types; command → capability mapping |
 | `shared/validator.ts` | Validates against `../protocol/schemas/duck-link.v0.schema.json` (Ajv 8.20.0) |
 | `mock/mock-duck.ts` | The **simulated** duck |

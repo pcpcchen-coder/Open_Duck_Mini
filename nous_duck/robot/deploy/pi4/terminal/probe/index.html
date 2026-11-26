@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>PROBE_PENDING</title>
+<style>
+  body { font: 14px/1.5 monospace; margin: 16px; background: #111; color: #ddd; }
+  pre { white-space: pre-wrap; word-break: break-all; }
+</style>
+</head>
+<body>
+<h1>鴨子終端 spike：本機探測頁（不連 Nous、不出聲）</h1>
+<p>這一頁只檢查瀏覽器本身：麥克風權限與裝置、AudioContext、自動播放。播放的內容全部是數位靜音。
+結果寫在下面的 <code>#result</code> 與頁面標題（<code>PROBE_RESULT {json}</code>），給腳本讀。</p>
+<pre id="result">執行中…</pre>
+<script>
+"use strict";
+// 網址參數：
+//   ?loopback=1   取得麥克風後，在頁面內用兩個 RTCPeerConnection 互連（不經任何伺服器），
+//                 讓 Opus 編碼／解碼持續進行，用來估通話中的 CPU。收到的音軌接在「靜音」的 audio 元素上。
+//   ?gum_timeout_ms=20000   getUserMedia 等多久算卡住（沒人能按權限提示時會卡住）
+const params = new URLSearchParams(location.search);
+const GUM_TIMEOUT_MS = Number(params.get("gum_timeout_ms") || 20000);
+const WANT_LOOPBACK = params.get("loopback") === "1";
+//   ?enumerate_only=1   只查權限、列裝置、試 getUserMedia；不建立 AudioContext、不播放任何東西
+const ENUMERATE_ONLY = params.get("enumerate_only") === "1";
+
+const R = {
+  probe_version: 1,
+  started_at: new Date().toISOString(),
+  url: location.href,
+  user_agent: navigator.userAgent,
+  secure_context: window.isSecureContext,
+  has_media_devices: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+  has_rtc_peer_connection: typeof RTCPeerConnection === "function",
+  has_set_sink_id: typeof HTMLMediaElement.prototype.setSinkId === "function",
+  hardware_concurrency: navigator.hardwareConcurrency,
+  device_memory_gb: navigator.deviceMemory || null,
+  done: false,
+};
+
+function publish() {
+  const json = JSON.stringify(R);
+  document.getElementById("result").textContent = JSON.stringify(R, null, 2);
+  document.title = (R.done ? "PROBE_RESULT " : "PROBE_PARTIAL ") + json;
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// 每一步都加時限並記下目前做到哪一步：無螢幕環境裡有些 API 會一直不回來，要看得出卡在哪。
+function step(name) { R.step = name; publish(); }
+function withTimeout(promise, ms, name) {
+  let timer;
+  const t = new Promise((_, reject) => { timer = setTimeout(() => reject({ name: "ProbeTimeout", message: name + " 超過 " + ms + " ms 沒有結果" }), ms); });
+  return Promise.race([promise, t]).finally(() => clearTimeout(timer));
+}
+const errInfo = (e) => ({ name: (e && e.name) || "Error", message: String((e && e.message) || e).slice(0, 200) });
+
+async function listDevices() {
+  try {
+    const all = await withTimeout(navigator.mediaDevices.enumerateDevices(), 10000, "enumerateDevices");
+    const pick = (kind) => all.filter((d) => d.kind === kind);
+    const brief = (d) => ({ label: d.label, has_id: d.deviceId !== "" });
+    return {
+      audioinput: pick("audioinput").length,
+      audiooutput: pick("audiooutput").length,
+      videoinput: pick("videoinput").length,
+      audioinput_devices: pick("audioinput").map(brief),
+      audiooutput_devices: pick("audiooutput").map(brief),
+    };
+  } catch (e) {
+    return { error: errInfo(e) };
+  }
+}
+
+async function micPermission() {
+  try {
+    const st = await withTimeout(navigator.permissions.query({ name: "microphone" }), 5000, "permissions.query");
+    return st.state;
+  } catch (e) {
+    return "query_failed:" + errInfo(e).name;
+  }
+}
+
+async function probeGetUserMedia() {
+  const out = { ok: false, timeout_ms: GUM_TIMEOUT_MS };
+  if (!R.has_media_devices) { out.error = { name: "NoMediaDevices", message: "navigator.mediaDevices 不存在" }; return out; }
+  const t0 = performance.now();
+  let timer;
+  const timeout = new Promise((resolve) => { timer = setTimeout(() => resolve("TIMEOUT"), GUM_TIMEOUT_MS); });
+  const gum = navigator.mediaDevices.getUserMedia({ audio: true }).then((s) => ({ stream: s }), (e) => ({ error: e }));
+  const res = await Promise.race([gum, timeout]);
+  clearTimeout(timer);
+  out.elapsed_ms = Math.round(performance.now() - t0);
+  if (res === "TIMEOUT") {
+    // 沒有成功也沒有失敗：通常是權限提示在等人按
+    out.error = { name: "ProbeTimeout", message: "getUserMedia 在時限內沒有結果（可能卡在權限提示）" };
+    return out;
+  }
+  if (res.error) { out.error = errInfo(res.error); return out; }
+  out.ok = true;
+  const tracks = res.stream.getAudioTracks();
+  out.tracks = tracks.map((t) => ({ label: t.label, ready_state: t.readyState, muted: t.muted, settings: t.getSettings() }));
+  out.stream = res.stream;
+  return out;
+}
+
+// 量輸入訊號 1 秒的 RMS。只接 AnalyserNode，不接到輸出，所以不會出聲。
+async function inputLevel(ctx, stream) {
+  try {
+    const src = ctx.createMediaStreamSource(stream);
+    const an = ctx.createAnalyser();
+    an.fftSize = 2048;
+    src.connect(an);
+    const buf = new Float32Array(an.fftSize);
+    let peak = 0, sumsq = 0, n = 0;
+    const end = performance.now() + 1000;
+    while (performance.now() < end) {
+      an.getFloatTimeDomainData(buf);
+      for (const v of buf) { sumsq += v * v; n++; if (Math.abs(v) > peak) peak = Math.abs(v); }
+      await sleep(50);
+    }
+    src.disconnect();
+    return { rms: Number(Math.sqrt(sumsq / Math.max(n, 1)).toFixed(5)), peak: Number(peak.toFixed(5)) };
+  } catch (e) {
+    return { error: errInfo(e) };
+  }
+}
+
+async function probeAudioContext() {
+  const out = {};
+  let ctx;
+  try {
+    ctx = new AudioContext();
+  } catch (e) {
+    out.error = errInfo(e);
+    return { out, ctx: null };
+  }
+  out.state_initial = ctx.state;
+  out.sample_rate = ctx.sampleRate;
+  out.base_latency = ctx.baseLatency;
+  // 播一段全 0 的緩衝，再經過增益 0：雙重靜音
+  const buf = ctx.createBuffer(1, Math.round(ctx.sampleRate * 0.5), ctx.sampleRate);
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const gain = ctx.createGain();
+  gain.gain.value = 0;
+  src.connect(gain).connect(ctx.destination);
+  let ended = false;
+  src.onended = () => { ended = true; };
+  const t0 = ctx.currentTime;
+  try { src.start(); out.silent_buffer_started = true; } catch (e) { out.silent_buffer_started = false; out.start_error = errInfo(e); }
+  await sleep(1000);
+  out.state_after_1s = ctx.state;
+  out.current_time_advanced_s = Number((ctx.currentTime - t0).toFixed(3));
+  out.silent_buffer_ended = ended;
+  out.output_latency = ctx.outputLatency;
+  // 沒有使用者手勢就能跑起來，才算自動播放被允許
+  out.autoplay_allowed = ctx.state === "running" && out.current_time_advanced_s > 0;
+  return { out, ctx };
+}
+
+function silentWavUrl(seconds) {
+  const rate = 8000, n = rate * seconds;
+  const b = new ArrayBuffer(44 + n * 2), v = new DataView(b);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); w(8, "WAVE"); w(12, "fmt ");
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  w(36, "data"); v.setUint32(40, n * 2, true); // 樣本全是 0
+  return URL.createObjectURL(new Blob([b], { type: "audio/wav" }));
+}
+
+// 「沒有靜音」的 audio 元素播一段全 0 的 wav：自動播放政策看的是元素有沒有靜音，不是內容。
+async function probeElementAutoplay() {
+  const out = {};
+  const el = new Audio();
+  el.src = silentWavUrl(1);
+  el.muted = false;
+  try {
+    await withTimeout(el.play(), 8000, "audio.play");
+    out.allowed = true;
+    await sleep(300);
+    out.current_time_s = Number(el.currentTime.toFixed(3));
+    out.paused = el.paused;
+  } catch (e) {
+    out.allowed = false;
+    out.error = errInfo(e);
+  }
+  return out;
+}
+
+// 頁面內的 WebRTC 迴路：pc1 送麥克風音軌、pc2 收。沒有 STUN／TURN、沒有信令伺服器。
+async function startLoopback(stream) {
+  const out = { started: false };
+  try {
+    const pc1 = new RTCPeerConnection({ iceServers: [] });
+    const pc2 = new RTCPeerConnection({ iceServers: [] });
+    pc1.onicecandidate = (e) => { if (e.candidate) pc2.addIceCandidate(e.candidate).catch(() => {}); };
+    pc2.onicecandidate = (e) => { if (e.candidate) pc1.addIceCandidate(e.candidate).catch(() => {}); };
+    const sink = new Audio();
+    sink.muted = true; // 收到的聲音（假裝置是嗶聲）絕不能播出來
+    pc2.ontrack = (e) => { sink.srcObject = e.streams[0] || new MediaStream([e.track]); sink.play().catch(() => {}); out.remote_track = true; };
+    for (const t of stream.getAudioTracks()) pc1.addTrack(t, stream);
+    const offer = await pc1.createOffer();
+    await pc1.setLocalDescription(offer);
+    await pc2.setRemoteDescription(offer);
+    const answer = await pc2.createAnswer();
+    await pc2.setLocalDescription(answer);
+    await pc1.setRemoteDescription(answer);
+    out.started = true;
+    out.sink_muted = true;
+    const m = /a=rtpmap:\d+ ([A-Za-z0-9]+)\/(\d+)/.exec(answer.sdp || "");
+    out.first_codec_in_answer = m ? m[1] + "/" + m[2] : null;
+    const update = async () => {
+      out.connection_state = pc1.connectionState;
+      out.ice_state = pc1.iceConnectionState;
+      const s1 = await pc1.getStats(), s2 = await pc2.getStats();
+      s1.forEach((r) => { if (r.type === "outbound-rtp" && r.kind === "audio") { out.packets_sent = r.packetsSent; out.bytes_sent = r.bytesSent; } });
+      s2.forEach((r) => {
+        if (r.type === "inbound-rtp" && r.kind === "audio") {
+          out.packets_received = r.packetsReceived; out.packets_lost = r.packetsLost;
+          out.jitter_s = r.jitter; out.total_samples_received = r.totalSamplesReceived;
+        }
+      });
+      out.updated_at = new Date().toISOString();
+      publish();
+    };
+    setInterval(() => { update().catch(() => {}); }, 5000);
+    await sleep(2000);
+    await update();
+  } catch (e) {
+    out.error = errInfo(e);
+  }
+  return out;
+}
+
+(async () => {
+  try {
+    step("permissions.query");
+    R.mic_permission_before = await micPermission();
+    step("enumerateDevices(before)");
+    R.devices_before = await listDevices();
+
+    step("getUserMedia");
+    const gum = await probeGetUserMedia();
+    const stream = gum.stream; delete gum.stream;
+    R.get_user_media = gum;
+    step("after getUserMedia");
+    R.mic_permission_after = await micPermission();
+    R.devices_after = await listDevices();
+
+    if (ENUMERATE_ONLY) { R.enumerate_only = true; throw { name: "EnumerateOnly", message: "依參數略過播放測試" }; }
+    step("AudioContext");
+    const ac = await probeAudioContext();
+    R.audio_context = ac.out;
+    if (stream && ac.ctx) { step("inputLevel"); R.input_level_1s = await inputLevel(ac.ctx, stream); }
+    // 測完就關掉，閒置量測才不會包含一個一直在跑的 AudioContext
+    if (ac.ctx) { try { await withTimeout(ac.ctx.close(), 3000, "AudioContext.close"); R.audio_context.closed = true; } catch (e) { R.audio_context.closed = false; } }
+    step("audio element autoplay");
+    R.audio_element_autoplay = await probeElementAutoplay();
+
+    if (WANT_LOOPBACK) {
+      step("webrtc loopback");
+      R.webrtc_loopback = stream ? await startLoopback(stream) : { started: false, skipped: "沒有麥克風音軌" };
+    }
+    R.step = "done";
+  } catch (e) {
+    if (!(e && e.name === "EnumerateOnly")) R.fatal = errInfo(e);
+  }
+  R.finished_at = new Date().toISOString();
+  R.done = true;
+  publish();
+})();
+window.addEventListener("error", (e) => { R.script_error = String(e.message).slice(0, 200); publish(); });
+</script>
+</body>
+</html>

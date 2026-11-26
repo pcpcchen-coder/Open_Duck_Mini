@@ -2,12 +2,42 @@
 
 # AIOS 整合計畫：把鴨子接進 Nous
 
-狀態：**計畫（尚未在 AIOS 動手）**。日期：2026-11-25。這份文件是之後在 AIOS repo 開批次的依據；在 AIOS 完成並驗證之前，不在任何地方宣稱「鴨子已整合進 Nous」。
+狀態：**D1、D2、D4a 已在 AIOS 的分支實作並開 PR（2026-11-26，旗標預設關閉，還沒合併、沒有用真實語音試過）；D3、D4b、D5～D7 仍是計畫。** 日期：2026-11-25，2026-11-26 更新（§0）。在 AIOS 合併並驗證之前，不在任何地方宣稱「鴨子已整合進 Nous」。
 
 - 查閱的 AIOS：`pcpcchen-coder/AIOS` `main`，commit `c85307861f7562803fb3776407493da49cdc8a83`（2026-11-24），`git clone` 到暫存目錄**唯讀**查閱；沒有執行、沒有修改、沒有對執行中的 Nous 發請求。
 - 除非另外註明，路徑都相對於 AIOS 的 `prototype/ambient-shell/`；`檔案:行號` 是該 commit 的行號。
 - 「事實」是直接從程式碼讀到的；「建議」「推論」是本文件的判斷，會明確標示。
 - 本 repo 這一端的現況見 [`../README.md`](../README.md)；語音怎麼到鴨子另見 [`voice-path.md`](voice-path.md)。
+
+## 0. 2026-11-26 更新：D1、D2、D4a 已在 AIOS 分支實作
+
+使用者 2026-11-26 同意在 AIOS repo 的**獨立 clone**（不是正在跑 Nous 的那個 checkout）開分支實作並開 PR。結果：
+
+- 分支 `claude/duck-link`（基於 AIOS main `c853078`；2026-11-26 確認 `origin/main` 仍是這個 commit），PR：[pcpcchen-coder/AIOS#156](https://github.com/pcpcchen-coder/AIOS/pull/156)。**沒有合併**，沒有重啟、切換或改動正在跑的 Nous。
+- 旗標 `NOUS_DUCK`（預設關閉）。關閉時沒有端點、沒有 adapter、沒有觀察者；AIOS 自己的完整檢查（`node scripts/verify-aios.mjs`）通過。
+- 驗證層級：AIOS 的 fixture 測試（新增 5 個測試檔 122 項，對面是標示 mock 的假鴨子）＋一次「AIOS 分支的 hub 與 Dispatcher 對 duckd 模擬身體」的本機檢查（雙向 0 則不合 schema 的訊息）。**沒有實機、沒有真實語音。** 細節在 AIOS 分支的 `docs/validation/duck-link-2026-11-26.md`。
+- 使用者要怎麼試（另起開發實例：不同的埠與設定目錄，不影響正在跑的 Nous）寫在同一份文件的 §5。那些步驟會連雲端模型、會出聲，**沒有人執行過**，要使用者自己啟動。
+
+實際做法和本文件 §3～§6 的計畫不同的地方：
+
+| 計畫 | 實際 | 原因 |
+|---|---|---|
+| hub 放 `server/duck-link.ts`，其餘散在 `server/` | 都放在 `server/duck/`：`link.ts`（hub）、`schema.ts`、`exec.ts`、`text.ts`、`presence.ts`、`session-bridge.ts`；adapter 在 `server/integrations/adapters/duck.ts`；型別在 `shared/duck-link.ts`、`shared/duck-capabilities.ts` | 一個資料夾好找、好整包拿掉 |
+| schema 用 `fs` 讀檔 | 用 JSON import（`with { type: "json" }`），和 AIOS 其他地方一致 | 不依賴執行時的檔案路徑 |
+| 17 個工具全部註冊，再決定開哪些 | 17 個都定義，**只啟用 6 個**：`status`、`stop`、`look`、`gesture`、`express`、`track`；其餘 `enabled: false`、`catalog.hidden: true` | 使用者 2026-11-26 的決定。沒啟用的不進模型的工具表，也不列在給人看的指令表 |
+| `presence` 由 DuckTerminal 送 | 核心直接用 `sendDuckPresence()`；DuckTerminal 的事件入口（D3）這一批沒有搬 | D3 不在這一批；presence 不該依賴 adapter 有沒有註冊 |
+| D4a 的觀察點接到 `PresenceDriver.handle()` | 中間多一層 `createPresenceBridge()`：處理「決定開始但一直沒連上」（60 秒後回 idle）、兩通同時存在、改路徑時工作階段 ID 改變；委派開始時自己切到 working | 核心的事件比頁面的 phase 粗，要有地方補這些情況 |
+| 觀察點欄位叫 `onSessionChange` 之類 | `RealtimeSessionsOptions.onSessionEvent`，事件型別 `SessionLifecycleEvent`（`started`／`connected`／`delegation`／`ended`）；`createApp` 的選項是 `voiceSessionObserver` | `RealtimeSessions` 是在 `createApp` 裡建立的（`server/app.ts:285`），不是在 `nous.ts` |
+| Ajv 要不要加待決 | 加了 `ajv` 8.20.0（`package.json` 與 lock） | 兩端要用同一份 schema 檔驗證；standalone 產生器沒有試 |
+
+對 AIOS 契約的逐項比對：本 repo 的 `shared/aios-integrations.ts`、`aios-schema.ts`、`aios-contracts.ts` 是最小重新宣告。把 adapter 原樣搬進 AIOS、import 改指向 AIOS 的原檔之後，`tsc --noEmit` 沒有任何錯誤——用到的型別（`ToolResult`、`toolResult`、`IntegrationToolId`、`ToolDefinition`、`AdapterCatalog`、`ExecutionContext`、`HealthReport`、`IntegrationAdapter`、`InputSchema`）和 AIOS `c853078` 的真實宣告相容。本 repo 沒有宣告、AIOS 有的：`ToolDefinition.legacyName`、`AdapterCatalog.builtin`、`PropertySchema` 的 `scalar`、`ToolCapability`、`IntegrationFunctionSpec`、`CAPABILITY_STATUSES`、`fromWireName`、`serviceOf`、頁面狀態的型別；DuckAdapter 都用不到。
+
+搬的時候才發現、之前計畫沒寫到的事：
+
+- AIOS 的英文指令表（`README.en.md`）不是自動產生的，要手動加列。
+- AIOS 的 `tests/commands-from-catalog.test.ts` 的基準檔含當地時間，在 Asia/Taipei 直接跑會失敗（和鴨子無關）；重新產生基準檔與跑測試都要 `TZ=UTC`。
+- AIOS 的雙語檢查要求兩個語言版本的程式碼區塊**逐位元組相同**（程式碼區塊裡的中文註解不能翻）。
+- 測試用的假 adapter 依賴不能用「一碰就丟錯」的 Proxy：`DuckAdapter.mock` 會讀連線狀態，總表與指令頁會讀它。
 
 ## 1. 摘要
 

@@ -1,5 +1,5 @@
 import type { DuckLink } from "../hub/duck-link-hub.ts";
-import type { ToolResult } from "../shared/aios-contracts.ts";
+import type { ToolResult } from "../shared/aios-integrations.ts";
 import type { DuckEventName, EventMessage, PresenceState } from "../shared/duck-link.ts";
 import { PresenceDriver, type PresenceDriverOptions, type PresenceSource } from "./presence.ts";
 
