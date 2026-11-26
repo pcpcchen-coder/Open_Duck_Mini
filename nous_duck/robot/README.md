@@ -19,7 +19,7 @@
 | `deploy/` | 安裝與部署：pip 從 git 安裝上游 runtime 並鎖 commit、systemd 服務；[`deploy/pi4/`](deploy/pi4/README.md) Pi 4 的 SD 卡燒錄、首次開機、開機後檢查、上游 runtime 安裝 | 規劃中；`pi4/` 燒錄與 runtime 安裝實機通過（[開機](../docs/validation/pi4-firstboot-2026-11-22.md)、[runtime](../docs/validation/pi4-runtime-2026-11-22.md)）；systemd 服務未做 |
 | `navigation/` | （感知板）定位融合（VIO＋AprilTag，**不用步數**）、拓撲與柵格路徑規劃、避障、回充對位（[ADR-0002](../docs/adr/ADR-0002-indoor-localization-and-navigation.md)、[ADR-0004](../docs/adr/ADR-0004-docking-and-charging.md)）；跟隨任務與原地等待（[ADR-0007](../docs/adr/ADR-0007-follow-me-and-wait-here.md)） | 規劃中 |
 | `perception/` | （感知板）雙目擷取、深度、AprilTag 偵測、人臉偵測與特徵（[ADR-0003](../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md)） | 規劃中 |
-| `audio/` | （感知板）喚醒詞（sherpa-onnx KWS）、聲源方向、語音串流、喇叭（ADR-0003） | 規劃中 |
+| `audio/` | （感知板）喚醒詞（sherpa-onnx KWS）、聲源方向、語音串流、喇叭（ADR-0003）；變聲輸出 `duck_voice`、本機音效 `duck_raw`、播放閘門與音量上限（[ADR-0010](../docs/adr/ADR-0010-duck-voice.md)） | 規劃中 |
 | [`servo_console/`](servo_console/README.md) | **舵機控制台**：Pi 4 上的網頁工具，控制 14 顆舵機、即時 3D 姿勢、姿勢與偏移、感測器、緊急停止（本機開發工具，不經過 Nous） | 第一版可用（[驗證](../docs/validation/servo-console-2026-11-25.md)：單元測試、模擬、實機只動頭部） |
 | `tests/` | 單元測試（safety 規則、意圖轉換、schema 驗證）；不需要硬體的部分可在雲端跑 | `test_look_at.py`（15 項）；其他規劃中 |
 

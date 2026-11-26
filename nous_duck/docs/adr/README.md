@@ -13,6 +13,7 @@
 | [ADR-0007](ADR-0007-follow-me-and-wait-here.md) | 跟著我來與在這等我（跟隨任務、本機停止句、原地等待） | 草案 | 2026-11-19 |
 | [ADR-0008](ADR-0008-single-board-pi4.md) | 單板 Pi 4，取代 Pi Zero 2 W（Pi 4 裝機身、Python 3.11 跑上游 runtime、5 V 電源要重選；試用期，達不到門檻拆回雙板） | 採用（試用期） | 2026-11-22 |
 | [ADR-0009](ADR-0009-duck-link-transport-and-command-bridge.md) | duck-link 傳輸（SSH 通道＋WebSocket）與鴨子端指令橋接（緊急停止、暫停時讀電壓） | 部分採用 | 2026-11-13 |
+| [ADR-0010](ADR-0010-duck-voice.md) | 鴨子的語音（Nous 的聲音加變聲、本機音效、回音消除、喇叭） | 部分採用 | 2026-11-15（2026-11-26 依 ADR-0008 與標準版 XVF3800 修訂） |
 | [ADR-0013](ADR-0013-camera-always-on-and-home-monitoring.md) | 鏡頭常開與家庭監控（C：只回報文字事件）、夜間紅外線、渲染程式故障保護 | 部分採用 | 2026-11-18 |
 
 編號說明：本序列只屬於本 repo 的 `nous_duck/docs/adr/`，與 AIOS repo 的 `docs/adr/`（ADR-0001 本機家人辨識等）是不同的序列。
