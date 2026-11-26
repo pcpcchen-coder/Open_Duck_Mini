@@ -2,7 +2,7 @@
 
 - 狀態：**草案（Proposed）**
 - 日期：2026-11-12
-- 相關：[R-001](../requirements/R-001-mobile-companion.md)、[ADR-0001](ADR-0001-duck-role-in-nous.md)、[ADR-0002](ADR-0002-indoor-localization-and-navigation.md)、[ADR-0005](ADR-0005-compute-and-sensor-upgrade.md)
+- 相關：[R-001](../requirements/R-001-mobile-companion.md)、[ADR-0001](ADR-0001-duck-role-in-nous.md)、[ADR-0002](ADR-0002-indoor-localization-and-navigation.md)、[ADR-0005](ADR-0005-compute-and-sensor-upgrade.md)、[ADR-0010](ADR-0010-duck-voice.md)（語音鏈、變聲、本機音效）
 - AIOS 參考（唯讀，main `7b0257d`）：`terminals/rpi4/`、`docs/adr/ADR-0001-local-family-recognition.md`（本機家人辨識）、`docs/adr/ADR-0003-local-wake-and-voice-recognition.md`（本機喚醒與聲音辨識）、`docs/Current_Implementation_Status.md`
 
 ## 1. 背景
