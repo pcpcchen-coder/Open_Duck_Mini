@@ -49,7 +49,7 @@ uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requi
 .venv/bin/python -m walk_sim.measure --out ../docs/validation/data/walk-measure-2026-11-25.json   # 約 3 分鐘
 
 # 加裝後的質量模型（質量預算在 mass_budget/）
-.venv/bin/python -m walk_sim.mass_compare --out ../docs/validation/data/mass-model-2026-11-26.json  # 4 核約 18 分鐘
+.venv/bin/python -m walk_sim.mass_compare --out ../docs/validation/data/mass-model-2026-11-26.json  # 4 核約 22 分鐘
 
 # 端到端：充電座 → 房間 → return_home，輸出軌跡圖 trips.png 與 summary.json
 .venv/bin/python -m nav_sim.demo --trips 10 --seed 100 --out nav_demo_out --topview

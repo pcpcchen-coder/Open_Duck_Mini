@@ -98,16 +98,17 @@ def test_budget_total_mass_matches_sum():
     up = _subtree(build_model(ModelOptions()))
     p2 = _subtree(build_model(ModelOptions(mass_items=tuple(items))))
     assert p2 - up == pytest.approx(sum(i.mass_kg for i in items), abs=1e-9)
-    # 估計值的增量：手算 −15＋50＋10＋15＋30＋20＋42＋10＋15＋5＋8.4＋8.4＋10＋0 = 208.8 g。
-    assert p2 - up == pytest.approx(0.2088, abs=1e-6)
+    # 估計值的增量：手算 −15＋50＋10＋15＋20＋42＋10（機身）＋40＋15＋5＋8.4＋8.4＋10＋0（頭）= 218.8 g。
+    assert p2 - up == pytest.approx(0.2188, abs=1e-6)
 
 
 def test_model_summary_moves_head_mass():
     b = load_budget(BUDGET)
     up = model_summary(build_model(ModelOptions()))
     p2 = model_summary(build_model(ModelOptions(mass_items=tuple(budget_items(b, "nominal")))))
-    # 頭部（head_assembly 以下）：拿掉 Pi Zero 15 g，加上鏡頭、補光、雙眼、線材共 46.8 g → 淨增 31.8 g。
-    assert p2["head_assembly_mass_kg"] - up["head_assembly_mass_kg"] == pytest.approx(0.0318, abs=1e-4)
+    # 頭部（head_assembly 以下）：拿掉 Pi Zero 15 g，加上麥克風 40 g、鏡頭 15 g、補光 5 g、
+    # 雙眼 16.8 g、線材 10 g 共 86.8 g → 淨增 71.8 g。
+    assert p2["head_assembly_mass_kg"] - up["head_assembly_mass_kg"] == pytest.approx(0.0718, abs=1e-4)
 
 
 @pytest.mark.slow

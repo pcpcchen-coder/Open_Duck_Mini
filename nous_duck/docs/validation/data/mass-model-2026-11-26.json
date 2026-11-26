@@ -3,7 +3,7 @@
  "note": "MuJoCo 模擬值（上游策略 BEST_WALK_ONNX_2.onnx、walk_sim 模型）；加裝件的重量與位置都是估計，沒有秤過，不是實機量測",
  "budget": {
   "file": "sim/mass_budget/p2_single_pi4.json",
-  "version": 1,
+  "version": 2,
   "date": "2026-11-26"
  },
  "onset_phases": [
@@ -282,13 +282,13 @@
      ]
     },
     {
-     "id": "mic_xvf3800_flex",
-     "body": "trunk_assembly",
-     "mass_g": 15.0,
+     "id": "mic_xvf3800_std",
+     "body": "head_assembly",
+     "mass_g": 25.0,
      "pos_base_m": [
-      -0.04,
       0.0,
-      0.106
+      0.0,
+      0.24
      ]
     },
     {
@@ -373,36 +373,36 @@
     }
    ],
    "static": {
-    "total_mass_kg": 2.2085,
+    "total_mass_kg": 2.2185,
     "com_base_m": [
-     -0.0287,
+     -0.0283,
      -0.0,
-     0.0434
+     0.0451
     ],
-    "head_chain_mass_kg": 0.5569,
+    "head_chain_mass_kg": 0.5819,
     "head_chain_com_base_m": [
-     0.015,
+     0.0143,
      -0.0012,
-     0.1913
+     0.1934
     ],
-    "head_assembly_mass_kg": 0.382,
+    "head_assembly_mass_kg": 0.407,
     "gravity_torque_home_Nm": {
-     "neck_pitch": 0.0763,
-     "head_pitch": 0.0763,
+     "neck_pitch": 0.0761,
+     "head_pitch": 0.0761,
      "head_yaw": 0.0,
      "head_roll": 0.0079
     },
     "neck_torque_max_Nm": {
-     "neck_pitch": 0.5288,
-     "head_pitch": 0.2171
+     "neck_pitch": 0.5628,
+     "head_pitch": 0.2367
     }
    },
    "stand": {
     "fallen": false,
     "stepping_fraction": 0.0,
     "drift_m": 0.0115,
-    "tilt_max_deg": 6.28,
-    "base_z_mean_m": 0.1658
+    "tilt_max_deg": 6.33,
+    "base_z_mean_m": 0.1657
    },
    "walk": [
     {
@@ -411,9 +411,9 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.1145,
-     "ratio": 0.763,
-     "tilt_max_deg": 6.4
+     "actual_mean": 0.1155,
+     "ratio": 0.77,
+     "tilt_max_deg": 6.3
     },
     {
      "axis": "vx",
@@ -421,9 +421,9 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": -0.0491,
-     "ratio": 0.327,
-     "tilt_max_deg": 6.1
+     "actual_mean": -0.0505,
+     "ratio": 0.337,
+     "tilt_max_deg": 6.0
     },
     {
      "axis": "yaw_rate",
@@ -431,8 +431,8 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.833,
-     "ratio": 0.833,
+     "actual_mean": 0.8462,
+     "ratio": 0.846,
      "tilt_max_deg": 5.5
     },
     {
@@ -441,9 +441,9 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": -0.8769,
-     "ratio": 0.877,
-     "tilt_max_deg": 5.5
+     "actual_mean": -0.9077,
+     "ratio": 0.908,
+     "tilt_max_deg": 5.6
     },
     {
      "axis": "vy",
@@ -506,27 +506,27 @@
      "cmd_rad": 0.5,
      "fallen": false,
      "tilt_max_deg": 5.6,
-     "actual_rad": 0.449
+     "actual_rad": 0.443
     },
     {
      "joint": "head_yaw",
      "cmd_rad": -0.5,
      "fallen": false,
      "tilt_max_deg": 5.6,
-     "actual_rad": -0.637
+     "actual_rad": -0.638
     },
     {
      "joint": "head_yaw",
      "cmd_rad": 1.0,
      "fallen": false,
      "tilt_max_deg": 5.6,
-     "actual_rad": 0.968
+     "actual_rad": 0.971
     },
     {
      "joint": "head_yaw",
      "cmd_rad": -1.0,
      "fallen": true,
-     "tilt_max_deg": 47.1,
+     "tilt_max_deg": 48.3,
      "actual_rad": -1.215
     },
     {
@@ -534,13 +534,13 @@
      "cmd_rad": 0.3,
      "fallen": false,
      "tilt_max_deg": 5.6,
-     "actual_rad": 0.192
+     "actual_rad": 0.193
     },
     {
      "joint": "head_pitch",
      "cmd_rad": -0.78,
      "fallen": false,
-     "tilt_max_deg": 7.5,
+     "tilt_max_deg": 7.6,
      "actual_rad": -0.786
     },
     {
@@ -548,28 +548,28 @@
      "cmd_rad": 0.5,
      "fallen": false,
      "tilt_max_deg": 5.6,
-     "actual_rad": 0.411
+     "actual_rad": 0.414
     },
     {
      "joint": "head_roll",
      "cmd_rad": -0.5,
      "fallen": false,
-     "tilt_max_deg": 5.7,
-     "actual_rad": -0.52
+     "tilt_max_deg": 5.6,
+     "actual_rad": -0.521
     },
     {
      "joint": "neck_pitch",
      "cmd_rad": 0.5,
      "fallen": false,
-     "tilt_max_deg": 6.5,
-     "actual_rad": 0.731
+     "tilt_max_deg": 6.3,
+     "actual_rad": 0.733
     },
     {
      "joint": "neck_pitch",
      "cmd_rad": -0.34,
      "fallen": false,
-     "tilt_max_deg": 6.0,
-     "actual_rad": -0.153
+     "tilt_max_deg": 5.9,
+     "actual_rad": -0.154
     }
    ],
    "fall_rate": {
@@ -579,8 +579,8 @@
     "falls": 0,
     "fall_rate": 0.0,
     "fall_times_s": [],
-    "tilt_max_deg_p50": 6.9,
-    "tilt_max_deg_worst": 8.5
+    "tilt_max_deg_p50": 7.0,
+    "tilt_max_deg_worst": 8.3
    }
   },
   {
@@ -629,13 +629,13 @@
      ]
     },
     {
-     "id": "mic_xvf3800_flex",
-     "body": "trunk_assembly",
-     "mass_g": 30.0,
+     "id": "mic_xvf3800_std",
+     "body": "head_assembly",
+     "mass_g": 40.0,
      "pos_base_m": [
-      -0.04,
       0.0,
-      0.106
+      0.0,
+      0.24
      ]
     },
     {
@@ -720,36 +720,36 @@
     }
    ],
    "static": {
-    "total_mass_kg": 2.2703,
+    "total_mass_kg": 2.2803,
     "com_base_m": [
-     -0.0289,
+     -0.0282,
      0.0001,
-     0.0446
+     0.0472
     ],
-    "head_chain_mass_kg": 0.5677,
+    "head_chain_mass_kg": 0.6077,
     "head_chain_com_base_m": [
-     0.0153,
+     0.0143,
      -0.0009,
-     0.1916
+     0.1948
     ],
-    "head_assembly_mass_kg": 0.3928,
+    "head_assembly_mass_kg": 0.4328,
     "gravity_torque_home_Nm": {
-     "neck_pitch": 0.0798,
-     "head_pitch": 0.0798,
+     "neck_pitch": 0.0794,
+     "head_pitch": 0.0794,
      "head_yaw": 0.0,
      "head_roll": 0.0065
     },
     "neck_torque_max_Nm": {
-     "neck_pitch": 0.5415,
-     "head_pitch": 0.2236
+     "neck_pitch": 0.5959,
+     "head_pitch": 0.2549
     }
    },
    "stand": {
     "fallen": false,
-    "stepping_fraction": 0.002,
-    "drift_m": 0.0115,
-    "tilt_max_deg": 6.39,
-    "base_z_mean_m": 0.1656
+    "stepping_fraction": 0.0,
+    "drift_m": 0.0117,
+    "tilt_max_deg": 6.33,
+    "base_z_mean_m": 0.1655
    },
    "walk": [
     {
@@ -758,9 +758,9 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.114,
-     "ratio": 0.76,
-     "tilt_max_deg": 6.5
+     "actual_mean": 0.1149,
+     "ratio": 0.766,
+     "tilt_max_deg": 6.3
     },
     {
      "axis": "vx",
@@ -768,9 +768,9 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": -0.0481,
-     "ratio": 0.32,
-     "tilt_max_deg": 6.1
+     "actual_mean": -0.051,
+     "ratio": 0.34,
+     "tilt_max_deg": 5.9
     },
     {
      "axis": "yaw_rate",
@@ -778,9 +778,9 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.8402,
-     "ratio": 0.84,
-     "tilt_max_deg": 5.5
+     "actual_mean": 0.8582,
+     "ratio": 0.858,
+     "tilt_max_deg": 5.4
     },
     {
      "axis": "yaw_rate",
@@ -788,9 +788,9 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": -0.884,
-     "ratio": 0.884,
-     "tilt_max_deg": 5.7
+     "actual_mean": -0.9086,
+     "ratio": 0.909,
+     "tilt_max_deg": 5.5
     },
     {
      "axis": "vy",
@@ -798,8 +798,8 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.1106,
-     "ratio": 0.553,
+     "actual_mean": 0.1115,
+     "ratio": 0.557,
      "tilt_max_deg": 5.6
     }
    ],
@@ -853,14 +853,14 @@
      "cmd_rad": 0.5,
      "fallen": false,
      "tilt_max_deg": 5.6,
-     "actual_rad": 0.448
+     "actual_rad": 0.439
     },
     {
      "joint": "head_yaw",
      "cmd_rad": -0.5,
      "fallen": false,
      "tilt_max_deg": 5.6,
-     "actual_rad": -0.639
+     "actual_rad": -0.64
     },
     {
      "joint": "head_yaw",
@@ -873,21 +873,21 @@
      "joint": "head_yaw",
      "cmd_rad": -1.0,
      "fallen": true,
-     "tilt_max_deg": 45.5,
-     "actual_rad": -1.217
+     "tilt_max_deg": 46.8,
+     "actual_rad": -1.218
     },
     {
      "joint": "head_pitch",
      "cmd_rad": 0.3,
      "fallen": false,
      "tilt_max_deg": 5.6,
-     "actual_rad": 0.192
+     "actual_rad": 0.194
     },
     {
      "joint": "head_pitch",
      "cmd_rad": -0.78,
      "fallen": false,
-     "tilt_max_deg": 7.4,
+     "tilt_max_deg": 7.7,
      "actual_rad": -0.786
     },
     {
@@ -895,28 +895,28 @@
      "cmd_rad": 0.5,
      "fallen": false,
      "tilt_max_deg": 5.6,
-     "actual_rad": 0.419
+     "actual_rad": 0.418
     },
     {
      "joint": "head_roll",
      "cmd_rad": -0.5,
      "fallen": false,
-     "tilt_max_deg": 5.7,
+     "tilt_max_deg": 5.6,
      "actual_rad": -0.519
     },
     {
      "joint": "neck_pitch",
      "cmd_rad": 0.5,
      "fallen": false,
-     "tilt_max_deg": 6.7,
-     "actual_rad": 0.732
+     "tilt_max_deg": 6.2,
+     "actual_rad": 0.735
     },
     {
      "joint": "neck_pitch",
      "cmd_rad": -0.34,
      "fallen": false,
-     "tilt_max_deg": 6.0,
-     "actual_rad": -0.153
+     "tilt_max_deg": 5.9,
+     "actual_rad": -0.155
     }
    ],
    "fall_rate": {
@@ -926,8 +926,8 @@
     "falls": 0,
     "fall_rate": 0.0,
     "fall_times_s": [],
-    "tilt_max_deg_p50": 6.9,
-    "tilt_max_deg_worst": 8.4
+    "tilt_max_deg_p50": 7.0,
+    "tilt_max_deg_worst": 8.3
    }
   },
   {
@@ -976,13 +976,13 @@
      ]
     },
     {
-     "id": "mic_xvf3800_flex",
-     "body": "trunk_assembly",
-     "mass_g": 50.0,
+     "id": "mic_xvf3800_std",
+     "body": "head_assembly",
+     "mass_g": 60.0,
      "pos_base_m": [
-      -0.04,
       0.0,
-      0.106
+      0.0,
+      0.24
      ]
     },
     {
@@ -1077,36 +1077,36 @@
     }
    ],
    "static": {
-    "total_mass_kg": 2.4485,
+    "total_mass_kg": 2.4585,
     "com_base_m": [
-     -0.0275,
+     -0.0266,
      0.0003,
-     0.0504
+     0.0539
     ],
-    "head_chain_mass_kg": 0.6429,
+    "head_chain_mass_kg": 0.7029,
     "head_chain_com_base_m": [
-     0.0189,
-     -0.0005,
-     0.1933
+     0.0173,
+     -0.0004,
+     0.1973
     ],
-    "head_assembly_mass_kg": 0.468,
+    "head_assembly_mass_kg": 0.528,
     "gravity_torque_home_Nm": {
-     "neck_pitch": 0.113,
-     "head_pitch": 0.113,
+     "neck_pitch": 0.1124,
+     "head_pitch": 0.1124,
      "head_yaw": 0.0,
      "head_roll": 0.0042
     },
     "neck_torque_max_Nm": {
-     "neck_pitch": 0.6303,
-     "head_pitch": 0.2709
+     "neck_pitch": 0.7119,
+     "head_pitch": 0.3159
     }
    },
    "stand": {
     "fallen": false,
     "stepping_fraction": 0.001,
-    "drift_m": 0.0126,
-    "tilt_max_deg": 6.11,
-    "base_z_mean_m": 0.1647
+    "drift_m": 0.0129,
+    "tilt_max_deg": 5.95,
+    "base_z_mean_m": 0.1646
    },
    "walk": [
     {
@@ -1115,9 +1115,9 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.1108,
-     "ratio": 0.739,
-     "tilt_max_deg": 6.7
+     "actual_mean": 0.1105,
+     "ratio": 0.737,
+     "tilt_max_deg": 7.0
     },
     {
      "axis": "vx",
@@ -1125,9 +1125,9 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": -0.0445,
-     "ratio": 0.297,
-     "tilt_max_deg": 5.6
+     "actual_mean": -0.0503,
+     "ratio": 0.335,
+     "tilt_max_deg": 5.4
     },
     {
      "axis": "yaw_rate",
@@ -1135,9 +1135,9 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.876,
-     "ratio": 0.876,
-     "tilt_max_deg": 5.3
+     "actual_mean": 0.8971,
+     "ratio": 0.897,
+     "tilt_max_deg": 5.2
     },
     {
      "axis": "yaw_rate",
@@ -1145,9 +1145,9 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": -0.8646,
-     "ratio": 0.865,
-     "tilt_max_deg": 5.5
+     "actual_mean": -0.8729,
+     "ratio": 0.873,
+     "tilt_max_deg": 5.4
     },
     {
      "axis": "vy",
@@ -1155,9 +1155,9 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.1084,
-     "ratio": 0.542,
-     "tilt_max_deg": 5.4
+     "actual_mean": 0.1092,
+     "ratio": 0.546,
+     "tilt_max_deg": 5.3
     }
    ],
    "start_threshold": [
@@ -1210,41 +1210,41 @@
      "cmd_rad": 0.5,
      "fallen": false,
      "tilt_max_deg": 5.4,
-     "actual_rad": 0.443
+     "actual_rad": 0.442
     },
     {
      "joint": "head_yaw",
      "cmd_rad": -0.5,
      "fallen": false,
      "tilt_max_deg": 5.4,
-     "actual_rad": -0.652
+     "actual_rad": -0.653
     },
     {
      "joint": "head_yaw",
      "cmd_rad": 1.0,
      "fallen": false,
      "tilt_max_deg": 5.4,
-     "actual_rad": 0.97
+     "actual_rad": 0.969
     },
     {
      "joint": "head_yaw",
      "cmd_rad": -1.0,
      "fallen": true,
-     "tilt_max_deg": 45.6,
-     "actual_rad": -1.209
+     "tilt_max_deg": 46.1,
+     "actual_rad": -1.21
     },
     {
      "joint": "head_pitch",
      "cmd_rad": 0.3,
      "fallen": false,
      "tilt_max_deg": 5.4,
-     "actual_rad": 0.19
+     "actual_rad": 0.193
     },
     {
      "joint": "head_pitch",
      "cmd_rad": -0.78,
      "fallen": false,
-     "tilt_max_deg": 6.7,
+     "tilt_max_deg": 6.8,
      "actual_rad": -0.786
     },
     {
@@ -1265,15 +1265,15 @@
      "joint": "neck_pitch",
      "cmd_rad": 0.5,
      "fallen": false,
-     "tilt_max_deg": 6.8,
-     "actual_rad": 0.733
+     "tilt_max_deg": 6.4,
+     "actual_rad": 0.739
     },
     {
      "joint": "neck_pitch",
      "cmd_rad": -0.34,
      "fallen": false,
      "tilt_max_deg": 5.7,
-     "actual_rad": -0.158
+     "actual_rad": -0.161
     }
    ],
    "fall_rate": {
@@ -1283,8 +1283,8 @@
     "falls": 0,
     "fall_rate": 0.0,
     "fall_times_s": [],
-    "tilt_max_deg_p50": 7.3,
-    "tilt_max_deg_worst": 8.5
+    "tilt_max_deg_p50": 7.5,
+    "tilt_max_deg_worst": 8.7
    }
   },
   {
@@ -1333,13 +1333,13 @@
      ]
     },
     {
-     "id": "mic_xvf3800_flex",
-     "body": "trunk_assembly",
-     "mass_g": 30.0,
+     "id": "mic_xvf3800_std",
+     "body": "head_assembly",
+     "mass_g": 40.0,
      "pos_base_m": [
-      -0.04,
       0.0,
-      0.106
+      0.0,
+      0.24
      ]
     },
     {
@@ -1424,36 +1424,36 @@
     }
    ],
    "static": {
-    "total_mass_kg": 2.2703,
+    "total_mass_kg": 2.2803,
     "com_base_m": [
-     -0.0278,
+     -0.0272,
      0.0001,
-     0.0446
+     0.0472
     ],
-    "head_chain_mass_kg": 0.5677,
+    "head_chain_mass_kg": 0.6077,
     "head_chain_com_base_m": [
-     0.0153,
+     0.0143,
      -0.0009,
-     0.1916
+     0.1948
     ],
-    "head_assembly_mass_kg": 0.3928,
+    "head_assembly_mass_kg": 0.4328,
     "gravity_torque_home_Nm": {
-     "neck_pitch": 0.0798,
-     "head_pitch": 0.0798,
+     "neck_pitch": 0.0794,
+     "head_pitch": 0.0794,
      "head_yaw": 0.0,
      "head_roll": 0.0065
     },
     "neck_torque_max_Nm": {
-     "neck_pitch": 0.5415,
-     "head_pitch": 0.2236
+     "neck_pitch": 0.5959,
+     "head_pitch": 0.2549
     }
    },
    "stand": {
     "fallen": false,
-    "stepping_fraction": 0.001,
-    "drift_m": 0.0117,
-    "tilt_max_deg": 6.26,
-    "base_z_mean_m": 0.1654
+    "stepping_fraction": 0.0,
+    "drift_m": 0.0121,
+    "tilt_max_deg": 6.23,
+    "base_z_mean_m": 0.1653
    },
    "walk": [
     {
@@ -1462,8 +1462,8 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.1137,
-     "ratio": 0.758,
+     "actual_mean": 0.1145,
+     "ratio": 0.763,
      "tilt_max_deg": 6.7
     },
     {
@@ -1472,9 +1472,9 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": -0.0467,
-     "ratio": 0.312,
-     "tilt_max_deg": 6.0
+     "actual_mean": -0.0494,
+     "ratio": 0.329,
+     "tilt_max_deg": 5.8
     },
     {
      "axis": "yaw_rate",
@@ -1482,9 +1482,9 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.8452,
-     "ratio": 0.845,
-     "tilt_max_deg": 5.4
+     "actual_mean": 0.8693,
+     "ratio": 0.869,
+     "tilt_max_deg": 5.3
     },
     {
      "axis": "yaw_rate",
@@ -1492,8 +1492,8 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": -0.8854,
-     "ratio": 0.885,
+     "actual_mean": -0.8976,
+     "ratio": 0.898,
      "tilt_max_deg": 5.4
     },
     {
@@ -1502,8 +1502,8 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.1104,
-     "ratio": 0.552,
+     "actual_mean": 0.111,
+     "ratio": 0.555,
      "tilt_max_deg": 5.5
     }
    ],
@@ -1557,41 +1557,41 @@
      "cmd_rad": 0.5,
      "fallen": false,
      "tilt_max_deg": 5.5,
-     "actual_rad": 0.445
+     "actual_rad": 0.439
     },
     {
      "joint": "head_yaw",
      "cmd_rad": -0.5,
      "fallen": false,
      "tilt_max_deg": 5.5,
-     "actual_rad": -0.642
+     "actual_rad": -0.644
     },
     {
      "joint": "head_yaw",
      "cmd_rad": 1.0,
      "fallen": false,
      "tilt_max_deg": 5.5,
-     "actual_rad": 0.967
+     "actual_rad": 0.969
     },
     {
      "joint": "head_yaw",
      "cmd_rad": -1.0,
      "fallen": true,
-     "tilt_max_deg": 47.2,
-     "actual_rad": -1.195
+     "tilt_max_deg": 45.9,
+     "actual_rad": -1.199
     },
     {
      "joint": "head_pitch",
      "cmd_rad": 0.3,
      "fallen": false,
      "tilt_max_deg": 5.5,
-     "actual_rad": 0.191
+     "actual_rad": 0.193
     },
     {
      "joint": "head_pitch",
      "cmd_rad": -0.78,
      "fallen": false,
-     "tilt_max_deg": 7.6,
+     "tilt_max_deg": 7.2,
      "actual_rad": -0.786
     },
     {
@@ -1599,28 +1599,28 @@
      "cmd_rad": 0.5,
      "fallen": false,
      "tilt_max_deg": 5.5,
-     "actual_rad": 0.42
+     "actual_rad": 0.423
     },
     {
      "joint": "head_roll",
      "cmd_rad": -0.5,
      "fallen": false,
      "tilt_max_deg": 5.5,
-     "actual_rad": -0.521
+     "actual_rad": -0.522
     },
     {
      "joint": "neck_pitch",
      "cmd_rad": 0.5,
      "fallen": false,
-     "tilt_max_deg": 7.0,
-     "actual_rad": 0.731
+     "tilt_max_deg": 6.5,
+     "actual_rad": 0.734
     },
     {
      "joint": "neck_pitch",
      "cmd_rad": -0.34,
      "fallen": false,
-     "tilt_max_deg": 5.9,
-     "actual_rad": -0.154
+     "tilt_max_deg": 5.8,
+     "actual_rad": -0.155
     }
    ],
    "fall_rate": {
@@ -1630,8 +1630,8 @@
     "falls": 0,
     "fall_rate": 0.0,
     "fall_times_s": [],
-    "tilt_max_deg_p50": 7.0,
-    "tilt_max_deg_worst": 7.9
+    "tilt_max_deg_p50": 7.1,
+    "tilt_max_deg_worst": 8.1
    }
   },
   {
@@ -1680,13 +1680,13 @@
      ]
     },
     {
-     "id": "mic_xvf3800_flex",
-     "body": "trunk_assembly",
-     "mass_g": 30.0,
+     "id": "mic_xvf3800_std",
+     "body": "head_assembly",
+     "mass_g": 40.0,
      "pos_base_m": [
-      -0.04,
       0.0,
-      0.106
+      0.0,
+      0.24
      ]
     },
     {
@@ -1771,36 +1771,36 @@
     }
    ],
    "static": {
-    "total_mass_kg": 2.2703,
+    "total_mass_kg": 2.2803,
     "com_base_m": [
-     -0.03,
+     -0.0293,
      0.0001,
-     0.0446
+     0.0472
     ],
-    "head_chain_mass_kg": 0.5677,
+    "head_chain_mass_kg": 0.6077,
     "head_chain_com_base_m": [
-     0.0153,
+     0.0143,
      -0.0009,
-     0.1916
+     0.1948
     ],
-    "head_assembly_mass_kg": 0.3928,
+    "head_assembly_mass_kg": 0.4328,
     "gravity_torque_home_Nm": {
-     "neck_pitch": 0.0798,
-     "head_pitch": 0.0798,
+     "neck_pitch": 0.0794,
+     "head_pitch": 0.0794,
      "head_yaw": 0.0,
      "head_roll": 0.0065
     },
     "neck_torque_max_Nm": {
-     "neck_pitch": 0.5415,
-     "head_pitch": 0.2236
+     "neck_pitch": 0.5959,
+     "head_pitch": 0.2549
     }
    },
    "stand": {
     "fallen": false,
-    "stepping_fraction": 0.001,
-    "drift_m": 0.0113,
+    "stepping_fraction": 0.0,
+    "drift_m": 0.0114,
     "tilt_max_deg": 6.4,
-    "base_z_mean_m": 0.1658
+    "base_z_mean_m": 0.1657
    },
    "walk": [
     {
@@ -1809,8 +1809,8 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.1146,
-     "ratio": 0.764,
+     "actual_mean": 0.1157,
+     "ratio": 0.771,
      "tilt_max_deg": 6.3
     },
     {
@@ -1819,9 +1819,9 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": -0.0495,
-     "ratio": 0.33,
-     "tilt_max_deg": 6.1
+     "actual_mean": -0.0535,
+     "ratio": 0.356,
+     "tilt_max_deg": 6.0
     },
     {
      "axis": "yaw_rate",
@@ -1829,8 +1829,8 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.8264,
-     "ratio": 0.826,
+     "actual_mean": 0.8453,
+     "ratio": 0.845,
      "tilt_max_deg": 5.6
     },
     {
@@ -1839,8 +1839,8 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": -0.871,
-     "ratio": 0.871,
+     "actual_mean": -0.9117,
+     "ratio": 0.912,
      "tilt_max_deg": 5.6
     },
     {
@@ -1849,8 +1849,8 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.1117,
-     "ratio": 0.558,
+     "actual_mean": 0.1118,
+     "ratio": 0.559,
      "tilt_max_deg": 5.7
     }
    ],
@@ -1911,7 +1911,7 @@
      "cmd_rad": -0.5,
      "fallen": false,
      "tilt_max_deg": 5.7,
-     "actual_rad": -0.635
+     "actual_rad": -0.636
     },
     {
      "joint": "head_yaw",
@@ -1924,7 +1924,7 @@
      "joint": "head_yaw",
      "cmd_rad": -1.0,
      "fallen": true,
-     "tilt_max_deg": 47.1,
+     "tilt_max_deg": 45.8,
      "actual_rad": -1.226
     },
     {
@@ -1932,13 +1932,13 @@
      "cmd_rad": 0.3,
      "fallen": false,
      "tilt_max_deg": 5.7,
-     "actual_rad": 0.193
+     "actual_rad": 0.195
     },
     {
      "joint": "head_pitch",
      "cmd_rad": -0.78,
      "fallen": false,
-     "tilt_max_deg": 7.6,
+     "tilt_max_deg": 7.7,
      "actual_rad": -0.786
     },
     {
@@ -1946,28 +1946,28 @@
      "cmd_rad": 0.5,
      "fallen": false,
      "tilt_max_deg": 5.7,
-     "actual_rad": 0.412
+     "actual_rad": 0.415
     },
     {
      "joint": "head_roll",
      "cmd_rad": -0.5,
      "fallen": false,
      "tilt_max_deg": 5.7,
-     "actual_rad": -0.518
+     "actual_rad": -0.515
     },
     {
      "joint": "neck_pitch",
      "cmd_rad": 0.5,
      "fallen": false,
-     "tilt_max_deg": 6.3,
-     "actual_rad": 0.732
+     "tilt_max_deg": 6.2,
+     "actual_rad": 0.736
     },
     {
      "joint": "neck_pitch",
      "cmd_rad": -0.34,
      "fallen": false,
-     "tilt_max_deg": 6.1,
-     "actual_rad": -0.153
+     "tilt_max_deg": 6.0,
+     "actual_rad": -0.155
     }
    ],
    "fall_rate": {
@@ -1978,7 +1978,7 @@
     "fall_rate": 0.0,
     "fall_times_s": [],
     "tilt_max_deg_p50": 6.9,
-    "tilt_max_deg_worst": 8.2
+    "tilt_max_deg_worst": 8.5
    }
   },
   {
@@ -2027,13 +2027,13 @@
      ]
     },
     {
-     "id": "mic_xvf3800_flex",
-     "body": "trunk_assembly",
-     "mass_g": 30.0,
+     "id": "mic_xvf3800_std",
+     "body": "head_assembly",
+     "mass_g": 40.0,
      "pos_base_m": [
-      -0.04,
       0.0,
-      0.106
+      0.0,
+      0.24
      ]
     },
     {
@@ -2118,36 +2118,36 @@
     }
    ],
    "static": {
-    "total_mass_kg": 2.2703,
+    "total_mass_kg": 2.2803,
     "com_base_m": [
-     -0.0293,
+     -0.0286,
      0.0001,
-     0.0421
+     0.0447
     ],
-    "head_chain_mass_kg": 0.5677,
+    "head_chain_mass_kg": 0.6077,
     "head_chain_com_base_m": [
-     0.0153,
+     0.0143,
      -0.0009,
-     0.1916
+     0.1948
     ],
-    "head_assembly_mass_kg": 0.3928,
+    "head_assembly_mass_kg": 0.4328,
     "gravity_torque_home_Nm": {
-     "neck_pitch": 0.0798,
-     "head_pitch": 0.0798,
+     "neck_pitch": 0.0794,
+     "head_pitch": 0.0794,
      "head_yaw": 0.0,
      "head_roll": 0.0065
     },
     "neck_torque_max_Nm": {
-     "neck_pitch": 0.5415,
-     "head_pitch": 0.2236
+     "neck_pitch": 0.5959,
+     "head_pitch": 0.2549
     }
    },
    "stand": {
     "fallen": false,
-    "stepping_fraction": 0.002,
-    "drift_m": 0.0114,
-    "tilt_max_deg": 6.36,
-    "base_z_mean_m": 0.1657
+    "stepping_fraction": 0.0,
+    "drift_m": 0.0116,
+    "tilt_max_deg": 6.32,
+    "base_z_mean_m": 0.1656
    },
    "walk": [
     {
@@ -2156,8 +2156,8 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.1138,
-     "ratio": 0.759,
+     "actual_mean": 0.115,
+     "ratio": 0.766,
      "tilt_max_deg": 6.4
     },
     {
@@ -2166,8 +2166,8 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": -0.0468,
-     "ratio": 0.312,
+     "actual_mean": -0.0497,
+     "ratio": 0.331,
      "tilt_max_deg": 6.0
     },
     {
@@ -2176,8 +2176,8 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.8248,
-     "ratio": 0.825,
+     "actual_mean": 0.8426,
+     "ratio": 0.843,
      "tilt_max_deg": 5.5
     },
     {
@@ -2186,8 +2186,8 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": -0.8624,
-     "ratio": 0.862,
+     "actual_mean": -0.9057,
+     "ratio": 0.906,
      "tilt_max_deg": 5.5
     },
     {
@@ -2196,7 +2196,7 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.1103,
+     "actual_mean": 0.1104,
      "ratio": 0.552,
      "tilt_max_deg": 5.6
     }
@@ -2251,41 +2251,41 @@
      "cmd_rad": 0.5,
      "fallen": false,
      "tilt_max_deg": 5.6,
-     "actual_rad": 0.449
+     "actual_rad": 0.446
     },
     {
      "joint": "head_yaw",
      "cmd_rad": -0.5,
      "fallen": false,
-     "tilt_max_deg": 5.7,
-     "actual_rad": -0.638
+     "tilt_max_deg": 5.6,
+     "actual_rad": -0.639
     },
     {
      "joint": "head_yaw",
      "cmd_rad": 1.0,
      "fallen": false,
      "tilt_max_deg": 5.6,
-     "actual_rad": 0.97
+     "actual_rad": 0.971
     },
     {
      "joint": "head_yaw",
      "cmd_rad": -1.0,
      "fallen": true,
-     "tilt_max_deg": 47.2,
-     "actual_rad": -1.218
+     "tilt_max_deg": 45.3,
+     "actual_rad": -1.22
     },
     {
      "joint": "head_pitch",
      "cmd_rad": 0.3,
      "fallen": false,
      "tilt_max_deg": 5.6,
-     "actual_rad": 0.192
+     "actual_rad": 0.194
     },
     {
      "joint": "head_pitch",
      "cmd_rad": -0.78,
      "fallen": false,
-     "tilt_max_deg": 7.5,
+     "tilt_max_deg": 7.4,
      "actual_rad": -0.786
     },
     {
@@ -2293,28 +2293,28 @@
      "cmd_rad": 0.5,
      "fallen": false,
      "tilt_max_deg": 5.6,
-     "actual_rad": 0.417
+     "actual_rad": 0.42
     },
     {
      "joint": "head_roll",
      "cmd_rad": -0.5,
      "fallen": false,
-     "tilt_max_deg": 5.7,
+     "tilt_max_deg": 5.6,
      "actual_rad": -0.52
     },
     {
      "joint": "neck_pitch",
      "cmd_rad": 0.5,
      "fallen": false,
-     "tilt_max_deg": 6.6,
-     "actual_rad": 0.732
+     "tilt_max_deg": 6.3,
+     "actual_rad": 0.736
     },
     {
      "joint": "neck_pitch",
      "cmd_rad": -0.34,
      "fallen": false,
-     "tilt_max_deg": 6.0,
-     "actual_rad": -0.153
+     "tilt_max_deg": 5.9,
+     "actual_rad": -0.155
     }
    ],
    "fall_rate": {
@@ -2594,13 +2594,13 @@
      ]
     },
     {
-     "id": "mic_xvf3800_flex",
-     "body": "trunk_assembly",
-     "mass_g": 50.0,
+     "id": "mic_xvf3800_std",
+     "body": "head_assembly",
+     "mass_g": 60.0,
      "pos_base_m": [
-      -0.04,
       0.0,
-      0.106
+      0.0,
+      0.24
      ]
     },
     {
@@ -2695,36 +2695,36 @@
     }
    ],
    "static": {
-    "total_mass_kg": 2.4485,
+    "total_mass_kg": 2.4585,
     "com_base_m": [
-     -0.0275,
+     -0.0266,
      0.0003,
-     0.0504
+     0.0539
     ],
-    "head_chain_mass_kg": 0.6429,
+    "head_chain_mass_kg": 0.7029,
     "head_chain_com_base_m": [
-     0.0189,
-     -0.0005,
-     0.1933
+     0.0173,
+     -0.0004,
+     0.1973
     ],
-    "head_assembly_mass_kg": 0.468,
+    "head_assembly_mass_kg": 0.528,
     "gravity_torque_home_Nm": {
-     "neck_pitch": 0.113,
-     "head_pitch": 0.113,
+     "neck_pitch": 0.1124,
+     "head_pitch": 0.1124,
      "head_yaw": 0.0,
      "head_roll": 0.0042
     },
     "neck_torque_max_Nm": {
-     "neck_pitch": 0.6303,
-     "head_pitch": 0.2709
+     "neck_pitch": 0.7119,
+     "head_pitch": 0.3159
     }
    },
    "stand": {
     "fallen": false,
     "stepping_fraction": 0.0,
     "drift_m": 0.0144,
-    "tilt_max_deg": 5.23,
-    "base_z_mean_m": 0.1627
+    "tilt_max_deg": 5.22,
+    "base_z_mean_m": 0.1625
    },
    "walk": [
     {
@@ -2733,9 +2733,9 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.0663,
-     "ratio": 0.442,
-     "tilt_max_deg": 6.7
+     "actual_mean": 0.0661,
+     "ratio": 0.44,
+     "tilt_max_deg": 7.3
     },
     {
      "axis": "vx",
@@ -2753,9 +2753,9 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.5458,
-     "ratio": 0.546,
-     "tilt_max_deg": 5.5
+     "actual_mean": 0.5985,
+     "ratio": 0.599,
+     "tilt_max_deg": 5.6
     },
     {
      "axis": "yaw_rate",
@@ -2763,8 +2763,8 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": -0.5362,
-     "ratio": 0.536,
+     "actual_mean": -0.5653,
+     "ratio": 0.565,
      "tilt_max_deg": 5.1
     },
     {
@@ -2773,8 +2773,8 @@
      "n": 9,
      "started": 9,
      "fallen": 0,
-     "actual_mean": 0.0639,
-     "ratio": 0.319,
+     "actual_mean": 0.0717,
+     "ratio": 0.358,
      "tilt_max_deg": 5.2
     }
    ],
@@ -2835,7 +2835,7 @@
      "cmd_rad": -0.5,
      "fallen": false,
      "tilt_max_deg": 5.2,
-     "actual_rad": -0.663
+     "actual_rad": -0.665
     },
     {
      "joint": "head_yaw",
@@ -2848,15 +2848,15 @@
      "joint": "head_yaw",
      "cmd_rad": -1.0,
      "fallen": true,
-     "tilt_max_deg": 47.5,
-     "actual_rad": -1.223
+     "tilt_max_deg": 48.9,
+     "actual_rad": -1.224
     },
     {
      "joint": "head_pitch",
      "cmd_rad": 0.3,
      "fallen": false,
      "tilt_max_deg": 5.2,
-     "actual_rad": 0.19
+     "actual_rad": 0.194
     },
     {
      "joint": "head_pitch",
@@ -2870,28 +2870,28 @@
      "cmd_rad": 0.5,
      "fallen": false,
      "tilt_max_deg": 5.2,
-     "actual_rad": 0.426
+     "actual_rad": 0.428
     },
     {
      "joint": "head_roll",
      "cmd_rad": -0.5,
      "fallen": false,
      "tilt_max_deg": 5.2,
-     "actual_rad": -0.494
+     "actual_rad": -0.488
     },
     {
      "joint": "neck_pitch",
      "cmd_rad": 0.5,
      "fallen": false,
-     "tilt_max_deg": 7.3,
-     "actual_rad": 0.744
+     "tilt_max_deg": 6.9,
+     "actual_rad": 0.752
     },
     {
      "joint": "neck_pitch",
      "cmd_rad": -0.34,
      "fallen": false,
      "tilt_max_deg": 5.2,
-     "actual_rad": -0.169
+     "actual_rad": -0.174
     }
    ],
    "fall_rate": {
@@ -2901,8 +2901,8 @@
     "falls": 0,
     "fall_rate": 0.0,
     "fall_times_s": [],
-    "tilt_max_deg_p50": 7.9,
-    "tilt_max_deg_worst": 10.5
+    "tilt_max_deg_p50": 8.5,
+    "tilt_max_deg_worst": 11.0
    }
   }
  ],
@@ -2913,20 +2913,20 @@
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.76,
+    "vx_0p15_ratio": 0.766,
     "vx_0p10_started": 9,
     "vx_0p08_started": 0,
     "head_cases_fallen": [
      "head_yaw -1.0"
     ],
-    "walk_tilt_max_deg": 6.5
+    "walk_tilt_max_deg": 6.3
    },
    {
     "extra_g": 25,
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.765,
+    "vx_0p15_ratio": 0.768,
     "vx_0p10_started": 9,
     "vx_0p08_started": 0,
     "head_cases_fallen": [
@@ -2939,76 +2939,102 @@
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.752,
+    "vx_0p15_ratio": 0.756,
     "vx_0p10_started": 9,
     "vx_0p08_started": 0,
     "head_cases_fallen": [
      "head_yaw -1.0"
     ],
-    "walk_tilt_max_deg": 6.8
+    "walk_tilt_max_deg": 7.0
    },
    {
     "extra_g": 75,
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.744,
+    "vx_0p15_ratio": 0.741,
     "vx_0p10_started": 9,
     "vx_0p08_started": 0,
     "head_cases_fallen": [
      "head_yaw -1.0"
     ],
-    "walk_tilt_max_deg": 7.3
+    "walk_tilt_max_deg": 7.4
    },
    {
     "extra_g": 100,
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.721,
+    "vx_0p15_ratio": 0.717,
     "vx_0p10_started": 9,
     "vx_0p08_started": 0,
     "head_cases_fallen": [
      "head_yaw -1.0"
     ],
-    "walk_tilt_max_deg": 7.5
+    "walk_tilt_max_deg": 7.7
    },
    {
     "extra_g": 150,
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.71,
+    "vx_0p15_ratio": 0.712,
     "vx_0p10_started": 9,
     "vx_0p08_started": 0,
     "head_cases_fallen": [
      "head_yaw -1.0",
      "neck_pitch -0.34"
     ],
-    "walk_tilt_max_deg": 8.1
+    "walk_tilt_max_deg": 8.2
    },
    {
     "extra_g": 200,
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.73,
+    "vx_0p15_ratio": 0.743,
     "vx_0p10_started": 9,
-    "vx_0p08_started": 0,
+    "vx_0p08_started": 1,
     "head_cases_fallen": [
      "head_yaw -1.0",
      "neck_pitch -0.34"
     ],
-    "walk_tilt_max_deg": 8.8
+    "walk_tilt_max_deg": 9.1
    }
   ],
-  "trunk_top": [
+  "head_top": [
    {
     "extra_g": 0,
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.76,
+    "vx_0p15_ratio": 0.766,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 6.3
+   },
+   {
+    "extra_g": 25,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.769,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 6.4
+   },
+   {
+    "extra_g": 50,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.772,
     "vx_0p10_started": 9,
     "vx_0p08_started": 0,
     "head_cases_fallen": [
@@ -3017,11 +3043,78 @@
     "walk_tilt_max_deg": 6.5
    },
    {
+    "extra_g": 75,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.771,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 6.6
+   },
+   {
     "extra_g": 100,
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.751,
+    "vx_0p15_ratio": 0.77,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 6.7
+   },
+   {
+    "extra_g": 150,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.769,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 6.9
+   },
+   {
+    "extra_g": 200,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.759,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 7.1
+   }
+  ],
+  "trunk_top": [
+   {
+    "extra_g": 0,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.766,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 6.3
+   },
+   {
+    "extra_g": 100,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.757,
     "vx_0p10_started": 9,
     "vx_0p08_started": 0,
     "head_cases_fallen": [
@@ -3034,20 +3127,20 @@
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.739,
+    "vx_0p15_ratio": 0.743,
     "vx_0p10_started": 9,
     "vx_0p08_started": 0,
     "head_cases_fallen": [
      "head_yaw -1.0"
     ],
-    "walk_tilt_max_deg": 6.6
+    "walk_tilt_max_deg": 6.7
    },
    {
     "extra_g": 400,
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.709,
+    "vx_0p15_ratio": 0.712,
     "vx_0p10_started": 9,
     "vx_0p08_started": 0,
     "head_cases_fallen": [
@@ -3060,26 +3153,26 @@
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.675,
+    "vx_0p15_ratio": 0.671,
     "vx_0p10_started": 9,
     "vx_0p08_started": 0,
     "head_cases_fallen": [
      "head_yaw -1.0"
     ],
-    "walk_tilt_max_deg": 6.7
+    "walk_tilt_max_deg": 6.8
    },
    {
     "extra_g": 800,
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.628,
+    "vx_0p15_ratio": 0.63,
     "vx_0p10_started": 9,
     "vx_0p08_started": 0,
     "head_cases_fallen": [
      "head_yaw -1.0"
     ],
-    "walk_tilt_max_deg": 6.6
+    "walk_tilt_max_deg": 6.8
    }
   ],
   "head_front_kp80": [
@@ -3088,20 +3181,7 @@
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.444,
-    "vx_0p10_started": 9,
-    "vx_0p08_started": 0,
-    "head_cases_fallen": [
-     "head_yaw -1.0"
-    ],
-    "walk_tilt_max_deg": 6.0
-   },
-   {
-    "extra_g": 25,
-    "stand_fallen": false,
-    "walk_fallen": 0,
-    "walk_runs": 45,
-    "vx_0p15_ratio": 0.46,
+    "vx_0p15_ratio": 0.474,
     "vx_0p10_started": 9,
     "vx_0p08_started": 0,
     "head_cases_fallen": [
@@ -3110,72 +3190,86 @@
     "walk_tilt_max_deg": 6.5
    },
    {
-    "extra_g": 50,
+    "extra_g": 25,
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.472,
+    "vx_0p15_ratio": 0.486,
     "vx_0p10_started": 9,
     "vx_0p08_started": 0,
     "head_cases_fallen": [
      "head_yaw -1.0"
     ],
-    "walk_tilt_max_deg": 7.1
+    "walk_tilt_max_deg": 6.9
+   },
+   {
+    "extra_g": 50,
+    "stand_fallen": false,
+    "walk_fallen": 0,
+    "walk_runs": 45,
+    "vx_0p15_ratio": 0.484,
+    "vx_0p10_started": 9,
+    "vx_0p08_started": 0,
+    "head_cases_fallen": [
+     "head_yaw -1.0"
+    ],
+    "walk_tilt_max_deg": 7.5
    },
    {
     "extra_g": 75,
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.469,
+    "vx_0p15_ratio": 0.462,
     "vx_0p10_started": 9,
     "vx_0p08_started": 0,
     "head_cases_fallen": [
-     "head_yaw -1.0"
+     "head_yaw -1.0",
+     "neck_pitch -0.34"
     ],
-    "walk_tilt_max_deg": 7.8
+    "walk_tilt_max_deg": 8.3
    },
    {
     "extra_g": 100,
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.453,
+    "vx_0p15_ratio": 0.447,
     "vx_0p10_started": 9,
     "vx_0p08_started": 0,
     "head_cases_fallen": [
      "head_yaw -1.0",
      "neck_pitch -0.34"
     ],
-    "walk_tilt_max_deg": 8.7
+    "walk_tilt_max_deg": 9.2
    },
    {
     "extra_g": 150,
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.412,
-    "vx_0p10_started": 5,
+    "vx_0p15_ratio": 0.506,
+    "vx_0p10_started": 6,
     "vx_0p08_started": 0,
     "head_cases_fallen": [
      "head_yaw -1.0",
      "neck_pitch -0.34"
     ],
-    "walk_tilt_max_deg": 11.5
+    "walk_tilt_max_deg": 13.7
    },
    {
     "extra_g": 200,
     "stand_fallen": false,
     "walk_fallen": 0,
     "walk_runs": 45,
-    "vx_0p15_ratio": 0.637,
+    "vx_0p15_ratio": 0.689,
     "vx_0p10_started": 9,
     "vx_0p08_started": 0,
     "head_cases_fallen": [
      "head_yaw -1.0",
      "neck_pitch -0.34"
     ],
-    "walk_tilt_max_deg": 13.6
+    "walk_tilt_max_deg": 14.3
    }
   ]
  }

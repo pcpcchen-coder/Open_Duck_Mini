@@ -33,7 +33,7 @@ from .sim import PHASE_PERIOD_STEPS, SimOptions, WalkSim
 BUDGET = "p2_single_pi4.json"
 KP_NOMINAL = 13.37
 
-#: 頭部大角度測試（站著、速度 0）：ADR-0011 的初版範圍，加上 PR #32 量到會跌倒的角度。
+#: 頭部大角度測試（站著、速度 0）：ADR-0015（動作庫）的初版範圍，加上 PR #32 量到會跌倒的角度。
 HEAD_CASES = [
     ("head_yaw", 5, 0.5),
     ("head_yaw", 5, -0.5),
@@ -207,9 +207,10 @@ def head_standing(opts: ModelOptions) -> list[dict]:
 
 
 def margin_sweep(base_items: list[MassItem], where: str, masses_g: list[float], phases: list[int], model_kw: dict) -> list[dict]:
-    """在估計值之外再加一顆點質量（頭的前方，或機身頂面），看走路與起步從哪裡開始出問題。"""
+    """在估計值之外再加一塊質量（頭前方、頭頂，或機身頂面），看走路與起步從哪裡開始出問題。"""
     body, pos, size = {
         "head_front": ("head_assembly", (0.09, 0.0, 0.215), (0.02, 0.06, 0.03)),
+        "head_top": ("head_assembly", (0.0, 0.0, 0.245), (0.10, 0.10, 0.01)),
         "trunk_top": ("trunk_assembly", (-0.045, 0.0, 0.10), (0.08, 0.06, 0.02)),
     }[where]
     rows = []
@@ -278,6 +279,7 @@ def run_all(quick: bool = False, workers: int | None = None) -> dict:
     trunk_masses = [0, 200] if quick else [0, 100, 200, 400, 600, 800]
     margin_jobs = [
         ("head_front", nominal, "head_front", head_masses, phases, {}),
+        ("head_top", nominal, "head_top", head_masses, phases, {}),
         ("trunk_top", nominal, "trunk_top", trunk_masses, phases, {}),
     ]
     if not quick:
