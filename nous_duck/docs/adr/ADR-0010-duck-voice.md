@@ -1,7 +1,7 @@
 # ADR-0010：鴨子的語音（收音、播放、變聲與本機音效）
 
 - 狀態：**部分採用**：使用者 2026-11-15 決定鴨子說話用「**Nous 的聲音加變聲**」；其餘為草案
-- 日期：2026-11-15；**2026-11-26 修訂**：配合 [ADR-0008](ADR-0008-single-board-pi4.md) 改成單板 Pi 4；把 Pi 4 已接上的 USB 喇叭列入考量；眼燈改為眼睛螢幕（ADR-0006 §4.2，2026-11-17）；加上與 [ADR-0007](ADR-0007-follow-me-and-wait-here.md) 本機停止句、V3「說話時看著對方」的關係；麥克風陣列改成**標準版 XVF3800**（2026-11-13 使用者決定，見[選型](../../hardware/sensors/mic_array_selection.md)），喇叭方案 A 跟著改。原稿編號是 ADR-0007，合併前兩度改號（0007 給了「跟著我來與在這等我」，0009 給了 duck-link 傳輸），定為 ADR-0010
+- 日期：2026-11-15；**2026-11-26 補記**：麥克風陣列在 2026-11-16 決定裝在頭頂（ADR-0005 §2.3.1），§4、§8 的位置描述跟著改；**2026-11-26 修訂**：配合 [ADR-0008](ADR-0008-single-board-pi4.md) 改成單板 Pi 4；把 Pi 4 已接上的 USB 喇叭列入考量；眼燈改為眼睛螢幕（ADR-0006 §4.2，2026-11-17）；加上與 [ADR-0007](ADR-0007-follow-me-and-wait-here.md) 本機停止句、V3「說話時看著對方」的關係；麥克風陣列改成**標準版 XVF3800**（2026-11-13 使用者決定，見[選型](../../hardware/sensors/mic_array_selection.md)），喇叭方案 A 跟著改。原稿編號是 ADR-0007，合併前兩度改號（0007 給了「跟著我來與在這等我」，0009 給了 duck-link 傳輸），定為 ADR-0010
 - 相關：[R-001](../requirements/R-001-mobile-companion.md)（S2、S3）、[ADR-0001](ADR-0001-duck-role-in-nous.md)、[ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md)（行動終端、喚醒、找人）、[ADR-0005](ADR-0005-compute-and-sensor-upgrade.md)（麥克風陣列、喇叭）、[ADR-0006](ADR-0006-privacy-settings.md)（隱私設定、眼睛螢幕）、[ADR-0007](ADR-0007-follow-me-and-wait-here.md)（本機停止句）、[ADR-0008](ADR-0008-single-board-pi4.md)（單板 Pi 4）、[麥克風陣列選型](../../hardware/sensors/mic_array_selection.md)、[`robot/behaviors/look_at.py`](../../robot/behaviors/look_at.py)（V3）
 - 實機紀錄：[Pi 4 上的上游 runtime §4.2 USB 喇叭](../validation/pi4-runtime-2026-11-22.md)
 - AIOS 參考（唯讀，main `7b0257d`）：`prototype/ambient-shell/shared/realtime-route.ts`（`LIVE_VOICES`、預設聲音 `cove`）、`terminals/rpi4/README.md`、`docs/adr/ADR-0003-local-wake-and-voice-recognition.md`（自我觸發防護）、`docs/Current_Implementation_Status.md`（瀏覽器語音與 WebRTC 雙路徑、選擇聲音輸出裝置、處理中音效、日／夜間對話音量）
@@ -103,7 +103,7 @@
 
 ## 4. 收音、回音消除與關鍵詞
 
-- 收音用標準版 XVF3800 麥克風陣列（ADR-0005，裝在身體頂面，與 FamilyRecorder 同款），晶片上做 AEC、波束成形與降噪；DOA 讀法沿用 FamilyRecorder（ADR-0003 §4）。
+- 收音用標準版 XVF3800 麥克風陣列（ADR-0005，與 FamilyRecorder 同款；2026-11-16 決定裝在**頭頂**，ADR-0005 §2.3.1），晶片上做 AEC、波束成形與降噪；DOA 讀法沿用 FamilyRecorder，換算成相對身體的方向見 ADR-0003 §4.1。
 - **AEC 的參考訊號必須是喇叭真正播出的聲音（變聲之後）**，否則鴨子會聽到自己的聲音，造成誤喚醒或打斷自己。
 - 只有喇叭由 **XVF3800 板子驅動**（§8 方案 A）時，XVF3800 才有機會直接拿到播放訊號當參考。但它是否真的這樣做，wiki 沒寫，**要實測**。用 MAX98357A 或 USB 喇叭（方案 B、C）時，XVF3800 看不到播放的聲音，要走下面的退路。
 - 退路：
@@ -153,12 +153,12 @@
 
 | 方案 | 說明 | 優點 | 缺點 |
 |---|---|---|---|
-| **A. XVF3800 板上功放＋JST 喇叭（建議，正式機）** | LM48511，wiki 寫支援 5 W 喇叭；由 USB-C 供電；喇叭裝在身體裡 | 播放與 AEC 在同一塊板，AEC 參考最可能是播放訊號（待驗證）；頭部不用再穿喇叭線 | 板子靠 USB 供電，大聲播放時的電流會算到 Pi 4 的 USB 與 5 V 電源上（ADR-0008 電源要重選）；實際音量要量；隱私開關會連喇叭一起切（§7） |
+| **A. XVF3800 板上功放＋JST 喇叭（建議，正式機）** | LM48511，wiki 寫支援 5 W 喇叭；由 USB-C 供電；喇叭接在 XVF3800 板上 | 播放與 AEC 在同一塊板，AEC 參考最可能是播放訊號（待驗證） | 板子靠 USB 供電，大聲播放時的電流會算到 Pi 4 的 USB 與 5 V 電源上（ADR-0008 電源要重選）；實際音量要量；隱私開關會連喇叭一起切（§7）；**XVF3800 板在頭頂**（2026-11-16）：喇叭放頭裡離麥克風很近、回音大，放身體裡則喇叭線要從頭穿過頸部 4 個關節 |
 | B. 上游表情套件：MAX98357A I2S＋小喇叭 | 腳位照上游（GPIO 19／18／21）；上游放在頭裡 | 上游已有這組零件與腳位 | XVF3800 看不到播放的聲音，要軟體 AEC；放在頭裡的話，線要穿過頸部 4 個關節（ADR-0008 §4.1） |
 | C. USB 喇叭（目前手上的 `CD002`） | 已在 Pi 4 實機播放成功（2026-11-22） | **現在就能用來開發**：變聲、閘門、音量包絡都能先在 Pi 4 上試 | 同 B，要軟體 AEC；體積、固定方式與音量都還沒評估，正式機用不用待定 |
 
 - 建議：**開發先用 C**，正式機以 A 為目標；A 的 AEC 或供電驗證不過時改用 B。
-- 喇叭盡量遠離身體頂面的麥克風（ADR-0005 §2.3.1）。上游有 `speaker_interface`、`speaker_stand` 兩件列印件（已印好），但 CAD 沒有擺放位置（交接摘要 §5），位置在 `hardware/` 依實物決定。
+- 喇叭盡量遠離頭頂的麥克風（ADR-0005 §2.3.1）。上游有 `speaker_interface`、`speaker_stand` 兩件列印件（已印好），但 CAD 沒有擺放位置（交接摘要 §5），位置在 `hardware/` 依實物決定。
 - 電源：ADR-0008 已指出手上的 3 A UBEC 不夠，喇叭功放的耗電要算進重選的 5 V 電源（方案 A 若接電池，則另算）。
 - 喇叭振動會傳到機身與 IMU，要在實機上確認會不會影響步態與 IMU 讀值。
 
