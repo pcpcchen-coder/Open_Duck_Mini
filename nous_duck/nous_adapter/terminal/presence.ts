@@ -83,23 +83,27 @@ export class PresenceDriver {
   private dirty = false;
   private stopped = false;
   private readonly idleWaiters: (() => void)[] = [];
-  private unsubscribe: (() => void) | null = null;
-  source: { label: string; dev: boolean } | null = null;
+  private readonly unsubscribers: (() => void)[] = [];
+  /** 接上的事件來源（診斷用）。 */
+  readonly sources: { label: string; dev: boolean }[] = [];
+  /** 最後接上的來源（相容舊的診斷輸出）。 */
+  get source(): { label: string; dev: boolean } | null {
+    return this.sources.at(-1) ?? null;
+  }
 
   constructor(options: PresenceDriverOptions) {
     this.options = { debounceMs: 120, wakeHoldMs: 600, errorHoldMs: 1_500, levelIntervalMs: 200, levelStep: 0.1, fullScaleRms: 0.2, now: Date.now, ...options };
   }
 
-  /** 接上一個事件來源（一次只有一個）。 */
+  /** 接上一個事件來源。可以接好幾個（例如語音通道的真實事件，加上開發用的手動來源）；事件照到達的順序處理。 */
   attach(source: PresenceSource): void {
-    this.unsubscribe?.();
-    this.source = { label: source.label, dev: source.dev };
-    this.unsubscribe = source.subscribe((event) => this.handle(event));
+    this.sources.push({ label: source.label, dev: source.dev });
+    this.unsubscribers.push(source.subscribe((event) => this.handle(event)));
   }
 
   stop(): void {
     this.stopped = true;
-    this.unsubscribe?.();
+    for (const off of this.unsubscribers.splice(0)) off();
     if (this.timer) clearTimeout(this.timer);
     if (this.holdTimer) clearTimeout(this.holdTimer);
     this.timer = null;

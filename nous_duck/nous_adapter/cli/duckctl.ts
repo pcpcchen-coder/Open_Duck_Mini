@@ -1,6 +1,8 @@
 import { DUCK_TOOLS } from "../adapters/duck.ts";
 import { DEFAULT_PORT, DUCK_LINK_PATH } from "../hub/duck-link-hub.ts";
 import { MockDuck } from "../mock/mock-duck.ts";
+import { MockDuckVoice } from "../mock/mock-duck-voice.ts";
+import type { NousVoiceMessage } from "../shared/duck-voice.ts";
 import type { ToolResult } from "../shared/aios-integrations.ts";
 import { PRESENCE_STATES } from "../shared/duck-link.ts";
 import { parseToolArgs, POSITIONAL } from "./args.ts";
@@ -13,7 +15,8 @@ import { runHub } from "./hub-main.ts";
 const HELP = `duckctl — 從終端機對鴨子下指令（開發用，不經過 Nous／AIOS）
 
 先啟動（各開一個終端機分頁，或用 scripts/duck-link-dev.sh 在背景跑）：
-  duckctl hub                     啟動 duck-link hub（只聽 127.0.0.1:${DEFAULT_PORT}，等鴨子連進來）
+  duckctl hub [--voice echo]      啟動 duck-link hub（只聽 127.0.0.1:${DEFAULT_PORT}，等鴨子連進來）
+                                  --voice echo：語音通道接「模擬的回放後端」（把聽到的聲音放回去；不是語音模型）
   duckctl mock-duck               啟動「模擬的鴨子」連到 hub（沒有真的鴨子時用；輸出一律標示模擬）
 
 看狀態：
@@ -22,6 +25,8 @@ const HELP = `duckctl — 從終端機對鴨子下指令（開發用，不經過
   duckctl state                   鴨子最新一則 state 的原文
   duckctl events [--follow]       鴨子回報的事件（跌倒、任務進度、斷線…）
   duckctl tools                   列出所有 app.duck.* 工具與參數
+  duckctl voice                   語音通道（/duck-voice）：音訊端、後端、進行中的對話、計數
+  duckctl mock-voice              模擬的鴨子音訊端：送一次「喚醒」與合成音，看通道通不通（不開麥克風、不出聲）
 
 動作（對應 app.duck.<動作>）：
   duckctl look --yaw 0.2                  頭轉到 0.2 rad（正＝往左）；也可以 --pitch --roll --neck --time 1.5
@@ -125,10 +130,13 @@ async function main(): Promise<number> {
 
   if (command === "hub") {
     const stamp = () => new Date().toLocaleTimeString("zh-TW", { hour12: false });
-    const running = await runHub({ port, log: (line) => console.log(`[${stamp()}] ${line}`) });
+    const voiceOption = takeOption(argv, "voice") ?? "none";
+    if (voiceOption !== "none" && voiceOption !== "echo") throw new Error("--voice 只能是 none 或 echo");
+    const running = await runHub({ port, voiceBackend: voiceOption, log: (line) => console.log(`[${stamp()}] ${line}`) });
     console.log(`duck-link hub 已啟動：ws://127.0.0.1:${running.port}${DUCK_LINK_PATH}（只聽本機 loopback）`);
     console.log(`控制通道：${running.socketPath}`);
-    console.log("presence 來源：開發用手動來源（duckctl presence …），不是 Nous 的事件。");
+    console.log(`語音通道：ws://127.0.0.1:${running.port}/duck-voice；後端：${voiceOption === "echo" ? "echo（模擬：把聽到的聲音原樣放回去，不是語音模型）" : "沒有（每次喚醒都回 refused: no_backend；加 --voice echo 可以用模擬的回放後端）"}`);
+    console.log("presence 來源：語音通道的真實事件，加上開發用手動來源（duckctl presence …）。這裡沒有 Nous 的語音模型。");
     console.log("等鴨子連進來…（Ctrl-C 結束）");
     running.terminal.onEvent((e) => console.log(`[${stamp()}] 事件 ${e.origin === "hub" ? "（hub）" : ""}${e.name}${e.reason ? ` reason=${e.reason}` : ""}${e.mission_id ? ` mission=${e.mission_id}` : ""}${e.mock ? "（模擬）" : ""}`));
     await new Promise<void>((resolve) => {
@@ -189,6 +197,45 @@ async function main(): Promise<number> {
     return 0;
   }
 
+  if (command === "voice") {
+    const v = await withHub(port, (c) => c.request<Record<string, any>>("voice"));
+    if (json) return console.log(JSON.stringify(v, null, 2)), 0;
+    console.log(`語音通道：${String(v.listening)}`);
+    console.log(`鴨子的音訊端：${v.connected ? `已連線（${v.duck.software}${v.duck.mock ? "，⚠ 模擬" : ""}）` : "沒有連線"}`);
+    console.log(`語音後端：${v.backend ? `${v.backend.label}${v.backend.mock ? "  ⚠ 模擬" : ""}` : "沒有（喚醒會被拒絕：no_backend）"}`);
+    console.log(`進行中的對話：${v.session ? `${v.session.state}，${Math.round(v.session.ageMs / 100) / 10} 秒，上行 ${v.session.uplinkFrames} 框、下行 ${v.session.downlinkFrames} 框${v.session.speaking ? "，鴨子正在出聲" : ""}` : "沒有"}`);
+    console.log(`計數：${JSON.stringify(v.counters)}`);
+    if (v.last) console.log(`上一通：${JSON.stringify(v.last)}`);
+    return 0;
+  }
+
+  if (command === "mock_voice") {
+    // ⚠ 模擬的鴨子音訊端：沒有麥克風與喇叭，「喚醒」是這個指令自己送的，上行是合成的正弦波。
+    const url = `ws://127.0.0.1:${port}/duck-voice`;
+    const speakMs = Number(takeOption(argv, "speak-ms") ?? 800);
+    console.log("⚠ 這是模擬的鴨子音訊端（mock）：不開麥克風、不出聲；上行是合成的正弦波，不是人聲。");
+    const duck = new MockDuckVoice({ url });
+    await duck.connect();
+    duck.wake(`mockwake_${Date.now().toString(36)}`, { keyword_id: "mock" });
+    const reply = await duck.waitFor((m): m is Extract<NousVoiceMessage, { type: "session" }> => m.type === "session", 3_000);
+    if (reply.state === "refused") {
+      console.log(`喚醒被拒絕：${reply.reason}${reply.reason === "no_backend" ? "（hub 沒有語音後端；用 duckctl hub --voice echo 啟動）" : ""}`);
+      duck.disconnect();
+      return 1;
+    }
+    console.log(`對話已開始（${reply.session_id}）。送 ${speakMs} ms 的合成音，再送 1 秒靜音…`);
+    await duck.stream(speakMs, 0.3);
+    await duck.stream(1_000, 0);
+    const start = Date.now();
+    while (!duck.playback.includes("drained") && Date.now() - start < speakMs + 5_000) await new Promise((r) => setTimeout(r, 50));
+    const bytes = duck.downlink.reduce((n, f) => n + f.bytes, 0);
+    console.log(`收到下行 ${duck.downlink.length} 框、${bytes} bytes（約 ${Math.round(bytes / 48)} ms 的 24 kHz 音訊）；播放回報：${duck.playback.join(" → ") || "沒有"}`);
+    duck.end("user");
+    await new Promise((r) => setTimeout(r, 200));
+    duck.disconnect();
+    return duck.playback.includes("drained") ? 0 : 2;
+  }
+
   if (command === "link" || command === "state") {
     const result = await withHub(port, (c) => c.request<Record<string, unknown>>(command));
     if (json || command === "state") return console.log(JSON.stringify(result, null, 2)), 0;
@@ -198,7 +245,9 @@ async function main(): Promise<number> {
     if (result.connected) console.log(`往返時間：${result.rtt_ms === null ? "還沒量到" : `${String(result.rtt_ms)} ms`}；已連線 ${Math.round(Number(result.connected_for_ms) / 1000)} 秒；${result.state_age_ms === null ? "還沒收到 state" : `最新 state 是 ${String(result.state_age_ms)} ms 前`}`);
     console.log(`health：${JSON.stringify(result.health)}`);
     console.log(`計數：${JSON.stringify(result.counters)}`);
-    console.log(`presence 來源：${(result.presence_source as { label: string } | null)?.label ?? "無"}`);
+    console.log(`presence 來源：${((result.presence_sources as { label: string }[] | undefined) ?? []).map((x) => x.label).join("；") || "無"}`);
+    const voice = result.voice as { connected: boolean; backend: { label: string; mock: boolean } | null } | undefined;
+    if (voice) console.log(`語音通道：音訊端${voice.connected ? "已連線" : "沒有連線"}；後端：${voice.backend ? voice.backend.label : "沒有"}（細節：duckctl voice）`);
     return 0;
   }
 

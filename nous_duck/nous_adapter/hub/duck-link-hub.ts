@@ -19,6 +19,9 @@ export const DUCK_LINK_PATH = "/duck-link";
 /** WebSocket 關閉代碼（4000 以上是應用自訂）。 */
 export const CLOSE = { stale: 4000, replaced: 4001, version: 4002, badHello: 4003, shutdown: 4004 } as const;
 
+/** 通過守門之後的 WebSocket 升級處理函式（見 DuckLinkHub.route）。 */
+export type UpgradeHandler = (req: IncomingMessage, socket: Duplex, head: Buffer) => void;
+
 export interface DuckLinkHubOptions {
   /** 預設 8791；測試用 0（系統配置臨時埠）。 */
   port?: number;
@@ -114,6 +117,7 @@ export class DuckLinkHub implements DuckLink {
   private http: Server | null = null;
   private wss: WebSocketServer | null = null;
   private detach: (() => void) | null = null;
+  private readonly routes = new Map<string, UpgradeHandler>();
   /** 已完成 hello 的鴨子連線。 */
   private duck: WebSocket | null = null;
   private heartbeat: ReturnType<typeof setInterval> | null = null;
@@ -161,6 +165,15 @@ export class DuckLinkHub implements DuckLink {
     this.detach = () => server.off("upgrade", onUpgrade);
   }
 
+  /**
+   * 在同一個埠上多接一條 WebSocket 路徑（和 /duck-link 共用守門：路徑完全相同、沒有 Origin、Host 與來源是 loopback）。
+   * 語音媒體通道（hub/duck-voice-hub.ts）用它掛 /duck-voice。
+   */
+  route(path: string, handler: UpgradeHandler): void {
+    if (path === DUCK_LINK_PATH || this.routes.has(path)) throw new Error(`路徑已經有人處理：${path}`);
+    this.routes.set(path, handler);
+  }
+
   /** 獨立執行（開發用的 hub 行程）：自己開一個只聽 127.0.0.1 的 http server（沒有選項可以改成別的位址）。回傳實際的埠號。 */
   async start(): Promise<number> {
     if (this.http || this.wss) throw new Error("hub 已經啟動");
@@ -204,14 +217,17 @@ export class DuckLinkHub implements DuckLink {
     const refuse = (code: number, text: string) => {
       socket.end(`HTTP/1.1 ${code} ${text}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n`);
     };
-    const path = (req.url ?? "").split("?")[0];
-    if (path !== DUCK_LINK_PATH) return refuse(404, "Not Found");
+    const path = (req.url ?? "").split("?")[0] ?? "";
+    const other = this.routes.get(path);
+    if (path !== DUCK_LINK_PATH && !other) return refuse(404, "Not Found");
     // 鴨子不是瀏覽器，不會帶 Origin；帶 Origin 的是網頁（跨站 WebSocket），拒絕。
     if (req.headers.origin !== undefined) return refuse(403, "Forbidden");
     const hostHeader = req.headers.host ?? "";
     const host = hostHeader.replace(/:\d+$/, "");
     if (hosts ? !hosts.has(hostHeader) : host !== "127.0.0.1" && host !== "localhost") return refuse(403, "Forbidden");
     if (!LOOPBACK.has(req.socket.remoteAddress ?? "")) return refuse(403, "Forbidden");
+    // 同一個埠上的其他 WebSocket 路徑（例如語音媒體通道 /duck-voice）：通過同樣的守門之後交給它自己的處理函式。
+    if (other) return other(req, socket, head);
     wss.handleUpgrade(req, socket, head, (ws) => this.onConnection(ws));
   }
 

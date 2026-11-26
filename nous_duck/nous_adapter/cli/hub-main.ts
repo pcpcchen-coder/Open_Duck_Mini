@@ -2,6 +2,9 @@ import { unlinkSync } from "node:fs";
 import { DuckAdapter } from "../adapters/duck.ts";
 import { compactState, DUCK_TIMING } from "../adapters/duck-exec.ts";
 import { DEFAULT_PORT, DUCK_LINK_PATH, DuckLinkHub } from "../hub/duck-link-hub.ts";
+import { DuckVoiceHub, type VoiceBackend } from "../hub/duck-voice-hub.ts";
+import { EchoVoiceBackend } from "../mock/echo-voice-backend.ts";
+import { DUCK_VOICE_PATH } from "../shared/duck-voice.ts";
 import { PRESENCE_STATES, type PresenceState } from "../shared/duck-link.ts";
 import { DuckTerminal } from "../terminal/duck-terminal.ts";
 import { ManualPresenceSource } from "../terminal/manual-presence-source.ts";
@@ -14,6 +17,7 @@ import { interpretTextCommand, TEXT_COMMAND_EXAMPLES } from "./text-command.ts";
 
 export interface RunningHub {
   hub: DuckLinkHub;
+  voice: DuckVoiceHub;
   adapter: DuckAdapter;
   terminal: DuckTerminal;
   port: number;
@@ -21,9 +25,13 @@ export interface RunningHub {
   stop(): Promise<void>;
 }
 
-export async function runHub(options: { port?: number; socketPath?: string; log?: (line: string) => void } = {}): Promise<RunningHub> {
+export async function runHub(options: { port?: number; socketPath?: string; log?: (line: string) => void; voiceBackend?: "none" | "echo" | VoiceBackend } = {}): Promise<RunningHub> {
   const log = options.log ?? (() => {});
   const hub = new DuckLinkHub({ port: options.port ?? DEFAULT_PORT, log });
+  // 語音媒體通道（/duck-voice）。真正接語音模型的後端在 AIOS；這裡只有「沒有」或標示 mock 的回放後端。
+  const voiceBackend = options.voiceBackend === "echo" ? new EchoVoiceBackend() : options.voiceBackend === "none" || options.voiceBackend === undefined ? null : options.voiceBackend;
+  const voice = new DuckVoiceHub({ backend: voiceBackend, log });
+  voice.attachTo(hub);
   const port = await hub.start();
   const socketPath = options.socketPath ?? defaultSocketPath(port);
   // 開發入口：17 個工具全開（AIOS 裡第一階段只開 DUCK_STAGE1_TOOLS 那六個）。
@@ -31,6 +39,7 @@ export async function runHub(options: { port?: number; socketPath?: string; log?
   const manual = new ManualPresenceSource();
   const terminal = new DuckTerminal(hub, { sendPresence: (state, level) => adapter.presence(state, level), log });
   terminal.attachPresenceSource(manual);
+  terminal.attachVoice(voice);
 
   const handler = async (request: ControlRequest, push: (frame: Record<string, unknown>) => void, onClose: (fn: () => void) => void): Promise<unknown> => {
     switch (request.op) {
@@ -69,8 +78,12 @@ export async function runHub(options: { port?: number; socketPath?: string; log?
           health: await adapter.health(),
           counters: snapshot.counters,
           presence_source: terminal.presence.source,
+          presence_sources: terminal.presence.sources,
+          voice: { listening: `ws://127.0.0.1:${port}${DUCK_VOICE_PATH}`, ...voice.snapshot() },
         };
       }
+      case "voice":
+        return { listening: `ws://127.0.0.1:${port}${DUCK_VOICE_PATH}`, ...voice.snapshot() };
       case "state": {
         const snapshot = hub.snapshot();
         return { connected: snapshot.connected, hello: snapshot.hello, state: snapshot.state, summary: compactState(snapshot, DUCK_TIMING) };
@@ -91,12 +104,14 @@ export async function runHub(options: { port?: number; socketPath?: string; log?
 
   return {
     hub,
+    voice,
     adapter,
     terminal,
     port,
     socketPath,
     async stop() {
       terminal.stop();
+      await voice.stop();
       await control.close();
       try {
         unlinkSync(socketPath);

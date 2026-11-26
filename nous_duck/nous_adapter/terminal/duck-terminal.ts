@@ -21,7 +21,7 @@ export interface TerminalEvent {
   at: number;
   /** duck＝鴨子回報的事實；hub＝Nous 端自己觀察到的（連線建立或中斷）。 */
   origin: "duck" | "hub";
-  name: DuckEventName | "duck_connected" | "duck_disconnected";
+  name: DuckEventName | "duck_connected" | "duck_disconnected" | "voice_session_ended";
   category: TerminalEventCategory;
   attention: TerminalEventAttention;
   /** 對面是模擬的鴨子。 */
@@ -32,6 +32,12 @@ export interface TerminalEvent {
   /** 固定的原因代碼（不是自由文字）。 */
   reason?: string;
   data?: Record<string, unknown>;
+}
+
+/** DuckTerminal 需要語音通道提供的部分（hub/duck-voice-hub.ts 的 DuckVoiceHub 實作它）。 */
+export interface VoiceEvents extends PresenceSource {
+  onWake(listener: (wake: { wakeId: string; keywordId?: string; doaDeg?: number; at: number; outcome: string; mock: boolean }) => void): () => void;
+  onSessionEnd(listener: (stats: { reason: string; durationMs: number; uplinkFrames: number; uplinkGaps: number; downlinkFrames: number; heardSpeech: boolean; interruptions: number; mock: boolean }) => void): () => void;
 }
 
 export interface DuckEventSink {
@@ -118,6 +124,41 @@ export class DuckTerminal {
 
   attachPresenceSource(source: PresenceSource): void {
     this.presence.attach(source);
+  }
+
+  /**
+   * 接上語音通道：它的真實事件（喚醒、開始、鴨子回報的播放狀態、結束）驅動 presence；
+   * 喚醒與對話結束也整理成終端事件。喚醒是鴨子的音訊端本機偵測到的，這裡不保存也看不到任何音訊。
+   */
+  attachVoice(voice: VoiceEvents): void {
+    this.presence.attach(voice);
+    this.unsubscribers.push(
+      voice.onWake((wake) =>
+        this.publish({
+          at: wake.at,
+          origin: "duck",
+          name: "wake_word",
+          category: "wake",
+          attention: wake.outcome === "open" ? "info" : "notify",
+          mock: wake.mock,
+          ...(wake.outcome === "open" ? {} : { reason: `voice_${wake.outcome}` }),
+          data: { wake_id: wake.wakeId, outcome: wake.outcome, ...(wake.keywordId ? { keyword_id: wake.keywordId } : {}), ...(wake.doaDeg !== undefined ? { doa_deg: wake.doaDeg } : {}) },
+        }),
+      ),
+      voice.onSessionEnd((stats) =>
+        this.publish({
+          at: this.now(),
+          origin: "hub",
+          name: "voice_session_ended",
+          category: "wake",
+          attention: "info",
+          mock: stats.mock,
+          reason: stats.reason,
+          // 只有數量與時間，沒有內容。
+          data: { duration_ms: Math.round(stats.durationMs), uplink_frames: stats.uplinkFrames, uplink_gaps: stats.uplinkGaps, downlink_frames: stats.downlinkFrames, heard_speech: stats.heardSpeech, interruptions: stats.interruptions },
+        }),
+      ),
+    );
   }
 
   stop(): void {
