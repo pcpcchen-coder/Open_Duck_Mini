@@ -1,0 +1,134 @@
+{
+ "ok": true,
+ "checks": [
+  {
+   "name": "設定頁伺服器起來了",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "模擬的 duckd 與聲源方位服務都回報了實際在用的設定",
+   "ok": true,
+   "detail": "2026-11-26 19:45:34,940 INFO root duckd 啟動（body=mock，hub=ws://127.0.0.1:9/duck-link，本機控制 /tmp/ducks-7nOdLN/duckd.sock）\n"
+  },
+  {
+   "name": "七個分區加系統狀態都在",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "表情預覽 25 張都畫出來了",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "已實作的設定顯示「已生效」",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "規劃中的項目停用、標示原因",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "硬體未到的項目停用",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "量測值沒勾確認前不能改",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "改了之後出現儲存列",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "儲存後聲源方位服務約 1 秒內套用，頁面顯示已生效",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "服務回報的值就是新的值",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "頭部角速度改了：顯示要重啟 duckd、現在用的還是 30",
+   "ok": true,
+   "detail": "要重啟 duckd 才生效（現在用的是 30）"
+  },
+  {
+   "name": "超出範圍被拒絕並說明原因",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "被拒絕的值沒有寫進去",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "presence 表情對應改了，duckd 即時套用",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "在鴨子上預覽：duckd 換成該表情，並說明是虛擬面板",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "關掉「讀取聲源方向」後服務停止讀取",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "收緊後這一頁的開關鎖住，並告訴你怎麼放寬",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "繞過頁面直接打 API 放寬也被拒絕",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "變更紀錄有記下來源",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "手機寬度沒有水平捲動",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "手機上開關的觸控範圍夠大（≥ 32 px 高）",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "手機上儲存，duckd 即時套用",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "頁面沒有向外部網路要任何資源",
+   "ok": true,
+   "detail": []
+  },
+  {
+   "name": "瀏覽器 console 沒有錯誤（被拒絕的請求除外）",
+   "ok": true,
+   "detail": [
+    "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "Failed to load resource: the server responded with a status of 400 (Bad Request)"
+   ]
+  }
+ ],
+ "note": "duckd 是模擬身體、麥克風是模擬裝置（mock）；不是實機"
+}

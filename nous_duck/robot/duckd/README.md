@@ -32,6 +32,7 @@ duckd 不做語音、視覺、決策（那是 Nous 的事，[ADR-0001](../../doc
 | [`tools/head_check.sh`](tools/head_check.sh) | 實機頭部檢查：前置檢查 → 接手 → 端到端與租約量測 → 釋放 | T1 |
 | `duckd/gait_host.py`、`duckd/gait_fakes.py` | 步態 host：以 importlib 載入上游步態腳本、把手把換成仲裁器；假硬體介面（mock） | A7 |
 | `duckd/localctl.py`、`duckd/ctl.py` | 本機控制（UNIX socket）：`status`、`engage`、`release`、`estop`、`clear-estop` | A8 |
+| `duckd/settings_in.py` | 讀「[鴨子設定](../settings/README.md)」（ADR-0019）：啟動時讀頭部角速度與活動範圍，之後每秒看一次有沒有變，即時套用功能開關、聽聲轉頭的時間與死區、對話小動作幅度、presence 的表情對應；回報實際在用的值 | 設定 |
 | `duckd/mock_hub.py` | **假的** hub（mock）：測試與開發用，不是 Nous，也不是 B 線的 hub | 測試 |
 | [`../deploy/pi4/deploy_duckd.sh`](../deploy/pi4/deploy_duckd.sh) | 部署到 Pi、systemd 服務 `duckd` | A8 |
 
@@ -103,7 +104,9 @@ ssh duck-pi4 'sudo systemctl stop duckd'
 - 服務啟動時**不碰硬體**。`engage` 才會開匯流排、讀頭部 4 顆的位置、把沒出力的開扭力（先寫目前位置，不跳）。
 - `engage` 前會檢查 `/dev/ttyACM0` 有沒有被別的程式開著（舵機控制台、上游腳本）。有就拒絕並說是誰；**不會搶**。要先在控制台頁面按「釋放硬體」。
 - `release`（或停止服務）：頭以限速回到接手時的位置，恢復接手前的扭力狀態，放開匯流排。
-- 服務的預設參數是 `--head-window-deg 15 --head-speed-deg 30`（2026-11-25 無人看顧時的規定）。要放寬就改 `/etc/systemd/system/duckd.service` 的 `ExecStart`。
+- 頭部角速度與活動範圍從[鴨子設定](../settings/README.md)讀（服務帶 `--settings-dir ~/duck/settings`；預設 30°/s、±15°，是 2026-11-25 無人看顧時的規定）。在設定頁改（`http://duck-pi4.local:8081/`，可調 5～60°/s、±5～30°），改完要重啟 duckd。設定讀不到（還沒跑 `deploy_settings.sh`、檔案壞掉）時 duckd 自己退回 30°/s、±15°。命令列的 `--head-speed-deg`、`--head-window-deg` 有給時以命令列為準。
+- 其他可以在設定頁即時改的：聽聲轉頭、具名動作、對話時的頭部小動作、說話點頭的開關；停穩等待、回正時間、死區、信心下限；對話小動作幅度；各 presence 狀態的表情。功能被關掉時，對應的指令回 `unsupported`（`detail` 是 `… disabled in duck settings`）。
+- 本機控制多一個 `express`（設定頁的「在鴨子上預覽」用）：顯示指定表情最多 10 秒。只在眼睛渲染有開時可用。
 
 ## 安全規則
 
@@ -153,7 +156,7 @@ ssh duck-pi4 'sudo systemctl stop duckd'
 | 回正 | 8 s 沒有聽到聲音，頭回正（送 `tracking_lost`，`reason: quiet`）；追蹤本身不結束 |
 | 來源不見 | 5 s 沒有收到 DOA 服務的存活訊息（麥克風拔掉、服務停了）：結束追蹤，`capabilities.tracking_sound` 變 `unsupported` |
 
-**麥克風裝在哪**（設定在 Pi 的 `~/duck/doa/config/doa.json`，改完 `sudo systemctl restart duck-doa`）：
+**麥克風裝在哪**（在[設定頁](../settings/README.md)的「機體量測值」改，約 1 秒內生效；還沒裝設定頁時才改 Pi 的 `~/duck/doa/config/doa.json` 並重啟 `duck-doa`）：
 
 | `mount` | 意思 | 換算 |
 |---|---|---|

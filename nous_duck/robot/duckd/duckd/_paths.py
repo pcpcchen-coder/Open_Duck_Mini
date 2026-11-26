@@ -29,6 +29,7 @@ def ensure_sibling_packages() -> None:
     robot = root.parent
     _add(robot / "servo_console")
     _add(robot / "eyes")
+    _add(robot / "settings")  # duck_settings（ADR-0019）；Pi 上由 deploy_settings.sh 用 .pth 接進 duckd-venv
 
 
 def find_schema() -> Path:

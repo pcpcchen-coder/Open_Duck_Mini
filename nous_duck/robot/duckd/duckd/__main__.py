@@ -25,11 +25,22 @@ from .limits import Limits
 from .link import DEFAULT_URL, LinkRunner
 from .localctl import LocalControl
 from .protocol import Protocol
+from .settings_in import SettingsInput
 
 WALK_REASON = "gait host not integrated; feet switches not wired; needs attended bring-up"
 
 
 def build(args) -> tuple[Duckd, LinkRunner]:
+    # 頭部限制：命令列有給就用命令列；否則用鴨子設定（ADR-0019）；都沒有就是 30°/s、不設視窗（原本的預設）
+    settings = SettingsInput(args.settings_dir) if getattr(args, "settings_dir", None) else None
+    if settings is not None:
+        if args.head_speed_deg is None:
+            args.head_speed_deg = settings.startup["head.speed_deg_s"]
+        if args.head_window_deg is None:
+            args.head_window_deg = settings.startup["head.window_deg"]
+        settings.startup = {"head.speed_deg_s": float(args.head_speed_deg), "head.window_deg": float(args.head_window_deg)}
+    if args.head_speed_deg is None:
+        args.head_speed_deg = 30.0
     limits = Limits(
         head_max_speed=math.radians(args.head_speed_deg),
         head_window=None if args.head_window_deg is None else math.radians(args.head_window_deg),
@@ -69,6 +80,10 @@ def build(args) -> tuple[Duckd, LinkRunner]:
         allow_unverified_gestures=args.allow_unverified_gestures,
         head_reason=head_reason,
     )
+    core.settings_input = settings
+    core.settings_status = settings.status() if settings is not None else None
+    if settings is not None:
+        settings.poll(core, force=True)
     return core, LinkRunner(core, args.url)
 
 
@@ -79,8 +94,9 @@ def main() -> int:
     p.add_argument("--engage", action="store_true", help="啟動後直接接手硬體（預設不碰硬體，等 `duckd.ctl engage`）")
     p.add_argument("--serial", default="/dev/ttyACM0")
     p.add_argument("--duck-config", type=Path, default=Path.home() / "duck_config.json", help="上游 duck_config.json（只讀偏移）")
-    p.add_argument("--head-speed-deg", type=float, default=30.0, help="頭部角速度上限（°/s，最高 90）")
-    p.add_argument("--head-window-deg", type=float, default=None, help="每軸只能在接手位置 ± 這個角度內")
+    p.add_argument("--head-speed-deg", type=float, default=None, help="頭部角速度上限（°/s，最高 90）。沒給：有 --settings-dir 用設定值，否則 30")
+    p.add_argument("--head-window-deg", type=float, default=None, help="每軸只能在接手位置 ± 這個角度內。沒給：有 --settings-dir 用設定值，否則不限制")
+    p.add_argument("--settings-dir", type=Path, default=None, help="鴨子設定的資料夾（ADR-0019）。沒給就不讀設定，全部用命令列與內建預設")
     p.add_argument("--eyes-panel", type=Path, default=None, help="虛擬面板：把兩眼畫面寫成這個 PNG")
     p.add_argument("--eyes-fps", type=float, default=5.0)
     p.add_argument("--no-eyes", action="store_true")
@@ -127,8 +143,13 @@ def main() -> int:
     # 連線迴圈在主執行緒跑到收到結束訊號；結束前先把頭送回原位、恢復扭力、放開匯流排
     link_thread = threading.Thread(target=link.run, name="duckd-link", daemon=True)
     link_thread.start()
+    settings, next_poll = core.settings_input, 0.0
     while not link.link_stop.wait(0.2):
-        pass
+        if settings is not None and time.monotonic() >= next_poll:  # 每秒看一次設定檔有沒有變
+            next_poll = time.monotonic() + 1.0
+            if settings.poll(core):
+                core.settings_status = settings.status()
+                logging.info("已套用新的鴨子設定（第 %s 版）", core.settings_status.get("revision"))
     link_thread.join(timeout=3.0)
     # 控制迴圈還在跑：把釋放做完再停
     if core.begin_release(time.monotonic()):
