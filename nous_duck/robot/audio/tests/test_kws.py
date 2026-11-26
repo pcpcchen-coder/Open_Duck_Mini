@@ -185,3 +185,62 @@ def test_smoke_real_engine_on_synthetic_fixtures():
             events += eng.accept(stream[i : i + 1600])
     assert events == []
     assert eng.stream_time_s > 10 and eng.silence_resets >= 4
+
+
+WAKE = AUDIO_ROOT / "config" / "wake_keywords.json"
+
+
+def test_product_keyword_list_groups_and_sensitivity():
+    """鴨子實際用的喚醒詞清單：依 group 選一句；Hey Nous 有三種念法；門檻倍數只影響門檻。"""
+    full = WakeConfig.load(WAKE)
+    groups = {e.get("group", e["id"]) for e in full.entries}
+    assert {"HEY_YAZI", "HELLO_YAZI", "HEY_NOUS", "HELLO_NOUS", "HEY_DUCK"} <= groups
+    nous = WakeConfig.load(WAKE, only_group="HEY_NOUS")
+    assert len(nous.entries) == 3 and nous.keywords_text().count(":1.0 #0.25 @HEY_NOUS_") == 3  # 與 AIOS 相同的提升分數與門檻
+    yazi = WakeConfig.load(WAKE, only_group="HELLO_YAZI")
+    assert yazi.keywords_text() == "HH AH0 L OW1 y ā z i @HELLO_YAZI\n"
+    strict = WakeConfig.load(WAKE, only_group="HELLO_YAZI", threshold_scale=2.0)
+    assert strict.keywords_text() == "HH AH0 L OW1 y ā z i #0.3 @HELLO_YAZI\n"
+    assert WakeConfig.load(WAKE, only_group="HEY_NOUS", threshold_scale=2.0).keywords_text().count("#0.5 ") == 3
+    with pytest.raises(ValueError):
+        WakeConfig.load(WAKE, only_group="NOPE")
+
+
+def test_settings_choices_match_keyword_file():
+    """設定頁能選的喚醒詞，都在清單裡（反過來不一定：清單可以有還沒開放的候選）。"""
+    import sys
+
+    sys.path.append(str(AUDIO_ROOT.parent / "settings"))
+    from duck_settings.schema import BY_KEY
+
+    groups = {e.get("group", e["id"]) for e in WakeConfig.load(WAKE).entries}
+    s = BY_KEY["audio.wake_keyword"]
+    presets = set(json.loads(WAKE.read_text(encoding="utf-8"))["presets"])
+    assert {c[0] for c in s.choices} <= groups | presets and s.default == "YAZI_EN"
+
+
+def test_default_preset_enables_hello_and_hey_yazi():
+    """使用者 2026-11-26 的決定：先用「Hello 鴨子」與「Hey 鴨子」，兩句同時有效；英文用 ARPAbet、鴨子用拼音。"""
+    c = WakeConfig.load(WAKE, only_group="YAZI_EN")
+    assert c.keywords_text() == "HH AH0 L OW1 y ā z i @HELLO_YAZI\nHH EY1 y ā z i @HEY_YAZI_EN\nh ēi y ā z i @HEY_YAZI_ZH\n"
+    from duck_audio.kws import WakeEngine as _E
+
+    assert _E(c, FakeSpotter({})).group_of("HEY_YAZI_ZH") == "HEY_YAZI"  # 回報的是哪一句，不是哪種寫法
+
+
+def test_engine_group_and_external_quiet_flag():
+    sp = FakeSpotter({})
+    c = WakeConfig.load(WAKE, only_group="HEY_NOUS")
+    eng = WakeEngine(c, sp, reset_on_silence_s=0.3)
+    assert eng.group_of("HEY_NOUS_AW") == "HEY_NOUS" and eng.group_of("X") == "X"
+    loud = np.full(1600, 0.2, np.float32)  # 很大聲，但呼叫端說是安靜（例如自動增益放大的底噪）
+    sp.calls += 1
+    sp.ready = True
+    eng.accept(loud, quiet=False)  # 先有一段聲音，之後的安靜才需要重置
+    for _ in range(5):
+        sp.calls += 1
+        sp.ready = True
+        eng.accept(loud, quiet=True)
+    assert sp.resets == 1
+    eng.reset()
+    assert sp.resets == 2

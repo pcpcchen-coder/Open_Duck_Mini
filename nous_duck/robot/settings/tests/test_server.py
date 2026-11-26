@@ -34,7 +34,7 @@ def test_state_lists_every_setting_with_value_default_range_and_effect(served):
     e = by["hearing.min_speech_energy"]
     assert (e["value"], e["default"], e["min"], e["max"], e["apply"], e["consumer"]) == (200000.0, 200000.0, 0.0, 5000000.0, "live", "duck-doa")
     assert e["effect"]["state"] == "service_down"  # 沒有服務在跑：照實說，不寫「已生效」
-    blocked = by["audio.volume_cap_day"]
+    blocked = by["audio.night_start"]
     assert blocked["writable"] is False and blocked["effect"]["state"] == "none" and blocked["blocked_by"]
     assert st["duckd"] == {"reachable": False} and st["access"] == {"token_required": False, "lan_only": True}
     assert any("緊急停止" in t for t in st["never_here"])
@@ -46,8 +46,8 @@ def test_save_roundtrip_and_real_reasons_on_failure(served, store):
     status, r = c.call("/api/save", {"changes": {"hearing.min_speech_energy": 350000, "features.speaking_bob": False}, "base_revision": rev})
     assert status == 200 and set(r["changed"]) == {"hearing.min_speech_energy", "features.speaking_bob"}
     assert store.load().values["hearing.min_speech_energy"] == 350000.0
-    status, r = c.call("/api/save", {"changes": {"head.speed_deg_s": 200, "audio.mute": True}})
-    assert status == 400 and set(r["errors"]) == {"head.speed_deg_s", "audio.mute"} and "超出範圍" in r["errors"]["head.speed_deg_s"]
+    status, r = c.call("/api/save", {"changes": {"head.speed_deg_s": 200, "audio.night_start": "23:00"}})
+    assert status == 400 and set(r["errors"]) == {"head.speed_deg_s", "audio.night_start"} and "超出範圍" in r["errors"]["head.speed_deg_s"]
     status, r = c.call("/api/save", {"changes": {"hearing.recenter_s": 9}, "base_revision": rev})
     assert status == 409 and r["code"] == "conflict"
     status, r = c.call("/api/save", {"changes": {"privacy.sound_direction": False}})

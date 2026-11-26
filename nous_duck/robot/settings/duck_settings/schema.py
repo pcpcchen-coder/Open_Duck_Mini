@@ -158,7 +158,8 @@ class Setting:
         return d
 
 
-DUCKD, DOA = "duckd", "duck-doa"
+DUCKD, DOA, VOICE = "duckd", "duck-doa", "duck-voice"
+_VOICE_TEST = "2026-11-26 語音服務實機紀錄（docs/validation/voice-duck-side-2026-11-26.md）"
 _HW_TEST = "2026-11-26 實機頭部與聽聲轉頭測試（docs/validation/duckd-head-hardware-2026-11-26.md）"
 
 
@@ -192,24 +193,27 @@ def _build() -> tuple[Setting, ...]:
     add(Setting("features.track_face", "features", "看著說話的人", "bool", True,
                 "用鏡頭找到人臉，頭跟著轉。", status="hardware_missing", blocked_by="雙目鏡頭還沒裝；人臉追蹤只在合成資料上測過"))
     add(Setting("features.wake_word", "features", "喚醒詞", "bool", True,
-                "聽到喚醒詞才開始對話。", status="planned", blocked_by="喚醒詞引擎只做過運算量測，還沒接成服務；喚醒詞也還沒決定"))
-    add(Setting("features.sound_effects", "features", "本機音效", "bool", True,
-                "表情切換、開始聽、聽完了等提示音。", status="planned", blocked_by="喇叭播放還沒接進 duckd；沒有人試聽過"))
+                "聽到喚醒詞才開始對話。關掉後語音服務不開麥克風，叫不醒鴨子。", consumer=VOICE, basis=_VOICE_TEST))
+    add(Setting("features.sound_effects", "features", "對話提示音", "bool", True,
+                "被叫醒時的「開始聽」、沒聽到人說話的「聽完了」、連不上 Nous 的提示音。目前只有語音服務會播；表情切換的音效還沒接。",
+                consumer=VOICE, basis=_VOICE_TEST))
 
-    # ------------------------------------------------------------ 語音與聲音（全部還沒有常駐服務在讀）
-    why_audio = "喇叭播放路徑（duck_audio.playback）還沒接成常駐服務；音量也還沒對著喇叭量過"
-    add(Setting("audio.volume_cap_day", "audio", "白天音量上限", "number", 0.5,
-                "鴨子出聲的線性增益上限。Nous 只能在這個上限以內調音量。", status="planned", blocked_by=why_audio,
+    # ------------------------------------------------------------ 語音與聲音（duck-voice 服務）
+    add(Setting("audio.volume", "audio", "提示音音量", "number", 0.2,
+                "鴨子本機提示音（被叫醒的「嘟嘟」等）的音量（線性增益），不會超過下面的上限。**管不到對話的聲音**：那是 Chromium 直接播的。", consumer=VOICE, min=0.0, max=1.0, step=0.05,
+                basis="保守初值；沒有量過聲壓。" + _VOICE_TEST))
+    add(Setting("audio.volume_cap_day", "audio", "提示音音量上限", "number", 0.5,
+                "鴨子本機提示音的線性增益上限。", consumer=VOICE,
                 min=0.0, max=0.5, step=0.05, basis="ADR-0010 §7；duck_audio.playback.GateConfig 的初始值，未校準"))
     add(Setting("audio.volume_cap_night", "audio", "夜間音量上限", "number", 0.15,
-                "夜間時段的音量上限。", status="planned", blocked_by=why_audio, min=0.0, max=0.15, step=0.05,
-                basis="ADR-0010 §7；初始值，未校準"))
+                "夜間時段的音量上限。", status="planned", blocked_by="夜間模式的排程還沒做（ADR-0006 待決第 4 項），目前一律用白天上限",
+                min=0.0, max=0.15, step=0.05, basis="ADR-0010 §7；初始值，未校準"))
     add(Setting("audio.night_start", "audio", "夜間開始", "time", "22:00", "夜間模式開始的時間。", status="planned",
                 blocked_by="夜間模式的排程還沒做（ADR-0006 待決第 4 項）"))
     add(Setting("audio.night_end", "audio", "夜間結束", "time", "07:00", "夜間模式結束的時間。", status="planned",
                 blocked_by="夜間模式的排程還沒做（ADR-0006 待決第 4 項）"))
-    add(Setting("audio.mute", "audio", "本機靜音", "bool", False, "擋下所有聲音，包含安全提示。", status="planned", blocked_by=why_audio))
-    why_voice = "變聲參數要等使用者試聽後決定（ADR-0010）；串流播放迴圈還沒寫"
+    add(Setting("audio.mute", "audio", "本機靜音", "bool", False, "擋下鴨子本機的提示音。**擋不到對話的聲音**（Chromium 直接播的）。", consumer=VOICE))
+    why_voice = "路線 2 不適用：對話的聲音由 Pi 上的 Chromium 直接播出，不經過鴨子的變聲（使用者 2026-11-26 決定走路線 2）"
     add(Setting("audio.voice_changer", "audio", "變聲方式", "enum", "phase_vocoder",
                 "把 Nous 的聲音變成鴨子的聲音的演算法。", status="planned", blocked_by=why_voice,
                 choices=(("delay_line", "延遲線（省運算，延遲 20 ms）"), ("phase_vocoder", "相位聲碼器（可控共振峰，延遲 53 ms）"))))
@@ -217,10 +221,20 @@ def _build() -> tuple[Setting, ...]:
                 status="planned", blocked_by=why_voice, min=0.0, max=7.0, step=1.0, unit=" 半音", basis="ADR-0010 §4 的候選值"))
     add(Setting("audio.voice_formant_ratio", "audio", "共振峰比例", "number", 1.0, "1.0＝保留原本的共振峰；大於 1 聽起來身體比較小。",
                 status="planned", blocked_by=why_voice, min=1.0, max=1.2, step=0.01, basis="audio-2026-11-25 驗證紀錄的候選值"))
-    add(Setting("audio.wake_keyword", "audio", "喚醒詞", "enum", "HEI_YAZI", "用哪一句叫醒鴨子。", status="planned",
-                blocked_by="喚醒詞還沒決定；這裡列的是量測用的候選（config/wake_keywords.candidates.json）",
-                choices=(("HEI_YAZI", "嘿鴨子"), ("XIAOYA_XIAOYA", "小鴨小鴨"), ("YAZI_YAZI", "鴨子鴨子"), ("HEY_DUCK", "Hey Duck"),
-                         ("HELLO_DUCK", "Hello Duck"))))
+    add(Setting("audio.wake_keyword", "audio", "喚醒詞", "enum", "YAZI_EN", "用哪一句叫醒鴨子。改了之後幾秒內生效。",
+                consumer=VOICE, basis="使用者 2026-11-26 決定先用「Hello 鴨子」與「Hey 鴨子」，之後可能換。清單在 robot/audio/config/wake_keywords.json；" + _VOICE_TEST,
+                choices=(("YAZI_EN", "Hello 鴨子／Hey 鴨子（兩句都可以）"), ("HELLO_YAZI", "只有 Hello 鴨子"), ("HEY_YAZI", "只有 Hey 鴨子"),
+                         ("HEY_DUCK", "Hey Duck"), ("HELLO_DUCK", "Hello Duck"),
+                         ("HEY_NOUS", "Hey Nous（和 Nous 其他終端相同）"), ("HELLO_NOUS", "Hello Nous（和 Nous 其他終端相同）"))))
+    add(Setting("audio.wake_sensitivity", "audio", "喚醒門檻倍數", "number", 1.0,
+                "把喚醒詞的門檻乘上這個倍數。調高比較不會誤喚醒、但比較難叫醒；調低相反。", consumer=VOICE, min=0.5, max=3.0, step=0.1,
+                basis="門檻本身沿用 AIOS 的值，在鴨子的麥克風上沒有用真人聲音校準"))
+    add(Setting("audio.wake_holdoff_s", "audio", "叫醒後多久內不再聽喚醒詞", "number", 8.0,
+                "叫醒一次之後，這段時間內不再偵測喚醒詞（對話由語音終端接手）。有對話狀態回報時，對話期間本來就不偵測。",
+                consumer=VOICE, min=2.0, max=60.0, step=1.0, unit=" 秒", advanced=True))
+    add(Setting("features.voice_terminal", "features", "語音終端（鴨子上的 Nous 頁面）", "bool", True,
+                "讓鴨子自己的麥克風與喇叭和 Nous 對話。", status="planned",
+                blocked_by="Pi 上無螢幕的 Chromium 已確認拿得到麥克風，但還沒有真的連 Nous、出聲測過（要你在場）；啟動它的服務也還沒做"))
 
     # ------------------------------------------------------------ 聽聲轉頭門檻
     add(Setting("hearing.min_speech_energy", "hearing", "語音能量門檻", "number", 200000.0,
@@ -282,8 +296,9 @@ def _build() -> tuple[Setting, ...]:
                 tighten=("normal", "guest", "night", "full")))
     add(Setting("privacy.camera", "privacy", "鏡頭", "bool", True, "關掉後不能導航、找人、回充。", status="hardware_missing",
                 blocked_by="雙目鏡頭還沒裝", tighten=(True, False)))
-    add(Setting("privacy.wake_listening", "privacy", "常駐喚醒聆聽（麥克風）", "bool", True, "關掉後叫不醒鴨子。", status="planned",
-                blocked_by="喚醒詞服務還沒做", tighten=(True, False)))
+    add(Setting("privacy.wake_listening", "privacy", "常駐喚醒聆聽（麥克風）", "bool", True,
+                "關掉後語音服務不開麥克風，叫不醒鴨子。喚醒前的聲音只在記憶體裡經過喚醒引擎，不存檔、不外傳。",
+                consumer=VOICE, tighten=(True, False), basis="ADR-0003 §6、ADR-0006 §4：規則在資料產生處執行"))
     add(Setting("privacy.face_recognition", "privacy", "臉部辨識", "bool", True, "關掉後找人只靠聲音方向與聲紋。", status="planned",
                 blocked_by="在 Nous 端執行（ADR-0006 §4），鴨子上沒有這個開關可以接", tighten=(True, False)))
 

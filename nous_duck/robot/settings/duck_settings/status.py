@@ -18,6 +18,7 @@ from .reader import View, read_applied
 SERVICES = (
     ("duckd", "duckd（頭部、動作、眼睛、duck-link）"),
     ("duck-doa", "duck-doa（聲源方位）"),
+    ("duck-voice", "duck-voice（喚醒詞、收音、喇叭回話）"),
     ("duck-console", "duck-console（舵機控制台）"),
     ("duck-settings", "duck-settings（這個設定頁）"),
 )

@@ -1,0 +1,4 @@
+# duck-voice 服務（喚醒詞、收音、喇叭回話）執行依賴；Pi 上裝進 ~/duck/audio-venv
+-r requirements-kws.txt
+# 與 duckd 相同的版本（duckd/requirements.txt）
+websockets==17.4
