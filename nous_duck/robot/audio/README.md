@@ -107,7 +107,7 @@ Chromium 語音終端要共用麥克風：啟動時設 `ALSA_CONFIG_PATH=/usr/sh
 
 還沒做、要別的線配合的：
 
-- **duckd（A 線）**：感知埠收到 `kind:"wake_word"` 時發 duck-link 的 `wake_word` 事件（`data` 帶 `keyword_id`、`doa_deg`；`doa_deg` 可由 duckd 用自己最新的聲音方位補）；把 presence 轉送到 `127.0.0.1:8794`；喚醒時轉向聲源。duckd 現在會靜靜忽略這個 `kind`。
+- **duckd（A 線）**：2026-11-27 已接上（分支 `claude/duckd-wake-relay`）——收到 `kind:"wake_word"` 發 duck-link 的 `wake_word` 事件、用最新的聲音方位補 `doa_deg`、把 presence 轉送到 `127.0.0.1:8794`。Pi 上不出力的實測通過（手動觸發）；頭部出力時的反應、頭在動時舵機聲會不會誤觸發喚醒詞**還沒測**（可能需要這個服務加「頭在動時不偵測」）。見 [`duckd-wake-relay-2026-11-27.md`](../../docs/validation/duckd-wake-relay-2026-11-27.md)。
 - **Chromium 語音終端的啟動與服務化、真的連 Nous 出聲**（B 線＋使用者在場）。
 - **回音消除的參考訊號**：Chromium 直接播到 CD002 時，XVF3800 拿不到參考；第一版靠 Chromium 的 `echoCancellation`。
 

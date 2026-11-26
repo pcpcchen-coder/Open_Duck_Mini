@@ -2,13 +2,15 @@
 
 - WebSocket server，聽 `127.0.0.1:8791/duck-link`；送 `hello`（`role: nous`、`mock: true`）、每 500 ms 一次 heartbeat。
 - 用同一份 schema 驗證鴨子送來的每一則訊息；不合格的記在 `schema_errors`。
-- `python -m duckd.mock_hub` 會開一個互動用的 hub；`--e2e` 跑一段固定的頭部端到端流程並輸出量測（JSON）。
+- `python -m duckd.mock_hub` 會開一個互動用的 hub；`--e2e` 跑一段固定的頭部端到端流程並輸出量測（JSON）；
+  `--wake` 跑喚醒路徑（手動丟一則 `wake_word` 給 duckd，看事件與 presence 轉送）。
 """
 from __future__ import annotations
 
 import argparse
 import asyncio
 import json
+import socket
 import statistics
 import sys
 import time
@@ -275,6 +277,80 @@ async def run_lease_test(hub: MockHub) -> dict:
     return out
 
 
+async def run_wake_test(hub: MockHub, percept_port: int = 8793, voice_port: int = 8794) -> dict:
+    """喚醒路徑：往 duckd 的感知埠丟一則 `wake_word`（**手動觸發、標 mock，不是真的有人叫**）→ hub 收到事件；
+
+    再像 Nous 一樣送 presence，並在 `voice_port`（喚醒服務的位置；**喚醒服務要先停著**）看 duckd 有沒有轉送。
+    不需要頭部接手，不會讓任何舵機出力。
+    """
+    out: dict = {"mock_hub": True, "trigger": "manual UDP datagram (mock: true)"}
+    loop = asyncio.get_running_loop()
+    relayed: list[tuple[float, dict]] = []
+
+    class _Rx(asyncio.DatagramProtocol):
+        def datagram_received(self, data, addr):
+            try:
+                relayed.append((time.monotonic(), json.loads(data)))
+            except ValueError:
+                relayed.append((time.monotonic(), {"_bad": data[:80].decode("latin-1")}))
+
+    try:
+        transport, _ = await loop.create_datagram_endpoint(_Rx, local_addr=("127.0.0.1", voice_port))
+    except OSError as exc:
+        out["error"] = f"UDP {voice_port} 被占用（喚醒服務在跑？）：{exc}"
+        return out
+    tx = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        await asyncio.wait_for(hub.connected.wait(), 60)
+        await asyncio.sleep(1.5)  # 等租約建立
+        st = await _head_state(hub)
+        out["before"] = {k: st.get(k) for k in ("mode", "control_source", "presence", "head")}
+
+        async def relay_of(state: str, since: float, timeout: float = 2.0) -> float | None:
+            end = time.monotonic() + timeout
+            while time.monotonic() < end:
+                for t, m in relayed:
+                    if t >= since and m == {"v": 1, "kind": "presence", "state": state}:
+                        return round((t - since) * 1000.0, 1)
+                await asyncio.sleep(0.01)
+            return None
+
+        n0, t0 = len(hub.received), time.monotonic()
+        msg = {"v": 1, "kind": "wake_word", "keyword_id": "HELLO_YAZI", "doa_deg": None, "t_ms": int(t0 * 1000), "mock": True}
+        tx.sendto(json.dumps(msg, separators=(",", ":")).encode(), ("127.0.0.1", percept_port))
+        try:
+            ev = await hub.wait_for(lambda m: m.get("type") == "event" and m.get("event") == "wake_word", 3.0)
+            out["wake_event"] = {k: ev.get(k) for k in ("event", "event_id", "data")}
+            out["wake_event_latency_ms"] = round((time.monotonic() - t0) * 1000.0, 1)
+        except asyncio.TimeoutError:
+            out["wake_event"] = None
+        out["relay_wake_ms"] = await relay_of("wake", t0)
+        out["presence_after_wake"] = (await _head_state(hub)).get("presence")
+
+        steps = []
+        for state in ("listening", "thinking", "speaking", "idle"):
+            t1 = time.monotonic()
+            ack = await hub.command("presence", {"state": state})
+            steps.append({"state": state, "ack": ack.get("status"), "relay_ms": await relay_of(state, t1)})
+        out["nous_presence"] = steps
+
+        # 第二次：沒有人接手 presence 時，本機的 wake 要自己回到 idle
+        t2 = time.monotonic()
+        tx.sendto(json.dumps({**msg, "keyword_id": "HEY_YAZI"}, separators=(",", ":")).encode(), ("127.0.0.1", percept_port))
+        out["second_relay_wake_ms"] = await relay_of("wake", t2)
+        idle_ms = await relay_of("idle", t2 + 0.5, timeout=12.0)
+        out["local_wake_back_to_idle_s"] = None if idle_ms is None else round(idle_ms / 1000.0 + 0.5, 2)
+        events = [m for _, m in hub.received[n0:] if m.get("type") == "event" and m.get("event") == "wake_word"]
+        out["wake_events_total"] = len(events)
+        out["wake_event_ids_unique"] = len({e["event_id"] for e in events}) == len(events)
+        out["relayed_states"] = [m.get("state") for _, m in relayed]
+        out["schema_errors"] = hub.schema_errors
+        return out
+    finally:
+        transport.close()
+        tx.close()
+
+
 async def _amain(args) -> int:
     hub = MockHub(args.host, args.port)
     await hub.start()
@@ -283,6 +359,8 @@ async def _amain(args) -> int:
         result = await run_e2e(hub, args.amplitude)
     elif args.lease:
         result = await run_lease_test(hub)
+    elif args.wake:
+        result = await run_wake_test(hub, args.percept_port, args.voice_port)
     else:
         try:
             while True:
@@ -301,6 +379,9 @@ def main() -> int:
     p.add_argument("--port", type=int, default=8791)
     p.add_argument("--e2e", action="store_true", help="跑頭部端到端流程並輸出量測")
     p.add_argument("--lease", action="store_true", help="跑租約測試（中途關掉 hub 再重開）")
+    p.add_argument("--wake", action="store_true", help="跑喚醒路徑測試（手動丟一則 wake_word 給 duckd；喚醒服務要先停著）")
+    p.add_argument("--percept-port", type=int, default=8793, help="--wake：duckd 的感知埠")
+    p.add_argument("--voice-port", type=int, default=8794, help="--wake：在這個埠收 duckd 轉送的 presence")
     p.add_argument("--amplitude", type=float, default=0.2, help="look 的幅度（rad）")
     args = p.parse_args()
     try:
