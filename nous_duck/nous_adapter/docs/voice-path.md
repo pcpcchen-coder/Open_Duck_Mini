@@ -2,7 +2,7 @@
 
 # 語音路徑：Nous 的聲音怎麼到鴨子、鴨子怎麼聽
 
-狀態：**設計（沒有試聽；路線 A 的終端只做了「不連 Nous、不出聲」的準備與量測）**。日期：2026-11-25；2026-11-26 依修訂後的 ADR-0003、ADR-0005、ADR-0010 更新（見 §7）。
+狀態：**使用者 2026-11-26 決定走路線 2（鴨子的 Pi 上跑 Chromium 開 Nous 頁面），見 §8。** Nous 端的改動在 AIOS 的 PR（[pcpcchen-coder/AIOS#158](https://github.com/pcpcchen-coder/AIOS/pull/158)，旗標預設關閉、未合併）；**還沒有任何人用真的麥克風、喇叭與語音模型跑過。** 日期：2026-11-25；2026-11-26 兩次更新（§7、§8）。§2～§5 是決定之前的比較，保留當紀錄。
 
 這份文件把 AIOS 的現況（事實）與鴨子現在的硬體對起來，回答四個問題：現在最短可行的對話路徑、麥克風陣列到貨後怎麼變、哪些要 AIOS 改、哪些能在鴨子端做。
 
@@ -136,3 +136,66 @@ spike 不通過（Pi 4 跑不動 Chromium，或無螢幕拿不到麥克風）的
 | 作法 0（在 Mac 對話、鴨子做動作） | AIOS 的批次 D1、D2、D4a **已經在 AIOS 的分支 `claude/duck-link` 實作並開了 PR**（旗標 `NOUS_DUCK` 預設關閉；fixture 測試與對 duckd 模擬身體的本機檢查，沒有實機、沒有真實語音）。見 [`aios-integration-plan.md` §0](aios-integration-plan.md#0-2026-11-26-更新d1d2d4a-已在-aios-分支實作) |
 | 路線 A 的 spike | 準備工作（Pi 上無螢幕跑 Chromium 的腳本與量測）見 [`../../robot/deploy/pi4/terminal/`](../../robot/deploy/pi4/terminal/) 與[驗證紀錄](../../docs/validation/duck-terminal-spike-2026-11-26.md)。真正連 Nous、出聲的那一步**等你**在場 |
 | `speaking` | AIOS 這一批的 presence 只有 `wake`／`thinking`／`listening`／`working`／`error`／`idle`，**沒有 `speaking`**（核心不知道模型正在說話）。說話時的點頭要等頁面回報 phase（D4b），或由鴨子自己量正在播的聲音（§4 的建議） |
+
+## 8. 2026-11-26 的決定：路線 2
+
+使用者的決定（2026-11-26，原話）：
+
+- 「我要路線2」——鴨子的 Raspberry Pi 上跑 Chromium 開 Nous 頁面（`?terminal=duck`），對話的收音、播放、和雲端模型的連線都在那個頁面；鴨子的喚醒叫頁面開始對話。
+- 「喚醒詞要用另一個，先用 “Hello 鴨子” & "hey 鴨子"」——鴨子本機偵測這兩個詞。Nous 自己的「Hello Nous」「Hey Nous」不改。
+
+計費方式（走哪條即時語音路徑）使用者沒有說明，這裡不推定；路線 2 兩條都能用。
+
+### 8.1 整條路
+
+```text
+人：「Hey 鴨子」
+  └► 鴨子的音訊服務（D 線，Pi 上原生）：本機喚醒詞偵測
+        └► duckd（A 線）──duck-link 事件 wake_word──► Nous 核心（AIOS，NOUS_DUCK=on）
+                                                        └► SSE voice.request（一次性權杖）
+                                                              └► Pi 上的 Chromium：Nous 頁面 ?terminal=duck
+                                                                    ├► 以 wake_word 開始即時語音（麥克風、喇叭都在這個頁面）
+                                                                    │     ⇅ WebRTC，直接連雲端模型
+                                                                    └► 每次狀態改變回報核心：聽／想／說
+Nous 核心 ──duck-link presence（wake／listening／thinking／speaking／idle）──► duckd：頭與眼睛
+模型呼叫 app.duck.look／gesture… ──► Nous 核心 ──duck-link 指令──► duckd
+```
+
+### 8.2 各段在哪裡、做到哪
+
+| 段 | 誰的 | 狀態（2026-11-26） |
+|---|---|---|
+| 本機喚醒詞（「Hello 鴨子」「Hey 鴨子」） | D 線 `robot/audio/` | 進行中（D 線） |
+| 喚醒 → duck-link 的 `wake_word` 事件 | D 線通知 duckd、duckd（A 線）送事件 | **還沒接**：D 線的服務有把狀態丟給 duckd 的選項，duckd 那一端還沒做。這一段沒通之前，鴨子的喚醒到不了 Nous |
+| 核心收到 `wake_word` → 請頁面開始對話；頁面回報聽／想／說 → `presence` | B 線，在 AIOS | 程式完成，PR 待審（[pcpcchen-coder/AIOS#158](https://github.com/pcpcchen-coder/AIOS/pull/158)）。伺服器端有 fixture 測試；**頁面端沒有在瀏覽器裡跑過** |
+| Pi 上無螢幕跑 Chromium 開 Nous 頁面 | B 線 `robot/deploy/pi4/terminal/` | 腳本有了（`run_nous_terminal.sh`）；只量過「不連 Nous、不出聲、沒有麥克風」的情況 |
+| 頭與眼睛跟著 `presence` | A 線 duckd | 實機頭部已有人眼確認（T1）；`speaking` 以前沒有來源，這次才有 |
+| 用說的叫鴨子做動作（`app.duck.*`） | B 線，已在 AIOS main | 沒有用真實語音試過 |
+
+### 8.3 鴨子終端的頁面和一般終端不同的地方
+
+- **只由鴨子的喚醒開始對話。** 這個頁面不啟動頁面內建的喚醒聆聽（就算 Nous 開了 `NOUS_WAKE`），所以不會因為有人說「Hey Nous」而開始，也不會和鴨子的喚醒偵測搶麥克風。
+- 鴨子的喚醒不需要 `NOUS_WAKE=on`：核心對每一次 `wake_word` 事件發一個一次性權杖，頁面帶著它開始，核心才把這通當成喚醒開始。
+- 既有的限速照樣適用：喚醒開始的對話每 60 秒最多 3 次。
+- 喚醒後 5 秒沒有人說話，這通自己結束。
+- 頁面把聽／想／說回報給核心，所以鴨子有真的「說話中」。
+
+### 8.4 還沒解決、要實測才知道的事
+
+這些以前都沒有驗證過。D 線 2026-11-26 深夜回覆了在 Pi 上量到的結果（沒有出聲、沒有連 Nous），下表標「D 線實測」的是他們量的，B 線沒有重跑；其餘仍然沒有驗證。
+
+| 問題 | 現況與打算 |
+|---|---|
+| 麥克風誰拿 | **用 ALSA 共享擷取（dsnoop），D 線實測可行。** D 線的設定檔 `nous_duck/robot/audio/alsa/duck-audio.conf`（Pi 上是 `~/duck/voice/alsa/duck-audio.conf`）定義共用裝置 `duck_mic`（XVF3800 的兩個聲道原樣，16 kHz）；不改 `~/.asoundrc`、不改 `/etc`，只對 Chromium 行程用環境變數載入。`run_nous_terminal.sh` 加了 `--alsa-config`、`--mic`、`--speaker` 三個選項。D 線實測（headless、只列裝置的探測）：`getUserMedia` 成功、音軌是 live，同時喚醒偵測照常讀同一支麥克風。不要直接開 `hw:Array`。**還沒有在真的通話裡用過** |
+| 喚醒到開始收音的延遲 | 事件 → 核心 → SSE → 頁面開始 → WebRTC 連線，沒有量過。這段時間說的話頁面聽不到 |
+| 喇叭 | Chromium 播到 ALSA 預設輸出。第一版先直接播（**不經變聲與閘門**）；要變聲得多一段 loopback，之後再做。這和 ADR-0010「鴨子的音色＝Nous 的聲音加變聲」有落差，要你知道 |
+| 回音消除 | 第一版只靠 Chromium 的軟體回音消除，**沒有實測夠不夠**。喇叭（CD002，48 kHz）和麥克風（XVF3800，16 kHz）是兩張時脈不同的卡，D 線沒有可靠的純設定作法把播出的聲音餵給 XVF3800 當參考。D 線實測：用程式把同一段聲音同時送給 XVF3800 時，處理後聲道的回授從 −19 dBFS 降到 −52～−58 dBFS，所以之後值得做（例如把喇叭改接 XVF3800 的輸出） |
+| 鴨子自己的聲音觸發喚醒 | D 線的喚醒服務在 `127.0.0.1:8794` 收 UDP 的 `presence`；不是 `idle` 時不偵測（30 秒沒更新就當結束）。沒有人送的話，退路是叫醒後固定 8 秒不偵測。**誰來送還沒定**：B 線建議由 duckd 轉送（它本來就從 duck-link 收到 `presence`，終端腳本不知道通話階段），要 A 線決定。D 線實測：喇叭播的合成語音經空氣回到麥克風，15 句裡喚醒引擎只回報 1 句，風險低但不是零 |
+| 即時語音的同意與麥克風權限 | 存在那個 Chromium 設定檔裡，鴨子沒有螢幕可以按。要從 Mac 用 DevTools 連過去按一次（`run_nous_terminal.sh --debug-port`），步驟在 [`voice-test.md` §7](voice-test.md#7-路線-2鴨子當語音終端說hey-鴨子開始對話) |
+| Pi 4（2 GB）的負載 | D 線實測（頁面閒置、麥克風開著、沒有通話）：喚醒偵測約佔一顆核心的 16～17%，Chromium 約 6%、PSS 約 440 MB，可用記憶體最低 1301 MB，52 °C。**通話中的負載還沒有數字**：探測腳本在通話模式會加 `--disable-audio-output`，那會讓 Chromium 列不到任何輸入裝置，所以要等真的通話才量得到 |
+| 喚醒事件怎麼到 duck-link | D 線的喚醒服務偵測到後，用 UDP 送到 duckd 的感知埠 `127.0.0.1:8793`（`kind: "wake_word"`，帶 `keyword_id`）。**duckd 現在會忽略這個 kind**；要 A 線補上「收到就發 duck-link 的 `wake_word` 事件」。這一段接上之前，鴨子叫不醒頁面 |
+| 隱私開關 | 通話時麥克風的聲音由瀏覽器直接送到雲端，不經鴨子的音訊服務。設定頁的「常駐喚醒聆聽」關掉時頁面不會被叫醒，但已經開始的通話要靠結束通話來停 |
+
+### 8.5 原生音訊通道 `/duck-voice` 的去向
+
+決定之前，B 線做了一條原生的 PCM 通道（鴨子端收音播放、Nous 端接語音後端），和 D 線的狀態機互通過。路線 2 的對話不走它，所以**沒有併進 `v2`**：留在分支 `claude/duck-b-voice-channel`（已推送，沒有 PR），當成實驗紀錄。之後如果要讓對話的聲音經過鴨子的變聲與閘門、或不想在 Pi 上跑瀏覽器，再回來看它；那條路需要 AIOS 核心自己和語音模型講音訊。

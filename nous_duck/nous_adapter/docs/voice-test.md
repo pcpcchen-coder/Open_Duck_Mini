@@ -2,7 +2,7 @@
 
 # 語音實測步驟：用說的讓鴨子轉頭、點頭、搖頭（T2、T3）
 
-狀態：**步驟寫好，還沒有人照著跑過。** 日期：2026-11-26。這份是給使用者照做的；裡面會連雲端語音模型、會出聲、會讓鴨子的頭動，所以每一步都由你自己執行。
+狀態：**步驟寫好，還沒有人照著跑過。** 日期：2026-11-26（當天晚上加了 §7：路線 2，對鴨子說「Hey 鴨子」開始對話）。這份是給使用者照做的；裡面會連雲端語音模型、會出聲、會開麥克風、會讓鴨子的頭動，所以每一步都由你自己執行。
 
 現況：AIOS 的 `/duck-link` 端點、`duck` adapter 與互動狀態已經合併進 AIOS main（PR #156，旗標預設關閉）。鴨子端的實機頭部與 `duckctl` 經通道下 `look`／`gesture` 已有人眼確認（A 線，2026-11-26）。**還沒驗證的就是中間這一段：真的語音 → 模型選工具 → 鴨子。**
 
@@ -177,3 +177,99 @@ ssh duck-pi4 '~/duck/duckd/duckd-ctl engage'
 - AIOS 端：fixture 測試與對 duckd 模擬身體的本機檢查（沒有真實語音）。
 - 鴨子端：實機頭部與 `duckctl` 經通道對實機的 `look`／`gesture`（A 線，人眼確認）。
 - **沒有驗證**：真實語音、模型怎麼使用這些工具、開發實例的啟動步驟（`.env` 的組合、另一個設定目錄下的登入）。
+
+## 7. 路線 2：鴨子當語音終端（說「Hey 鴨子」開始對話）
+
+§1～§3 是「在 Mac 的頁面說話、鴨子做動作」。這一節是 2026-11-26 你決定的路線 2：**對鴨子說話、鴨子的喇叭回話**——Pi 上的 Chromium 開 Nous 頁面當終端，鴨子本機偵測「Hello 鴨子」「Hey 鴨子」來開始對話。設計與還沒解決的事見 [`voice-path.md` §8](voice-path.md#8-2026-11-26-的決定路線-2)。
+
+**這一節的前提還沒有全部到位**，寫這份文件時：
+
+| 需要 | 狀態 |
+|---|---|
+| AIOS 的 DUCK-2（[pcpcchen-coder/AIOS#158](https://github.com/pcpcchen-coder/AIOS/pull/158)）合併，或你用那個分支啟動 Nous | PR 待審 |
+| 鴨子本機的喚醒詞偵測（D 線的 `duck-voice` 服務，預設不啟用） | D 線已做成設定，兩句都有效 |
+| 喚醒送到 duck-link（D 線 → duckd → `wake_word` 事件） | 還沒接：duckd 現在會忽略 D 線送來的喚醒，要 A 線補上 |
+| 麥克風共用：D 線的 `~/duck/voice/alsa/duck-audio.conf` 在 Pi 上，且 `~/duck/terminal-spike` 裡的 `run_nous_terminal.sh` 是有 `--alsa-config`／`--mic`／`--speaker` 的新版（重跑一次 `setup_terminal.sh` 更新） | D 線實測共用可行；新版腳本帶這些選項**還沒有執行過** |
+
+這四項沒有全部到位之前，可以先做 7.2 的一次性設定與 7.4 的「不靠喚醒詞」檢查。
+
+### 7.1 誰做什麼
+
+| 事情 | 誰做 | 為什麼 |
+|---|---|---|
+| 啟動開了旗標的 Nous、它的 `.env` 與金鑰 | **你** | 同 §0 |
+| 在鴨子的瀏覽器設定檔上同意即時語音、允許麥克風 | **你**（從 Mac 用 DevTools 連過去按） | 這是你的同意；鴨子沒有螢幕 |
+| 在 Pi 上啟動終端頁面、喚醒服務、duckd 與 `engage` | **你** | 會開麥克風、會出聲、頭會動 |
+| 在場、說話、聽 | **你** | — |
+
+### 7.2 一次性設定
+
+1. Nous（開發實例，同 §1；用含 DUCK-2 的程式）：`.env` 和 §1.2 相同（`PORT=8791`、`NOUS_DUCK=on`、`NOUS_AIL=on`、`NOUS_AIL_SERVICES=duck`）。終端 ID 預設是 `duck`，不用另外設。**不需要** `NOUS_WAKE=on`。
+2. Pi 上的 Chromium 與腳本（裝過就跳過）：
+
+   ```bash
+   bash nous_duck/robot/deploy/pi4/setup_terminal.sh
+   ```
+
+3. 在鴨子的瀏覽器設定檔上按同意（每個設定檔一次）。先照 §2.1、§2.2 啟動 Nous 與通道，然後：
+
+   ```bash
+   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --debug-port 9333 --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic --speaker plughw:CARD=CD002,DEV=0'
+   ```
+
+   ```bash
+   ssh -N -L 9333:127.0.0.1:9333 duck-pi4
+   ```
+
+   在 Mac 的 Chrome 開 `chrome://inspect`，把 `localhost:9333` 加進 Discover network targets，點那個頁面的 inspect，就能看到並操作鴨子上的 Nous 頁面：開始一次即時語音、在同意說明按同意、在麥克風權限按允許，然後結束對話。之後這個設定檔會記得。
+
+   這一步的每個細節（DevTools 能不能這樣操作那個頁面、權限提示在無螢幕模式下會不會出現）**都沒有驗證過**；卡住的話把畫面與訊息記下來。
+
+### 7.3 每次實測
+
+1. Mac：啟動 Nous（§2.1）。log 要有 `鴨子：duck-link 已開在 ws://127.0.0.1:8791/duck-link…；語音終端頁面：http://localhost:8791/?terminal=duck`。
+2. Mac：開通道（§2.2）。
+3. Pi：啟動終端頁面。
+
+   ```bash
+   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic --speaker plughw:CARD=CD002,DEV=0'
+   ```
+
+4. Pi：啟動 duckd 並 `engage`（§2.3）。Nous 的 log 出現 `鴨子：鴨子已連線`。
+5. Pi：啟動鴨子的喚醒服務（指令以 [`robot/audio/README.md`](../../robot/audio/README.md) 為準）。
+6. 對鴨子說「Hey 鴨子」（或「Hello 鴨子」），等它有反應後說一句話，例如「鴨子看左邊」或「今天星期幾」。
+
+### 7.4 不靠喚醒詞先檢查頁面這一段
+
+喚醒那一段還沒接好時，可以先確認「Pi 上的頁面能不能對話」：做完 7.3 的第 1～4 步，用 7.2 第 3 步的 DevTools 連到頁面，手動開始一次即時語音，對著鴨子的麥克風說話。聲音應該從鴨子的喇叭出來，Nous 說話時鴨子的頭是「說話」的姿勢（這是頁面回報的狀態，這次才有）。
+
+### 7.5 預期
+
+| 時間點 | Nous 的 log | 鴨子 |
+|---|---|---|
+| 說完喚醒詞 | `鴨子：聽到喚醒詞，已請終端頁面（duck）開始對話（1 個頁面）`，接著是即時語音開始 | 被叫醒的反應（頭、提示音依鴨子端設定） |
+| 連上之後 | — | Nous 打招呼（喚醒開始的對話會先打招呼），聲音從鴨子的喇叭出來 |
+| 你說話、它想、它回答 | 用到工具時有 `整合層：… app.duck.… → …` | 頭依序是在聽、在想、**說話中**、在聽 |
+| 5 秒沒人說話 | 即時語音結束 | 回到待命 |
+
+如果 log 是 `鴨子：聽到喚醒詞，但終端頁面（?terminal=duck）沒有連著，沒有開始對話`：Pi 上的頁面沒開或通道斷了。如果完全沒有「聽到喚醒詞」這一行：喚醒沒有送到 Nous（鴨子端那一段）。
+
+### 7.6 請記下來的事
+
+1. 喚醒詞中幾次；沒叫的時候有沒有自己醒；Nous 說話時鴨子有沒有被自己的聲音叫醒。
+2. 從說完喚醒詞到可以開始說話，大約幾秒；頭一句話有沒有被漏掉。
+3. Nous 聽不聽得清楚你（回答對不對題）；它說話時你插話，它會不會停。
+4. 喇叭的聲音清不清楚、音量、有沒有回音或嘯叫。
+5. 頭的狀態跟不跟得上（特別是「說話中」的開始與結束）。
+6. Pi 的負載：`ssh duck-pi4 'cd ~/duck/terminal-spike && bash measure.sh'` 的輸出（CPU、記憶體、溫度）。
+7. 一分鐘內連叫四次：第四次應該被拒絕（限速）。
+
+### 7.7 收
+
+1. Pi：停喚醒服務；`ssh duck-pi4 'sudo systemctl stop duckd'`。
+2. Pi：在 `run_nous_terminal.sh` 的終端機按 Ctrl-C（關掉 Chromium，麥克風放開）。
+3. Mac：通道 Ctrl-C；`npm start` Ctrl-C。
+
+### 7.8 這一節的驗證層級
+
+到 2026-11-26 為止：AIOS 那一側的伺服器端有 fixture 測試（假鴨子、假的語音路徑）；頁面端只有型別檢查與建置，**沒有在瀏覽器裡跑過**。Pi 上的 Chromium 只量過不連 Nous、不出聲、沒有麥克風的情況。**上面的步驟沒有任何一步有人照著跑過。**
