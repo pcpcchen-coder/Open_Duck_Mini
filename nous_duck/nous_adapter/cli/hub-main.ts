@@ -64,7 +64,7 @@ export async function runHub(options: { port?: number; socketPath?: string; log?
         if (level !== undefined && (level < 0 || level > 1)) throw new Error("level 要在 0 到 1 之間");
         manual.request(state, level);
         const sent = await terminal.presence.settled();
-        return { source: terminal.presence.source, requested: { state, ...(level !== undefined ? { level } : {}) }, sent };
+        return { source: { label: manual.label, dev: manual.dev }, requested: { state, ...(level !== undefined ? { level } : {}) }, sent };
       }
       case "link": {
         const snapshot = hub.snapshot();

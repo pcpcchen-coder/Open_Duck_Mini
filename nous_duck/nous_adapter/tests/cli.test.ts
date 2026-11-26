@@ -154,7 +154,9 @@ describe("hub 行程與控制通道（對 mock 鴨子）", () => {
     const c = await start();
     const link = await c.request<Record<string, any>>("link");
     expect(link).toMatchObject({ connected: true, duck: { mock: true }, health: { health: "available" } });
-    expect(link.presence_source).toMatchObject({ dev: true });
+    // presence 有兩個來源：開發用手動來源，以及語音通道的真實事件。
+    expect(link.presence_sources.map((x: { dev: boolean }) => x.dev)).toEqual([true, false]);
+    expect(link.voice).toMatchObject({ connected: false, backend: null });
     const state = await c.request<Record<string, any>>("state");
     expect(state.state.mock).toBe(true);
   });
