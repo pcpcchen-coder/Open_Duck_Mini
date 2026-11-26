@@ -1,8 +1,9 @@
 # ADR-0005：運算與感測硬體升級
 
 - 狀態：**部分採用**（2026-11-12 使用者決定：雙板＝Pi Zero 2 W＋**Pi 4**、鏡頭沿用 **AR0144** 並**裝在頭上**、麥克風陣列用 **reSpeaker XVF3800 USB 4-Mic Array 標準版**（與 FamilyRecorder 同款，2026-11-13 由 Flex 改過來）並**裝在身體上**、加裝實體隱私開關、眼燈改 RGB 用顏色提示鏡頭狀態）；2026-11-13 決定頭上鏡頭旁加**紅外線補光燈**（沒開燈時的備案，ADR-0002 §4.1）；其餘仍為草案
+- **2026-11-22 更新**：§2.1 的雙板決定被 [ADR-0008](ADR-0008-single-board-pi4.md) 取代，改成 **Pi 4 單板**（不用 Pi Zero 2 W）。§2.2 以後的感測器、鏡頭與麥克風位置照舊。
 - 日期：2026-11-12
-- 相關：[R-001](../requirements/R-001-mobile-companion.md)、[ADR-0002](ADR-0002-indoor-localization-and-navigation.md)、[ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md)、[ADR-0004](ADR-0004-docking-and-charging.md)
+- 相關：[R-001](../requirements/R-001-mobile-companion.md)、[ADR-0002](ADR-0002-indoor-localization-and-navigation.md)、[ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md)、[ADR-0004](ADR-0004-docking-and-charging.md)、[雙目視覺規劃](../stereo_vision_plan.md)（AR0144 的用途清單，2026-11-16）
 
 ## 1. 背景
 
@@ -51,8 +52,8 @@ Pi Zero 2 W 的 512 MB 記憶體與 A53 核心，不可能同時做到上表全�
 
 | 感測器 | 用途 | 建議 | 待決 |
 |---|---|---|---|
-| 雙目鏡頭 | 定位（視覺里程計、AprilTag）、避障深度、找人 | **已決定：Waveshare AR0144 Stereo USB Camera (A)**（沿用 AIOS 的經驗）：雙全域快門、單眼 1280×720、基線 52 mm、水平視角 65°、UVC 免驅動、輸出 2560×720 MJPG 併排（規格引自 AIOS `docs/11`） | 裝頭上還是身上（§2.3）；模組尺寸與重量要量；基線 52 mm 的深度有效距離要實測 |
-| 麥克風陣列 | 喚醒詞、對話、**聲源方向（DOA）** | **已決定（2026-11-13）：reSpeaker XVF3800 USB 4-Mic Array 標準版（USB VID `0x2886`、PID `0x001A`），裝在身體上**（§2.3.1）。原本選 Flex Circular-4，使用者改用與 FamilyRecorder 同款，因為台灣好買；與使用者的 FamilyRecorder 專案用的標準版 XVF3800 同晶片，方向讀取可沿用其作法；選型見 [`hardware/sensors/mic_array_selection.md`](../../hardware/sensors/mic_array_selection.md) | Flex 的 USB ID 與控制指令是否與標準版相同，到貨後驗證 |
+| 雙目鏡頭 | 定位（視覺里程計、AprilTag）、避障深度、找人 | **已決定：Waveshare AR0144 Stereo USB Camera (A)**（沿用 AIOS 的經驗；2026-11-16 決定**另買一台**給鴨子，Nous 螢幕上那台不拆）：雙全域快門、單眼 1280×720、基線 52 mm、水平視角 65°、UVC 免驅動、輸出 2560×720 MJPG 併排（規格引自 AIOS `docs/11`） | 裝頭上還是身上（§2.3）；模組尺寸與重量要量；基線 52 mm 的深度有效距離要實測 |
+| 麥克風陣列 | 喚醒詞、對話、**聲源方向（DOA）** | **已決定（2026-11-13）：reSpeaker XVF3800 USB 4-Mic Array 標準版（USB VID `0x2886`、PID `0x001A`），裝在身體上**（§2.3.1）。原本選 Flex Circular-4，使用者改用與 FamilyRecorder 同款，因為台灣好買；方向讀取可沿用 FamilyRecorder 的作法；選型見 [`hardware/sensors/mic_array_selection.md`](../../hardware/sensors/mic_array_selection.md) | 同款，USB ID 與控制指令相同；要驗證 Pi 4（Linux）上的收音、DoA 讀取與走路噪音 |
 | 喇叭＋功放 | 說話、叫人起床 | 上游 BOM 已有小喇叭與功放（表情套件）；叫人起床可能需要更大音量，要實測 | 音量是否足夠 |
 | IMU | 姿態、跌倒、視覺里程計融合 | 沿用上游 BNO055 | — |
 | 紅外線補光燈 | 沒開燈時讓鏡頭看得到 AprilTag、特徵與深度（[ADR-0002 §4.1](ADR-0002-indoor-localization-and-navigation.md#41-沒開燈時的備案紅外線補光2026-11-13-使用者同意以此為主)） | **已決定方向（2026-11-13）**：頭殼上緊貼 AR0144 的 850 nm 紅外線 LED，由 Pi 4 依 AR0144 估計的環境照度**自動開關**（低於門檻就開，2026-11-13 使用者決定，規則見 ADR-0002 §4.1.1）並調光；不另加照度感測器 | AR0144 模組有沒有 IR-cut 濾片；850／940 nm；LED 型號、耗電、發熱、重量、照射距離都要實測 |

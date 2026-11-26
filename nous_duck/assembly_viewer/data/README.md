@@ -1,6 +1,6 @@
 # assembly_viewer/data
 
-狀態：**部分完成**。`cad_parts.yaml` 已完成（2026-11-13），`bom.yaml`、`steps.yaml` 規劃中。
+狀態：**部分完成**。`cad_parts.yaml`（2026-11-13）、`steps.yaml`（2026-11-15）已完成，`bom.yaml` 規劃中。
 
 ## 內容
 
@@ -8,14 +8,14 @@
 |---|---|---|
 | [`cad_parts.yaml`](cad_parts.yaml) | 上游 robot.xml 每個網格的類別、對應列印檔、中英文名稱，以及 CAD 沒有擺放位置的 7 件列印件要借用哪個零件的座標。pipeline 會檢查它涵蓋每個網格 | 已完成 |
 | `bom.yaml` | BOM：每一項的 ID、中英名稱、數量、類別（列印件／舵機／電子／緊固件／線材）、來源（CAD 網格、列印 STL 或示意）、對應的上游 BOM 列 | 規劃中 |
-| `steps.yaml` | 組裝步驟：標題、說明、要用的零件、操作、驗收項目、上游參考圖與連結 | 規劃中 |
+| [`steps.yaml`](steps.yaml) | 15 個組裝步驟：標題、摘要、操作、驗收、警語、這一步裝上的零件（`adds`）、要注意的零件（`focus`）、上游連結。零件用選擇器指定（`servo:13`、`body:…`、`mesh:…@body`、`part:…`），pipeline 展開成 `steps.json` 並檢查每個零件剛好裝一次 | 已完成 |
 | `part_names.yaml` | ~~零件的繁體中文與英文名稱~~：CAD 零件的名稱已放在 `cad_parts.yaml`；BOM 才有的零件（螺絲、線材等）的名稱放 `bom.yaml`，不另開檔案 | 取消 |
 
 ## 資料來源
 
 - 上游 BOM：[`../../docs/handoff/upstream_bom.csv`](../../docs/handoff/upstream_bom.csv)
 - 列印清單：上游 `docs/print_guide.md`（36 種、51 件）
-- 組裝順序：上游 `docs/assembly_guide.md`、ChatGPT 版的 14 步（見交接摘要）
+- 組裝順序：上游 `docs/assembly_guide.md`、[中文組裝指引](../../docs/build_log/Open_Duck_Mini_v2_Assembly_Guide_zh-TW.md)、ChatGPT 版的 14 步（見交接摘要）；左右腿 180° 依 [CAD 驗證](../../docs/validation/viewer-pipeline-2026-11-13.md)
 - 舵機 ID：上游 `docs/configure_motors.md`
 
 ## 規則

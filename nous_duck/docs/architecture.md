@@ -2,6 +2,8 @@
 
 狀態：**草案**（2026-11-12；同日依 [R-001 行動夥伴需求](requirements/R-001-mobile-companion.md) 修訂，見 [§9](#9-2026-11-12-修訂行動夥伴)）。本文件描述目標架構；除了特別標明的上游既有程式，其餘都是**規劃中**，還沒有實作。決策理由見 [ADR-0001](adr/ADR-0001-duck-role-in-nous.md)。
 
+> **2026-11-22 更新**：鴨子改成 **Pi 4 單板**，不用 Pi Zero 2 W（[ADR-0008](adr/ADR-0008-single-board-pi4.md)）。下文的「Pi Zero 2 W」請讀成 Pi 4；「身體板」與「感知板」改讀成同一片 Pi 4 上的兩組服務（步態＋安全、感知＋導航＋音訊），用 systemd 隔離（ADR-0008 §2.4）。其餘分工不變。
+
 參考來源（唯讀查閱，2026-11-12）：
 
 - AIOS `main`：`prototype/ambient-shell/server/integrations/contracts.ts`、`prototype/ambient-shell/shared/integrations.ts`、`terminals/rpi4/README.md`、`docs/Current_Implementation_Status.md`、`docs/BILINGUAL.md`。
