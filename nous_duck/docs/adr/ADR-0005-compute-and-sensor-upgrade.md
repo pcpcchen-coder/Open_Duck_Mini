@@ -135,4 +135,4 @@ CAD 檢查（[驗證紀錄](../validation/mic-placement-2026-11-16.md)，層級�
 4. 是否願意為了感測器與充電觸點修改尚未列印的外殼件。
 5. 是否接受重新訓練步態策略的工作量（需要 GPU 環境）。
 6. ~~是否加裝實體隱私開關~~：要（[ADR-0006](ADR-0006-privacy-settings.md) §4.1）。
-7. ~~鏡頭提示方式~~：2026-11-12 決定眼燈顏色（上游眼燈是單色 LED，由 Pi Zero GPIO D24／D23 開關，原本要改成 RGB LED）；2026-11-17 改為兩片 1.28 吋圓形螢幕，由 Pi 4 驅動（ADR-0006 §4.2）。
+7. ~~鏡頭提示方式~~：2026-11-12 決定眼燈顏色（上游眼燈是單色 LED，由 Pi Zero GPIO D24／D23 開關，原本要改成 RGB LED）；2026-11-17 改為兩片 1.28 吋圓形螢幕，由 Pi 4 驅動（ADR-0006 §4.2）。詳細設計見 [`hardware/expression_mods/gc9a01_eyes.md`](../../hardware/expression_mods/gc9a01_eyes.md)；新頭殼要同時容納兩片螢幕、AR0144 與紅外線燈。

@@ -15,6 +15,7 @@
 | [ADR-0009](ADR-0009-duck-link-transport-and-command-bridge.md) | duck-link 傳輸（SSH 通道＋WebSocket）與鴨子端指令橋接（緊急停止、暫停時讀電壓） | 部分採用 | 2026-11-13 |
 | [ADR-0010](ADR-0010-duck-voice.md) | 鴨子的語音（Nous 的聲音加變聲、本機音效、回音消除、喇叭） | 部分採用 | 2026-11-15（2026-11-26 依 ADR-0008 與標準版 XVF3800 修訂） |
 | [ADR-0011](ADR-0011-duck-memory.md) | 鴨子的記憶系統（沿用 Nous 記憶層，不另做 Hermes 式記憶；鴨子只補身體、空間、任務記憶；可以在鴨子旁邊說「記住」） | 採用 | 2026-11-26 |
+| [ADR-0013](ADR-0013-camera-always-on-and-home-monitoring.md) | 鏡頭常開與家庭監控（C：只回報文字事件）、夜間紅外線、渲染程式故障保護 | 部分採用 | 2026-11-18 |
 
 編號說明：本序列只屬於本 repo 的 `nous_duck/docs/adr/`，與 AIOS repo 的 `docs/adr/`（ADR-0001 本機家人辨識等）是不同的序列。
 
