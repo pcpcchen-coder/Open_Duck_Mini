@@ -113,6 +113,7 @@ export class DuckLinkHub implements DuckLink {
 
   private http: Server | null = null;
   private wss: WebSocketServer | null = null;
+  private detach: (() => void) | null = null;
   /** 已完成 hello 的鴨子連線。 */
   private duck: WebSocket | null = null;
   private heartbeat: ReturnType<typeof setInterval> | null = null;
@@ -146,15 +147,28 @@ export class DuckLinkHub implements DuckLink {
     this.validator = options.validator ?? createValidator();
   }
 
-  /** 開始聽 127.0.0.1（只有 loopback，沒有選項可以改成別的位址）。回傳實際的埠號。 */
+  /**
+   * 掛到一個既有的 http.Server（AIOS 核心的作法）：只接 /duck-link 的 WebSocket 升級，其他路徑的升級一律 404。
+   * hosts＝允許的 Host 標頭（AIOS 的 allowedHosts()）；不給時只看主機名稱是 127.0.0.1 或 localhost。
+   * 這個方法不呼叫 listen，也不改 server 綁的位址——綁 loopback 是呼叫端的責任。
+   */
+  attach(server: Server, options: { hosts?: ReadonlySet<string> } = {}): void {
+    if (this.wss) throw new Error("hub 已經啟動");
+    const wss = new WebSocketServer({ noServer: true, maxPayload: 64 * 1024 });
+    const onUpgrade = (req: IncomingMessage, socket: Duplex, head: Buffer) => this.onUpgrade(wss, req, socket, head, options.hosts);
+    server.on("upgrade", onUpgrade);
+    this.wss = wss;
+    this.detach = () => server.off("upgrade", onUpgrade);
+  }
+
+  /** 獨立執行（開發用的 hub 行程）：自己開一個只聽 127.0.0.1 的 http server（沒有選項可以改成別的位址）。回傳實際的埠號。 */
   async start(): Promise<number> {
-    if (this.http) throw new Error("hub 已經啟動");
+    if (this.http || this.wss) throw new Error("hub 已經啟動");
     const http = createServer((_req, res) => {
       // 這個埠只提供 duck-link 的 WebSocket；一般 HTTP 請求一律 404，不提供任何狀態頁。
       res.writeHead(404, { "content-type": "text/plain; charset=utf-8" }).end("not found\n");
     });
-    const wss = new WebSocketServer({ noServer: true, maxPayload: 64 * 1024 });
-    http.on("upgrade", (req, socket, head) => this.onUpgrade(wss, req, socket, head));
+    this.attach(http);
     await new Promise<void>((resolve, reject) => {
       http.once("error", reject);
       http.listen(this.requestedPort, "127.0.0.1", () => {
@@ -163,7 +177,6 @@ export class DuckLinkHub implements DuckLink {
       });
     });
     this.http = http;
-    this.wss = wss;
     return this.port;
   }
 
@@ -172,10 +185,13 @@ export class DuckLinkHub implements DuckLink {
     return address?.port ?? 0;
   }
 
+  /** 結束：關掉鴨子的連線、拿掉 upgrade 監聽；自己開的 http server 也一併關閉（掛在別人 server 上時不關它）。 */
   async stop(): Promise<void> {
     this.dropDuck("shutdown", CLOSE.shutdown);
     for (const client of this.wss?.clients ?? []) client.terminate();
     this.wss?.close();
+    this.detach?.();
+    this.detach = null;
     const http = this.http;
     this.http = null;
     this.wss = null;
@@ -184,7 +200,7 @@ export class DuckLinkHub implements DuckLink {
 
   // ---- 連線 ----
 
-  private onUpgrade(wss: WebSocketServer, req: IncomingMessage, socket: Duplex, head: Buffer): void {
+  private onUpgrade(wss: WebSocketServer, req: IncomingMessage, socket: Duplex, head: Buffer, hosts?: ReadonlySet<string>): void {
     const refuse = (code: number, text: string) => {
       socket.end(`HTTP/1.1 ${code} ${text}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n`);
     };
@@ -192,8 +208,9 @@ export class DuckLinkHub implements DuckLink {
     if (path !== DUCK_LINK_PATH) return refuse(404, "Not Found");
     // 鴨子不是瀏覽器，不會帶 Origin；帶 Origin 的是網頁（跨站 WebSocket），拒絕。
     if (req.headers.origin !== undefined) return refuse(403, "Forbidden");
-    const host = (req.headers.host ?? "").replace(/:\d+$/, "");
-    if (host !== "127.0.0.1" && host !== "localhost") return refuse(403, "Forbidden");
+    const hostHeader = req.headers.host ?? "";
+    const host = hostHeader.replace(/:\d+$/, "");
+    if (hosts ? !hosts.has(hostHeader) : host !== "127.0.0.1" && host !== "localhost") return refuse(403, "Forbidden");
     if (!LOOPBACK.has(req.socket.remoteAddress ?? "")) return refuse(403, "Forbidden");
     wss.handleUpgrade(req, socket, head, (ws) => this.onConnection(ws));
   }

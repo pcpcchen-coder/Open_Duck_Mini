@@ -26,7 +26,8 @@ export async function runHub(options: { port?: number; socketPath?: string; log?
   const hub = new DuckLinkHub({ port: options.port ?? DEFAULT_PORT, log });
   const port = await hub.start();
   const socketPath = options.socketPath ?? defaultSocketPath(port);
-  const adapter = new DuckAdapter(hub);
+  // 開發入口：17 個工具全開（AIOS 裡第一階段只開 DUCK_STAGE1_TOOLS 那六個）。
+  const adapter = new DuckAdapter(hub, { enableAllTools: true });
   const manual = new ManualPresenceSource();
   const terminal = new DuckTerminal(hub, { sendPresence: (state, level) => adapter.presence(state, level), log });
   terminal.attachPresenceSource(manual);

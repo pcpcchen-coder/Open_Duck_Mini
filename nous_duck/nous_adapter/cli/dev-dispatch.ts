@@ -34,6 +34,7 @@ let counter = 0;
 export async function devExecute(adapter: IntegrationAdapter, toolId: string, args: Record<string, unknown>): Promise<ToolResult> {
   const tool = adapter.tools().find((t) => t.id === toolId);
   if (!tool) return toolResult("refused", "沒有這個工具。", { reason: "not_registered" });
+  if (!tool.enabled) return toolResult("refused", "這個工具目前沒有啟用。", { reason: "disabled" });
   const problem = validateArgs(tool.inputSchema, args);
   if (problem) return toolResult("refused", `參數不正確：${problem}。沒有送出。`, { reason: "invalid_arguments" });
   const controller = new AbortController();
