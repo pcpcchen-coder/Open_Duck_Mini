@@ -56,10 +56,18 @@ class PresenceState:
         return self.speech_level
 
 
-def head_target(p: PresenceState, now: float) -> dict[str, float]:
-    """這個 presence 狀態在此刻的頭部目標（rad；head_pitch 正值＝抬頭、head_yaw 正值＝往左）。"""
+def head_target(p: PresenceState, now: float, *, amplitude: float = 1.0, motion: bool = True, speaking_bob: bool = True) -> dict[str, float]:
+    """這個 presence 狀態在此刻的頭部目標（rad；head_pitch 正值＝抬頭、head_yaw 正值＝往左）。
+
+    `amplitude`（0～1，只能調小）、`motion`、`speaking_bob` 來自鴨子設定（ADR-0019）；關掉的部分頭回正。
+    """
     t = max(0.0, now - p.since)
     out = dict(ZERO)
+    if p.state == "speaking":
+        if not speaking_bob:
+            return out
+    elif not motion:
+        return out
     s = p.state
     if s == "wake":
         out["head_pitch"] = 0.10  # 抬頭（沒有聲源方向可轉：麥克風陣列還沒裝）
@@ -75,4 +83,5 @@ def head_target(p: PresenceState, now: float) -> dict[str, float]:
             out["head_yaw"] = ERROR_SHAKE_RAD * math.sin(2 * math.pi * t / ERROR_SHAKE_S)
     elif s == "sleeping":
         out["head_pitch"] = -0.25  # 低頭
-    return out
+    scale = min(1.0, max(0.0, amplitude))
+    return {n: v * scale for n, v in out.items()}

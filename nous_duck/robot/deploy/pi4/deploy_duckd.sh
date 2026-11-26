@@ -94,8 +94,9 @@ WorkingDirectory=$PI_HOME/duck/duckd
 RuntimeDirectory=duckd
 RuntimeDirectoryMode=0700
 # 啟動時不碰硬體：要在 Pi 上執行 ~/duck/duckd/duckd-ctl engage 才會開匯流排。
-# --head-window-deg 15 --head-speed-deg 30 是 2026-11-25 無人看顧時的規定（初始值，使用者看過實機後再放寬）。
-ExecStart=$PI_HOME/duck/duckd-venv/bin/python -m duckd --body head --head-window-deg 15 --head-speed-deg 30 --ctl-socket /run/duckd/duckd.sock --eyes-panel /run/duckd/eyes.png --eyes-fps 1 ${DUCKD_EXTRA_ARGS:-} \$DUCKD_TEST_ARGS
+# 頭部角速度與活動範圍從鴨子設定讀（ADR-0019；預設 30°/s、±15°，是 2026-11-25 無人看顧時的規定）。
+# 設定讀不到（還沒跑 deploy_settings.sh、檔案壞掉）時 duckd 自己退回 30°/s、±15°（duckd/settings_in.py）。
+ExecStart=$PI_HOME/duck/duckd-venv/bin/python -m duckd --body head --settings-dir $PI_HOME/duck/settings --ctl-socket /run/duckd/duckd.sock --eyes-panel /run/duckd/eyes.png --eyes-fps 1 ${DUCKD_EXTRA_ARGS:-} \$DUCKD_TEST_ARGS
 Restart=on-failure
 RestartSec=3
 # DUCKD_TEST_ARGS：測試腳本（duckd/tools/head_check.sh）用 drop-in 臨時加參數；平常是空的

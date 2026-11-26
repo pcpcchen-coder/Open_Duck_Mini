@@ -113,7 +113,7 @@ Nous 的語音 ─► play_voice ─► 閘門 ─► 變聲 ─┐
 | 路徑 | 內容 |
 |---|---|
 | `duck_audio/doa.py` | XVF3800 經 USB 控制介面讀角度與語音旗標、環狀分群、正前方校準、只在有語音時把方位送給 duckd（UDP `127.0.0.1:8793`）；每秒送一次存活訊息 |
-| `config/doa.json` | `mount`（`head`／`body`／`desk`）、`front_angle_deg`、`counterclockwise`、`speech_source`、`min_speech_energy`、`calibrated`。**校正值不進 repo**：`front_angle_deg` 是每次安裝的量測值，只留在 Pi 的 `~/duck/doa/config/doa.json`（部署不會覆蓋） |
+| `config/doa.json` | `mount`（`head`／`body`／`desk`）、`front_angle_deg`、`counterclockwise`、`speech_source`、`min_speech_energy`、`calibrated`。**校正值不進 repo**：`front_angle_deg` 是每次安裝的量測值，只留在 Pi 的 `~/duck/doa/config/doa.json`（部署不會覆蓋）。**服務帶 `--settings-dir` 時改從[鴨子設定](../settings/README.md)讀**（ADR-0019）：門檻、視窗、安裝位置、校正值都在設定頁改，約 1 秒內生效、不用重啟；設定裡的「讀取聲源方向」關掉時服務不開也不讀麥克風。這時 `doa.json` 只在設定讀不到時當備援，校正值存在 Pi 的 `~/duck/settings/calibration.json` |
 | `requirements-doa.txt` | pyusb 1.3.1（Pi 上沿用 runtime-venv 的） |
 | [`../deploy/pi4/setup_doa.sh`](../deploy/pi4/setup_doa.sh) | 複製到 `~/duck/doa/`、udev 規則（VID 2886 給 plugdev）、服務 `duck-doa`（不 enable、不啟動） |
 
@@ -136,7 +136,7 @@ ssh duck-pi4 'cd ~/duck/doa && ~/duck/duckd-venv/bin/python -m duck_audio.doa --
 校準正前方（指令開始後 5 秒內，站在鴨子正前方約 1 m 說話）：
 
 ```bash
-ssh duck-pi4 'cd ~/duck/doa && ~/duck/duckd-venv/bin/python -m duck_audio.doa --calibrate 5 --write-config --config ~/duck/doa/config/doa.json'
+ssh duck-pi4 'cd ~/duck/doa && ~/duck/duckd-venv/bin/python -m duck_audio.doa --calibrate 5 --write-config --settings-dir ~/duck/settings --config ~/duck/doa/config/doa.json'
 ```
 
 看即時讀值（在不同方向說話，確認左邊是正的；不對就把 `counterclockwise` 反過來。`duck-doa` 在跑時兩個程式會互相要求重試，讀值變慢）：

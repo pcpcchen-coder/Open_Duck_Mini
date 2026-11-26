@@ -74,6 +74,10 @@ class Duckd:
         self.player = GesturePlayer()
         self.presence = PresenceState()
         self.presence_motion = False
+        #: 鴨子設定（ADR-0019）給的功能開關與幅度；沒有設定來源時就是這些內建預設
+        self.features = {"track_sound": True, "gestures": True, "presence_head_motion": True, "speaking_bob": True}
+        self.presence_amplitude = 1.0
+        self.expression_map = dict(EXPRESSION)
         self.tracking = "none"
         self._track_until = math.inf
         self._track_acquired = False
@@ -141,7 +145,9 @@ class Duckd:
         put("camera", "unsupported", "no camera")
         for kind in ("face", "sound"):
             src = self.percept.source(kind, 5.0) if self.percept else None
-            if src is None:
+            if kind == "sound" and not self.features["track_sound"]:
+                put("tracking_sound", "unsupported", "disabled in duck settings")
+            elif src is None:
                 put(f"tracking_{kind}", "unsupported", "no perception source is feeding duckd")
             elif not src.ok:
                 put(f"tracking_{kind}", "unsupported", f"source reports a fault: {src.detail}")
@@ -158,7 +164,7 @@ class Duckd:
         return caps
 
     def listed_gestures(self) -> list[str]:
-        if not self.reading.engaged:
+        if not self.reading.engaged or not self.features["gestures"]:
             return []
         return self.library.listed(self.hardware_profile, self.allow_unverified_gestures)
 
@@ -348,6 +354,8 @@ class Duckd:
         busy = self._busy_head()
         if busy:
             return busy
+        if not self.features["gestures"]:
+            return Decision(False, "unsupported", "gestures: disabled in duck settings")
         if not self.arbiter.head_enabled:
             return Decision(False, "unsupported", "head is not engaged")
         if name not in self.listed_gestures():
@@ -399,6 +407,8 @@ class Duckd:
         if target == "none":
             self._end_tracking()
             return Decision(True, applied={"target": "none"})
+        if target == "sound" and not self.features["track_sound"]:
+            return Decision(False, "unsupported", "tracking_sound: disabled in duck settings")
         busy = self._busy_head()
         if busy:
             return busy
@@ -492,6 +502,54 @@ class Duckd:
                 self.body.reset_estop()
             return self.arbiter.clear_estop_local()
 
+    # ================================================================ 鴨子設定（本機；不在 duck-link 上）
+    def apply_settings(self, values: dict) -> dict:
+        """套用鴨子設定（ADR-0019）裡可以即時生效的項目，回傳實際在用的值（key 同設定的 key）。
+
+        值的範圍由 `duck_settings.schema` 檢查過；這裡只認得的 key 才用，其他忽略。安全上限不從這裡來。
+        """
+        with self.lock:
+            for name in self.features:
+                v = values.get(f"features.{name}")
+                if isinstance(v, bool):
+                    self.features[name] = v
+            amp = values.get("head.presence_amplitude")
+            if isinstance(amp, (int, float)) and not isinstance(amp, bool):
+                self.presence_amplitude = min(1.0, max(0.0, float(amp)))
+            cfg = self.sound.cfg
+            num = lambda key, cur: float(values[key]) if isinstance(values.get(key), (int, float)) and not isinstance(values.get(key), bool) else cur  # noqa: E731
+            self.sound.cfg = replace(
+                cfg,
+                deadzone=math.radians(num("hearing.deadzone_deg", math.degrees(cfg.deadzone))),
+                settle_s=num("hearing.settle_s", cfg.settle_s),
+                recenter_s=num("hearing.recenter_s", cfg.recenter_s),
+                min_confidence=num("hearing.min_confidence", cfg.min_confidence),
+            )
+            for state in self.expression_map:
+                name = values.get(f"eyes.presence.{state}")
+                if isinstance(name, str) and (self.eyes is None or self.eyes.known(name)):
+                    self.expression_map[state] = name
+            if not self.features["track_sound"] and self.tracking == "sound":
+                self._event("tracking_lost", reason="disabled", data={"target": "sound"})
+                self.tracking = "none"
+            if not self.features["gestures"]:
+                self._cancel_gesture("interrupted")
+            self._state_dirty = True
+            return self.settings_applied()
+
+    def settings_applied(self) -> dict:
+        cfg = self.sound.cfg
+        out = {f"features.{k}": v for k, v in self.features.items()}
+        out.update({
+            "head.presence_amplitude": self.presence_amplitude,
+            "hearing.deadzone_deg": round(math.degrees(cfg.deadzone), 6),
+            "hearing.settle_s": cfg.settle_s,
+            "hearing.recenter_s": cfg.recenter_s,
+            "hearing.min_confidence": cfg.min_confidence,
+        })
+        out.update({f"eyes.presence.{k}": v for k, v in self.expression_map.items()})
+        return out
+
     # ================================================================ 每圈
     def _cancel_gesture(self, reason: str) -> None:
         if self.player.active:
@@ -507,7 +565,7 @@ class Duckd:
     def _sync_eyes(self, now: float) -> None:
         if self.eyes is None:
             return
-        self.eyes.set_base(EXPRESSION[self.presence.state], camera_streaming=False)
+        self.eyes.set_base(self.expression_map[self.presence.state], camera_streaming=False)
         self.eyes.set_device(
             camera_streaming=False,  # 沒有鏡頭：真實狀態就是沒在串流
             conversation_active=self.arbiter.lease_ok and self.presence.state in ("wake", "listening", "thinking", "speaking"),
@@ -602,7 +660,10 @@ class Duckd:
                     if targets:
                         a.stream_head(targets, now)
                 elif self.presence_motion:  # look 會把它關掉；presence 狀態改變才再打開
-                    a.stream_head(head_target(self.presence, now), now)
+                    a.stream_head(head_target(
+                        self.presence, now, amplitude=self.presence_amplitude,
+                        motion=self.features["presence_head_motion"], speaking_bob=self.features["speaking_bob"],
+                    ), now)
 
             out = a.update(now, dt)
             for name, fields in out.events:
