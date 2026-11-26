@@ -1,6 +1,6 @@
 # ⑤ MuJoCo 模擬（sim）
 
-狀態：**三個模擬可用**（都只在開發機上跑，結果是模擬值，不是實機）：[`look_at_sim/`](look_at_sim/)（2026-11-16，[驗證紀錄](../docs/validation/look-at-sim-2026-11-16.md)）、[`walk_sim/`](walk_sim/) 全身走路與 [`nav_sim/`](nav_sim/) 家中導航（2026-11-25，[驗證紀錄](../docs/validation/sim-nav-2026-11-25.md)）。加裝後的質量模型、duck-link 端到端模擬仍是規劃中。
+狀態：**三個模擬可用**（都只在開發機上跑，結果是模擬值，不是實機）：[`look_at_sim/`](look_at_sim/)（2026-11-16，[驗證紀錄](../docs/validation/look-at-sim-2026-11-16.md)）、[`walk_sim/`](walk_sim/) 全身走路與 [`nav_sim/`](nav_sim/) 家中導航（2026-11-25，[驗證紀錄](../docs/validation/sim-nav-2026-11-25.md)）。加裝後的質量模型（2026-11-26，[驗證紀錄](../docs/validation/mass-model-2026-11-26.md)）可用，但重量是估計值；duck-link 端到端模擬仍是規劃中。
 
 ## 職責
 
@@ -32,6 +32,7 @@ R-001（2026-11-12）後新增：
 | [`look_at_sim/`](look_at_sim/) | `robot/behaviors/look_at.py` 的模擬：上游 `robot.xml` **固定機身**（只動頭頸）、依幾何投影產生的**合成人臉偵測**（fixture）、轉身用運動學近似；7 個情境 | 可用；**不驗證平衡**（沒跑步態策略） |
 | [`walk_sim/`](walk_sim/) | **全身走路**：用 `MjSpec` 由上游 `robot.xml` 組出浮動機身模型（不改原檔），跑上游步態策略 `BEST_WALK_ONNX_2.onnx`，50 Hz、7 維指令。觀測向量與動作的組法、參數來源寫在 `model.py` 與 `sim.py` 檔頭 | 可用；跟 Playground 自己的場景交叉檢查過；**沒有對照實機** |
 | [`walk_sim/measure.py`](walk_sim/measure.py) | 走、停、轉的量測：指令 vs 實際速度、起步門檻、起步與停下、轉身、頭部指令的影響、加速度限制、多種子跌倒率、里程誤差；另外產生導航用的步態反應表 | 可用（模擬值） |
+| [`walk_sim/mass.py`](walk_sim/mass.py)、[`walk_sim/mass_compare.py`](walk_sim/mass_compare.py) | **加裝後的質量模型**：依 [`mass_budget/`](mass_budget/README.md) 的質量預算，把元件合進上游模型的 body 慣量（可加可減：拿掉頭裡的 Pi Zero 2 W、機身加 Pi 4 等），再比較上游模型與加裝後的站立、走路、起步門檻、頭部大角度、跌倒率與加重餘裕 | 可用（模擬值）；**重量與位置都是估計，沒有秤過**（2026-11-26，[驗證紀錄](../docs/validation/mass-model-2026-11-26.md)） |
 | [`nav_sim/`](nav_sim/) | 把導航核心 [`robot/navigation/duck_nav`](../robot/navigation/README.md) 接上全身走路模擬：依地圖蓋牆、家具、充電座與貼了 tag36h11 貼圖的標籤；標籤觀測、障礙點、充電訊號是 **mock** | 可用；充電座的 V 形導引與電氣行為**沒有模擬** |
 | [`nav_sim/tagcheck.py`](nav_sim/tagcheck.py) | 頭上相機算圖＋OpenCV 的 tag36h11 偵測器，對照 mock 的標籤觀測 | 可用；算圖沒有畸變、模糊、雜訊 |
 
@@ -46,6 +47,9 @@ uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requi
 .venv/bin/python -m walk_sim --vx 0.15 --duration 10 --png --out walk_sim_out
 .venv/bin/python -m walk_sim --script "2:0,0,0;8:0.15,0,0;4:0,0,1.0;3:0,0,0" --gif --out walk_sim_out
 .venv/bin/python -m walk_sim.measure --out ../docs/validation/data/walk-measure-2026-11-25.json   # 約 3 分鐘
+
+# 加裝後的質量模型（質量預算在 mass_budget/）
+.venv/bin/python -m walk_sim.mass_compare --out ../docs/validation/data/mass-model-2026-11-26.json  # 4 核約 22 分鐘
 
 # 端到端：充電座 → 房間 → return_home，輸出軌跡圖 trips.png 與 summary.json
 .venv/bin/python -m nav_sim.demo --trips 10 --seed 100 --out nav_demo_out --topview
@@ -67,4 +71,4 @@ uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requi
 
 ## 限制
 
-模擬結果不等於實機：舵機背隙、摩擦、電壓變化、足底材質都會不同；Pi 4 等加裝件的重量與重心還沒放進模型（只試過機身加點質量）。差距的清單見[驗證紀錄 §9](../docs/validation/sim-nav-2026-11-25.md#9-模擬與實機的差距)。
+模擬結果不等於實機：舵機背隙、摩擦、電壓變化、足底材質都會不同；Pi 4 等加裝件已用**估計重量**放進模型（[`mass_budget/`](mass_budget/README.md)），還沒秤過實物。差距的清單見[驗證紀錄 §9](../docs/validation/sim-nav-2026-11-25.md#9-模擬與實機的差距)。
