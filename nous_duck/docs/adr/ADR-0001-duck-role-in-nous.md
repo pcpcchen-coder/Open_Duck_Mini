@@ -106,7 +106,7 @@ Nous Agent 收到完成事件後接續下一步，需要 AIOS 支援（見 [路�
 | 工具 ID | effect | 說明（草案） | 參數草案 | 回讀確認方式 |
 |---|---|---|---|---|
 | `app.duck.where` | `read` | 目前所在房間／地點、定位不確定度、是否在充電座 | 無 | 最新 state（附時間戳） |
-| `app.duck.places` | `read` | 地圖上已命名的地點清單（ID 與本機顯示名稱） | 無 | 鴨子回報的地圖版本 |
+| `app.duck.places` | `read` | 地圖上已命名的地點清單。鴨子只回地點 ID，顯示名稱由 DuckAdapter 從 Nous 本機的名稱表補上（2026-11-26 依 [ADR-0011 §7.1](ADR-0011-duck-memory.md#71-地點-id-一定要能對應回名稱2026-11-26-使用者要求) 修訂） | 無 | 鴨子回報的地圖版本 |
 | `app.duck.mission_status` | `read` | 目前任務的狀態與進度 | `mission_id`（可省略） | 最新 state |
 | `app.duck.go_to` | `reversible_write` | 導航到某個地點 | `place`（地點 ID，來自 `places`） | 接受並開始 → `confirmed`＋`mission_id` |
 | `app.duck.find_person` | `reversible_write` | 在附近找人（可指定是誰），找到後面向對方 | `person`（家人 ID，可省略） | 同上 |
