@@ -42,7 +42,20 @@
 python3 scripts/configure_motor.py --port /dev/ttyACM0 --id 14
 ```
 
+也可以用本 repo 的[舵機工作台](../../tools/README.md#舵機工作台說明)，不用先裝 Runtime，Mac 直接跑。寫入的參數相同，另外會擋下「同時接了兩顆」、低電壓，並記錄進度：
+
+```bash
+python3 -m pip install --user pyserial
+python3 nous_duck/tools/servo_bench.py wizard
+```
+
 - [ ] 看見設定完成和目標 ID，確認舵機已轉到電子零位。依原圖對齊舵盤，固定前先比對舵盤方向。每顆貼上 ID 與部位，再換下一顆。
+- [ ] **裝主動舵盤**（設定完、舵機還在出力保持零位時裝）：
+  1. 不要用手轉輸出軸。舵機斷電後零位就沒有被鎖住，要重新 `center <ID>`。
+  2. 鋁製圓舵盤的 4 個孔排成「十」字，上下左右對齊舵機機身的四邊（[上游照片](https://github.com/pcpcchen-coder/Open_Duck_Mini/blob/v2/docs/configure_motors.md)）。
+  3. 垂直壓進輸出軸的齒。位置不正就拔起來轉一齒再壓，不要硬扭。差一齒沒關係，第 6 步的 `find_soft_offsets.py` 會補償。
+  4. 中心螺絲是金屬鎖金屬，依上游通則上一點 Loctite 243。用手指捏住舵盤再鎖，不要讓鎖螺絲的力道傳進齒輪箱。
+  5. 背面的被動舵盤這時不用裝，組裝時依各步驟照片裝。
 - [ ] 記下每顆 ID 與安裝方向。若單顆讀不到，先查電源、資料線、序列埠和 D／V／G 線序。
 
 驗收：14 顆都逐顆讀回，ID 無重複，舵盤已依零位和安裝圖對齊。整機軟體偏移量在第 6 步校正。

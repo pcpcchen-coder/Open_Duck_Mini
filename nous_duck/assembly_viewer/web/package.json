@@ -10,7 +10,8 @@
     "build": "node build.mjs",
     "check": "node check_output.mjs",
     "release": "node build.mjs && node release.mjs",
-    "check:release": "node check_release.mjs"
+    "check:release": "node check_release.mjs",
+    "build:console": "node build_console.mjs"
   },
   "dependencies": {
     "three": "0.186.1"
