@@ -14,7 +14,7 @@
 | 採購 | 周邊零件採購中（[清單與賣場](docs/build_log/README.md)） |
 | 組裝 | 尚未開始 |
 | 軟體 | 組裝檢視器第一版可用（[直接下載 HTML](assembly_viewer/release/duck_viewer.html)）：單一 HTML、離線開啟，依上游 CAD 顯示 138 個零件、14 顆舵機 ID 與 15 步組裝順序，可爆炸、透視（[pipeline 驗證](docs/validation/viewer-pipeline-2026-11-13.md)、[前端驗證](docs/validation/viewer-web-2026-11-15.md)，層級為單元測試與無頭瀏覽器）。V3「說話時看著對方」的頭部控制器完成，單元測試與 MuJoCo 模擬通過（[驗證](docs/validation/look-at-sim-2026-11-16.md)，未實機）。BOM 與其他模組仍是「規劃中」 |
-| 設計 | 行動夥伴需求 [R-001](docs/requirements/R-001-mobile-companion.md)（導航、行動對話、喚醒找人、自動回充）與 ADR-0002～0006（含可開關的隱私設定）為草案或部分採用；「跟著我來／在這等我」需求 [R-002](docs/requirements/R-002-follow-me.md) 與 [ADR-0007](docs/adr/ADR-0007-follow-me-and-wait-here.md) 為草案（只有設計，實作晚點做）；鴨子的語音（Nous 的聲音加變聲）見 [ADR-0010](docs/adr/ADR-0010-duck-voice.md)，只有設計；記憶系統 [ADR-0011](docs/adr/ADR-0011-duck-memory.md) 已採用（沿用 Nous 記憶層，可以在鴨子旁邊說「記住」；只有設計）；階段見 [路線圖](docs/roadmap.md) |
+| 設計 | 行動夥伴需求 [R-001](docs/requirements/R-001-mobile-companion.md)（導航、行動對話、喚醒找人、自動回充）與 ADR-0002～0006（含可開關的隱私設定）為草案或部分採用；「跟著我來／在這等我」需求 [R-002](docs/requirements/R-002-follow-me.md) 與 [ADR-0007](docs/adr/ADR-0007-follow-me-and-wait-here.md) 為草案（只有設計，實作晚點做）；鴨子的語音（Nous 的聲音加變聲）見 [ADR-0010](docs/adr/ADR-0010-duck-voice.md)，只有設計；記憶系統 [ADR-0011](docs/adr/ADR-0011-duck-memory.md) 已採用（沿用 Nous 記憶層，可以在鴨子旁邊說「記住」；只有設計）；低電量回家互動需求 [R-003](docs/requirements/R-003-low-battery-return.md) 與 [ADR-0012](docs/adr/ADR-0012-low-battery-return-interaction.md) 為草案（只有設計與名目推算）；階段見 [路線圖](docs/roadmap.md) |
 | 實機驗證 | 無 |
 
 ## 分工
@@ -30,7 +30,7 @@
 | 路徑 | 內容 | 狀態 |
 |---|---|---|
 | [`docs/handoff/`](docs/handoff/README.md) | 交接摘要、環境調查、ChatGPT 對話紀錄、上游 BOM | 完成 |
-| [`docs/requirements/`](docs/requirements/README.md) | 需求紀錄 | R-001、R-002 |
+| [`docs/requirements/`](docs/requirements/README.md) | 需求紀錄 | R-001、R-002、R-003 |
 | [`docs/architecture.md`](docs/architecture.md) | 鴨子與 Nous 的分工和資料流 | 草案 |
 | [`docs/roadmap.md`](docs/roadmap.md) | 階段與 gate、待使用者決定的事 | 草案 |
 | [`docs/stereo_vision_plan.md`](docs/stereo_vision_plan.md) | 雙目視覺規劃：AR0144 裝上鴨子後可以做什麼、限制、順序 | 規劃（草案） |
