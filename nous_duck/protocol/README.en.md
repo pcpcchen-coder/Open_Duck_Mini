@@ -16,6 +16,7 @@ duck-link is the **only** interface between the duck (Pi Zero 2 W) and Nous (Mac
 | `schemas/state.schema.json` | Duck → Nous: state snapshot (mode, battery voltage, posture, temperature summary, available capabilities, timestamp) | Planned |
 | `schemas/event.schema.json` | Duck → Nous: events (fell, picked_up, battery_low, overheat, motor_error, link_lost / link_restored, estop) and command acks | Planned |
 | `schemas/mission.schema.json` | Long-running missions: start (go_to, find_person, return_home, follow), cancel, progress, done, failed (reason codes) ([ADR-0001 §7.2](../docs/adr/ADR-0001-duck-role-in-nous.md#72-長時間任務mission), Traditional Chinese only) | Planned |
+| `schemas/wake_config.schema.json` | Wake-word settings (the duck's name and thresholds; versioned), synced from Nous to the duck; they take effect only after the duck reads back the version ([ADR-0003 §3.1](../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md#31-喚醒詞設定預設hey-鴨子可以改2026-11-26-使用者決定), Traditional Chinese only) | Planned |
 | `schemas/privacy_policy.schema.json` | Privacy settings document (global, rooms, family members, modes, time windows; IDs only, versioned), synced from Nous to the duck ([ADR-0006](../docs/adr/ADR-0006-privacy-settings.md), Traditional Chinese only) | Planned |
 | `examples/` | Valid and invalid examples for each schema, shared by the tests on both sides | Planned |
 
