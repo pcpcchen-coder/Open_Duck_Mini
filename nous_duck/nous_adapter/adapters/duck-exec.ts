@@ -1,5 +1,5 @@
 import type { CommandOutcome, DuckLink, LinkSnapshot, Observation } from "../hub/duck-link-hub.ts";
-import { toolResult, type ToolResult, type ToolResultReason } from "../shared/aios-contracts.ts";
+import { toolResult, type ToolResult, type ToolResultReason } from "../shared/aios-integrations.ts";
 import { capabilitiesFor } from "../shared/capabilities.ts";
 import { HEAD_JOINTS, type AckMessage, type AckReason, type DuckAction, type StateMessage } from "../shared/duck-link.ts";
 import { DUCK_REJECT_TEXT, DUCK_TEXT } from "./duck-text.ts";

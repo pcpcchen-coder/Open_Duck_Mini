@@ -1,4 +1,6 @@
-import { isToolResult, toolResult, type InputSchema, type IntegrationAdapter, type IntegrationToolId, type ToolResult } from "../shared/aios-contracts.ts";
+import { isToolResult, toolResult, type IntegrationToolId, type ToolResult } from "../shared/aios-integrations.ts";
+import type { InputSchema } from "../shared/aios-schema.ts";
+import type { IntegrationAdapter } from "../shared/aios-contracts.ts";
 
 // 開發用的最小 Dispatcher：duckctl 不經過 AIOS，但仍照 AIOS Dispatcher 的順序做三件事，
 // 讓這裡試到的行為接近之後在 AIOS 裡的行為：驗證參數（inputSchema）→ 執行並套工具的時限 → 檢查結果格式。

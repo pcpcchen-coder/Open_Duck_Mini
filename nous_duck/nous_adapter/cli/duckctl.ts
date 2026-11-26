@@ -1,7 +1,7 @@
 import { DUCK_TOOLS } from "../adapters/duck.ts";
 import { DEFAULT_PORT, DUCK_LINK_PATH } from "../hub/duck-link-hub.ts";
 import { MockDuck } from "../mock/mock-duck.ts";
-import type { ToolResult } from "../shared/aios-contracts.ts";
+import type { ToolResult } from "../shared/aios-integrations.ts";
 import { PRESENCE_STATES } from "../shared/duck-link.ts";
 import { parseToolArgs, POSITIONAL } from "./args.ts";
 import { ControlClient, defaultSocketPath } from "./control.ts";

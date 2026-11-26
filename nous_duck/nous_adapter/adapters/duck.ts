@@ -1,5 +1,6 @@
 import type { DuckLink, LinkSnapshot } from "../hub/duck-link-hub.ts";
-import { toolResult, type AdapterCatalog, type ExecutionContext, type HealthReport, type IntegrationAdapter, type IntegrationToolId, type ToolDefinition, type ToolResult } from "../shared/aios-contracts.ts";
+import { toolResult, type IntegrationToolId, type ToolResult } from "../shared/aios-integrations.ts";
+import type { AdapterCatalog, ExecutionContext, HealthReport, IntegrationAdapter, ToolDefinition } from "../shared/aios-contracts.ts";
 import type { AckMessage, PresenceState } from "../shared/duck-link.ts";
 import { compactState, DUCK_TIMING, isMock, lookReadback, missionReadback, runDuckCommand, stateReadback, type CommandSpec, type DuckTiming } from "./duck-exec.ts";
 import { DUCK_TEXT } from "./duck-text.ts";

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { DUCK_CATALOG, DUCK_TOOL, DUCK_TOOLS } from "../adapters/duck.ts";
 import { DUCK_REJECT_TEXT, DUCK_REJECT_TEXT_EN, DUCK_TEXT, DUCK_TEXT_EN } from "../adapters/duck-text.ts";
-import { INTEGRATION_TOOL_ID, isToolResult, toWireName, WIRE_NAME_MAX } from "../shared/aios-contracts.ts";
+import { INTEGRATION_TOOL_ID, isToolResult, toWireName, WIRE_NAME_MAX } from "../shared/aios-integrations.ts";
 import { ACK_REASONS } from "../shared/duck-link.ts";
 import { ctx, rig, sleep, until, type Rig } from "./helpers.ts";
 

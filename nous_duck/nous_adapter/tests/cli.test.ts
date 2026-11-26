@@ -9,7 +9,8 @@ import { devExecute, validateArgs } from "../cli/dev-dispatch.ts";
 import { runHub, type RunningHub } from "../cli/hub-main.ts";
 import { interpretTextCommand, TEXT_COMMAND_EXAMPLES } from "../cli/text-command.ts";
 import { MockDuck } from "../mock/mock-duck.ts";
-import { toolResult, type IntegrationAdapter, type ToolResult } from "../shared/aios-contracts.ts";
+import { toolResult, type ToolResult } from "../shared/aios-integrations.ts";
+import type { IntegrationAdapter } from "../shared/aios-contracts.ts";
 import { until } from "./helpers.ts";
 
 // duckctl 的三個部分：參數解析、開發用 Dispatcher、hub 行程的控制通道（對 mock 鴨子）。

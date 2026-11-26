@@ -1,4 +1,4 @@
-import type { IntegrationToolId } from "../shared/aios-contracts.ts";
+import type { IntegrationToolId } from "../shared/aios-integrations.ts";
 
 // ⚠️ 開發用的「文字命令 → 工具」對應。**不是 Nous、不是語音辨識、不是語言模型。**
 // 用途：在 AIOS 還沒接上之前，用一句已經是文字的命令（duckctl say-command "往左看"）走一遍
