@@ -187,9 +187,9 @@ ssh duck-pi4 '~/duck/duckd/duckd-ctl engage'
 | 需要 | 狀態 |
 |---|---|
 | AIOS 的 DUCK-2（[pcpcchen-coder/AIOS#158](https://github.com/pcpcchen-coder/AIOS/pull/158)）合併，或你用那個分支啟動 Nous | PR 待審 |
-| 鴨子本機的喚醒詞偵測（D 線） | 進行中 |
-| 喚醒送到 duck-link（D 線 → duckd → `wake_word` 事件） | 還沒接 |
-| 麥克風在喚醒偵測與 Chromium 之間怎麼共用（D 線的 ALSA 設定） | 還沒定 |
+| 鴨子本機的喚醒詞偵測（D 線的 `duck-voice` 服務，預設不啟用） | D 線已做成設定，兩句都有效 |
+| 喚醒送到 duck-link（D 線 → duckd → `wake_word` 事件） | 還沒接：duckd 現在會忽略 D 線送來的喚醒，要 A 線補上 |
+| 麥克風共用：D 線的 `~/duck/voice/alsa/duck-audio.conf` 在 Pi 上，且 `~/duck/terminal-spike` 裡的 `run_nous_terminal.sh` 是有 `--alsa-config`／`--mic`／`--speaker` 的新版（重跑一次 `setup_terminal.sh` 更新） | D 線實測共用可行；新版腳本帶這些選項**還沒有執行過** |
 
 這四項沒有全部到位之前，可以先做 7.2 的一次性設定與 7.4 的「不靠喚醒詞」檢查。
 
@@ -214,7 +214,7 @@ ssh duck-pi4 '~/duck/duckd/duckd-ctl engage'
 3. 在鴨子的瀏覽器設定檔上按同意（每個設定檔一次）。先照 §2.1、§2.2 啟動 Nous 與通道，然後：
 
    ```bash
-   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --debug-port 9333'
+   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --debug-port 9333 --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic --speaker plughw:CARD=CD002,DEV=0'
    ```
 
    ```bash
@@ -232,7 +232,7 @@ ssh duck-pi4 '~/duck/duckd/duckd-ctl engage'
 3. Pi：啟動終端頁面。
 
    ```bash
-   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh'
+   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic --speaker plughw:CARD=CD002,DEV=0'
    ```
 
 4. Pi：啟動 duckd 並 `engage`（§2.3）。Nous 的 log 出現 `鴨子：鴨子已連線`。

@@ -187,9 +187,9 @@ This document itself has not verified anything. As of 2026-11-26, the verified s
 | Needed | Status |
 |---|---|
 | AIOS's DUCK-2 ([pcpcchen-coder/AIOS#158](https://github.com/pcpcchen-coder/AIOS/pull/158)) merged, or you start Nous from that branch | PR awaiting review |
-| The duck's local wake-word detection (line D) | In progress |
-| The wake delivered to duck-link (line D → duckd → `wake_word` event) | Not connected yet |
-| How the microphone is shared between wake detection and Chromium (line D's ALSA configuration) | Not decided yet |
+| The duck's local wake-word detection (line D's `duck-voice` service, not enabled by default) | Line D has made it a setting; both phrases work |
+| The wake delivered to duck-link (line D → duckd → `wake_word` event) | Not connected yet: duckd currently ignores the wake line D sends; line A has to add it |
+| Microphone sharing: line D's `~/duck/voice/alsa/duck-audio.conf` is on the Pi, and the `run_nous_terminal.sh` in `~/duck/terminal-spike` is the new version with `--alsa-config` / `--mic` / `--speaker` (rerun `setup_terminal.sh` once to update it) | Sharing measured by line D to work; the new script with these options **has not been run yet** |
 
 Until all four are in place, you can do the one-time setup in 7.2 and the "without the wake word" check in 7.4 first.
 
@@ -214,7 +214,7 @@ Until all four are in place, you can do the one-time setup in 7.2 and the "witho
 3. Press consent on the duck's browser profile (once per profile). First start Nous and the tunnel following §2.1 and §2.2, then:
 
    ```bash
-   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --debug-port 9333'
+   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --debug-port 9333 --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic --speaker plughw:CARD=CD002,DEV=0'
    ```
 
    ```bash
@@ -232,7 +232,7 @@ Until all four are in place, you can do the one-time setup in 7.2 and the "witho
 3. Pi: start the terminal page.
 
    ```bash
-   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh'
+   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic --speaker plughw:CARD=CD002,DEV=0'
    ```
 
 4. Pi: start duckd and `engage` (§2.3). `鴨子：鴨子已連線` (Duck: duck connected) appears in Nous's log.
