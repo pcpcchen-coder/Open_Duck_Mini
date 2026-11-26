@@ -83,7 +83,7 @@ const card = (page, key) => page.locator(`[id="card-${key}"]`);
   ok("七個分區加系統狀態都在", (await page.locator("nav a").allInnerTexts()).join("|") === "功能開關|語音與聲音|聽聲轉頭門檻|頭部動作|眼睛表情|隱私|機體量測值|系統狀態");
   ok("表情預覽 25 張都畫出來了", await page.evaluate(() => [...document.querySelectorAll(".expr img")].every((i) => i.complete && i.naturalWidth === 200)));
   ok("已實作的設定顯示「已生效」", (await chip(page, "hearing.min_speech_energy")) === "已生效" && (await chip(page, "features.track_sound")) === "已生效");
-  const blocked = card(page, "audio.volume_cap_day");
+  const blocked = card(page, "audio.volume_cap_night");
   ok("規劃中的項目停用、標示原因", (await blocked.locator("input").first().isDisabled()) && /規劃中/.test(await blocked.innerText()) && /還不能設定/.test(await blocked.innerText()));
   ok("硬體未到的項目停用", (await card(page, "privacy.camera").locator("input").isDisabled()) && /硬體未到/.test(await card(page, "privacy.camera").innerText()));
   ok("量測值沒勾確認前不能改", await card(page, "calibration.mic.front_angle_deg").locator("input[type=number]").isDisabled());

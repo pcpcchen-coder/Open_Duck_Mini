@@ -27,6 +27,7 @@ gen() { # voice keyword_id(or -) slug text
 
 for v in Meijia Tingting Sinji; do
   gen "$v" HEI_YAZI hei_yazi "嘿鴨子"
+  gen "$v" HEY_YAZI hey_yazi "Hey 鴨子"
   gen "$v" XIAOYA_XIAOYA xiaoya_xiaoya "小鴨小鴨"
   gen "$v" YAZI_YAZI yazi_yazi "鴨子鴨子"
   gen "$v" - neg_weather "今天天氣很好，我們去散步吧。"
@@ -36,6 +37,9 @@ for v in Meijia Tingting Sinji; do
 done
 for v in Samantha Daniel Alex Karen; do
   gen "$v" HEY_DUCK hey_duck "Hey duck"
+  gen "$v" HEY_NOUS hey_nous "Hey Nous"
+  gen "$v" HELLO_NOUS hello_nous "Hello Nous"
+  gen "$v" - neg_hey_nurse "Hey nurse, they know us."
   gen "$v" HELLO_DUCK hello_duck "Hello duck"
   gen "$v" - neg_hey_doug "Hey Doug, the dock is over there."
   gen "$v" - neg_weather_en "The weather is nice today, let us go for a walk."

@@ -1,9 +1,9 @@
 # robot/audio：喇叭、本機音效、變聲、喚醒詞
 
-狀態：**D5 播放路徑與音效可用到「送到裝置」；D6 變聲與 D7 喚醒詞是 spike**（2026-11-25，D 線）。
-驗證層級：單元測試（77 項）＋ Pi 4 上的運算量測（輸入是合成語音檔）＋不出聲的裝置路徑檢查。
-**沒有人聽過任何聲音；沒有麥克風，喚醒率與誤喚醒率沒有量。**
-紀錄：[`docs/validation/audio-2026-11-25.md`](../../docs/validation/audio-2026-11-25.md)；設計：[ADR-0010](../../docs/adr/ADR-0010-duck-voice.md)、[ADR-0017](../../docs/adr/ADR-0017-audio-playback-path-v1.md)（草案）。
+狀態（2026-11-26）：**語音服務 `duck-voice` 在 Pi 上對「模擬的 Nous」跑通**（手動喚醒 → 收音上行 → 回話變聲後從喇叭播出）；**真的 Nous 端還沒有對應的端點**（B 線）；**喚醒詞還沒有用真人聲音測過**。D5 播放路徑與音效、D6 變聲、D7 喚醒詞引擎見下面各節。
+驗證層級：單元測試（129 項，其中 2 項需要 `aplay`）＋對模擬 Nous 的端到端（合成音訊）＋ Pi 4 實機：麥克風底噪與喇叭回授量測、合成語音經喇叭的聲學測試、對模擬 Nous 的實機端到端。
+**喚醒率與誤喚醒率沒有用真人聲音量過；回話的聽感（變聲、音量）沒有人確認過。**
+紀錄：[`voice-duck-side-2026-11-26.md`](../../docs/validation/voice-duck-side-2026-11-26.md)（語音服務）、[`audio-2026-11-25.md`](../../docs/validation/audio-2026-11-25.md)（音效、變聲、喚醒引擎的運算量測）；設計：[ADR-0010](../../docs/adr/ADR-0010-duck-voice.md)、[ADR-0017](../../docs/adr/ADR-0017-audio-playback-path-v1.md)；介面：[duck-voice v0](../../protocol/proposals/d-duck-voice-media-channel.md)（草案）。
 
 ## 職責
 
@@ -64,6 +64,55 @@ ssh duck-pi4 'cd ~/duck/d-line/audio && ~/duck/audio-venv/bin/python -m duck_aud
 ```
 
 `--volume` 是要求的音量（0～1），會被夾到本機上限（白天 0.5）。先從 0.1 開始；硬體混音器目前是 75%。
+
+## 語音服務 duck-voice（喚醒詞、收音、喇叭回話）
+
+```text
+XVF3800 ch0（處理後）─► 喚醒引擎（本機，音訊不離開記憶體）
+        │                    └─ 喚醒 ─► 提示音 listen_on ─► 開上行
+        └─ 只有「聽」的狀態 ─► 16 kHz PCM ─► ws://127.0.0.1:8791/duck-voice ─►（SSH 通道）─► Nous 端
+Nous 的回話（24 kHz PCM）◄───────────────────────────────────────────────────────┘
+        └─► 閘門 ─► 變聲 ─► 增益（≤ 上限）─► 限幅 ─► 喇叭 CD002
+                                                └─► 同一段聲音送 XVF3800 的 USB 播放端（回音消除的參考）
+```
+
+| 檔案 | 內容 |
+|---|---|
+| `duck_audio/voice_service.py` | 常駐服務：麥克風執行緒、喚醒、連線、設定、播放 |
+| `duck_audio/session.py` | 對話狀態機（純邏輯）：待命／聽／等回話／說；所有逾時；什麼時候音訊可以上行 |
+| `duck_audio/capture.py` | `arecord` 收音（只經管線進記憶體） |
+| `duck_audio/playback.py` 的 `StreamPlayer`、`RefSink`、`TeeSink` | 串流播放、回音消除參考 |
+| `duck_audio/mock_nous.py` | **模擬的 Nous 端（mock）**：回一句固定的合成語音，測試用 |
+| `config/wake_keywords.json` | 喚醒詞清單（Hey 鴨子、嘿鴨子、Hey Duck、Hey Nous…）；用哪一句由設定頁決定 |
+| `tools/measure_mic.py`、`tools/acoustic_wake_test.py` | 實機量測（底噪、回授、合成語音經喇叭的喚醒測試、環境誤觸發） |
+| [`../deploy/pi4/deploy_voice.sh`](../deploy/pi4/deploy_voice.sh) | 部署到 Pi、裝 systemd 服務 `duck-voice`（不 enable、不啟動） |
+
+規則（細節在 `session.py` 與介面文件）：
+
+- **喚醒前的音訊不離開記憶體**：只經過喚醒引擎；沒有 pre-roll、不寫檔、不進 log。只有「聽」的狀態會上行，而且只送到 loopback。
+- **`privacy.wake_listening` 或 `features.wake_word` 關掉時不開麥克風。**
+- 逾時都在鴨子本機：沒人說話 8 秒、說完安靜 1.5 秒、單輪最長 30 秒、等回話 15 秒（都在設定頁）。
+- 半雙工：鴨子說話時不上行、不聽喚醒詞（`audio.barge_in` 可開，預設關）。
+- 沒連上 Nous 時被叫醒：只播一聲提示音，不收音。
+- systemd 單元另外限制：整個檔案系統唯讀（只有 `~/duck/settings/applied` 可寫）、網路只允許 loopback。
+- 測試用的手動喚醒：`sudo systemctl kill -s USR1 duck-voice`（等於在鴨子上按一下「開始聽」）。
+- 設定全部在「鴨子設定」（`robot/settings`）：`audio.*`、`features.wake_word`、`features.sound_effects`、`privacy.wake_listening`。
+
+怎麼在 Pi 上試（先不接 Nous）：
+
+```bash
+bash nous_duck/robot/deploy/pi4/deploy_voice.sh
+ssh duck-pi4 'cd ~/duck/voice && ~/duck/audio-venv/bin/python -m duck_audio.mock_nous --port 8791 --listen-s 4'   # 分頁 1：模擬的 Nous
+ssh duck-pi4 'sudo systemctl start duck-voice && journalctl -u duck-voice -f'                                       # 分頁 2
+```
+
+然後對鴨子說喚醒詞（預設「Hey 鴨子」）：應該聽到「嘟嘟」（往上），說一句話，約 4 秒後鴨子用變聲後的合成語音回一句固定的話。那句話是 mock 的，不是 Nous 的回答。
+
+還沒做、要別的線配合的：
+
+- **Nous 端的 `duck-voice` 端點**（B 線）：沒有它就只能對 mock。
+- **duckd 的動作**（A 線）：服務可以用 `--notify-duckd 127.0.0.1:8793` 把 `{"v":1,"kind":"voice_state","state":"listening"|"waiting"|"speaking"|"idle"|"error","turn_id":…,"t_ms":…}` 丟給 duckd，但 duckd 還不認得這個 `kind`，所以預設關。喚醒時轉向聲源、說話時點頭都要 duckd 那邊接。
+- 喚醒當下的聲源方向（`doa_deg`）：duck-doa 與這個服務同時讀 XVF3800 的 USB 控制介面會互相重試，先不帶。
 
 ## 播放路徑（D5）
 

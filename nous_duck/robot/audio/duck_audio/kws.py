@@ -44,9 +44,18 @@ class WakeConfig:
     status: str = "unconfigured"
 
     @classmethod
-    def load(cls, path: Path | str) -> "WakeConfig":
+    def load(cls, path: Path | str, only_group: str | None = None, threshold_scale: float = 1.0) -> "WakeConfig":
+        """`only_group`：只啟用某一句喚醒詞（entries 的 `group`，沒有就用 `id`；同一句可以有多種念法）。
+        `threshold_scale`：把門檻乘上這個倍數（> 1 比較不容易觸發）。"""
         d = json.loads(Path(path).read_text(encoding="utf-8"))
         entries = tuple(d["entries"])
+        if only_group is not None:
+            entries = tuple(e for e in entries if e.get("group", e["id"]) == only_group)
+            if not entries:
+                raise ValueError(f"設定檔裡沒有這個喚醒詞：{only_group}")
+        if threshold_scale != 1.0:
+            base = float(d["keywords_threshold"])
+            entries = tuple({**e, "threshold": round(min(0.95, (e.get("threshold") or base) * threshold_scale), 4)} for e in entries)
         ids = [e["id"] for e in entries]
         if not entries or len(set(ids)) != len(ids):
             raise ValueError("關鍵詞清單是空的或 id 重複")
@@ -142,14 +151,29 @@ class WakeEngine:
             return True
         return self._quiet_since_s is not None and self.stream_time_s - self._quiet_since_s < self.holdoff_s and self._quiet_since_s > 0
 
-    def accept(self, samples_16k: np.ndarray) -> list[WakeEvent]:
-        """送進一段 16 kHz 單聲道 float 音訊，回傳這段時間內的喚醒事件（可能是空的）。"""
+    def group_of(self, keyword_id: str) -> str:
+        for e in self.cfg.entries:
+            if e["id"] == keyword_id:
+                return e.get("group", keyword_id)
+        return keyword_id
+
+    def reset(self) -> None:
+        """丟掉引擎裡累積的上下文（例如鴨子自己剛說完話、重新開始聽喚醒詞時）。"""
+        self._kws.reset_stream(self._stream)
+        self._quiet_s = 0.0
+        self._reset_done = True
+
+    def accept(self, samples_16k: np.ndarray, quiet: bool | None = None) -> list[WakeEvent]:
+        """送進一段 16 kHz 單聲道 float 音訊，回傳這段時間內的喚醒事件（可能是空的）。
+
+        `quiet`：呼叫端自己判斷這一段是不是安靜（例如依底噪調整的 VAD）；不給就用固定的 RMS 門檻。"""
         self._stream.accept_waveform(KWS_RATE, np.asarray(samples_16k, dtype=np.float32))
         self._samples += len(samples_16k)
         events: list[WakeEvent] = []
         if self.reset_on_silence_s is not None and len(samples_16k):
             x = np.asarray(samples_16k, dtype=np.float32)
-            if float(np.sqrt(np.mean(x * x))) < self.silence_rms:
+            is_quiet = quiet if quiet is not None else float(np.sqrt(np.mean(x * x))) < self.silence_rms
+            if is_quiet:
                 self._quiet_s += len(x) / KWS_RATE
             else:
                 self._quiet_s = 0.0

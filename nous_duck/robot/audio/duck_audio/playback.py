@@ -18,7 +18,9 @@
 from __future__ import annotations
 
 import json
+import queue
 import subprocess
+import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -57,6 +59,9 @@ class NullSink:
         self.frames += len(pcm) // (2 * OUT_CHANNELS)
 
     def close(self) -> None:
+        self.closed = True
+
+    def abort(self) -> None:
         self.closed = True
 
 
@@ -127,6 +132,11 @@ class AplaySink:
         except Exception:
             return ""
 
+    def abort(self) -> None:
+        """立刻停止（丟掉還在緩衝裡的聲音）。"""
+        self._proc.kill()
+        self._proc.wait(timeout=5)
+
     def close(self) -> None:
         assert self._proc.stdin is not None
         try:
@@ -137,6 +147,69 @@ class AplaySink:
         err = self._stderr()
         if rc != 0:
             raise PlaybackError(f"aplay 結束碼 {rc}：{err}")
+
+
+REF_DEVICE = "plughw:CARD=Array,DEV=0"
+REF_RATE = 16000
+
+
+class RefSink:
+    """把同一段聲音送到 XVF3800 的 USB 播放端，當它的回音消除（AEC）參考訊號。
+
+    XVF3800 的播放端只收 16 kHz 雙聲道；它自己的喇叭輸出沒有接東西，所以這裡不會出聲。
+    輸入是 48 kHz 雙聲道（和喇叭那一路相同），每 3 個取樣取 1 個（語音頻帶夠用；沒有另外做抗混疊濾波）。
+    """
+
+    def __init__(self, device: str = REF_DEVICE) -> None:
+        self.device = device
+        self.frames = 0
+        self._proc = subprocess.Popen(
+            ["aplay", "-q", "-D", device, "-t", "raw", "-f", "S16_LE", "-r", str(REF_RATE), "-c", "2", "-"],
+            stdin=subprocess.PIPE, stderr=subprocess.DEVNULL,
+        )
+
+    def write(self, pcm: bytes) -> None:
+        x = np.frombuffer(pcm, dtype="<i2").reshape(-1, OUT_CHANNELS)[::3]
+        try:
+            self._proc.stdin.write(x.tobytes())  # type: ignore[union-attr]
+        except BrokenPipeError:
+            pass  # 參考訊號送不出去不該讓喇叭那一路失敗；AEC 會變差，由量測發現
+        self.frames += len(x)
+
+    def abort(self) -> None:
+        self._proc.kill()
+
+    def close(self) -> None:
+        try:
+            self._proc.stdin.close()  # type: ignore[union-attr]
+            self._proc.wait(timeout=10)
+        except Exception:
+            self._proc.kill()
+
+
+class TeeSink:
+    """同時寫到多個 sink（喇叭＋AEC 參考）。第一個是主要的：它出錯就整個失敗。"""
+
+    def __init__(self, *sinks) -> None:
+        self.sinks = sinks
+
+    def write(self, pcm: bytes) -> None:
+        for s in self.sinks:
+            s.write(pcm)
+
+    def abort(self) -> None:
+        for s in self.sinks:
+            s.abort()
+
+    def close(self) -> None:
+        err = None
+        for s in self.sinks:
+            try:
+                s.close()
+            except Exception as e:  # noqa: BLE001
+                err = err or e
+        if err is not None:
+            raise err
 
 
 # ---------------------------------------------------------------- 閘門
@@ -333,3 +406,132 @@ class DuckAudioOut:
                 self.on_level(0.0)
         peak = float(np.max(np.abs(x))) if len(x) else 0.0
         return PlayResult("played", output, kind, None, len(x), len(x) / OUT_RATE, gain, round(peak, 4), levels)
+
+
+# ---------------------------------------------------------------- 串流播放（Nous 的即時語音）
+
+
+class StreamPlayer:
+    """`duck_voice` 的串流版：邊收邊變聲邊播。一次只播一段（一輪回話）。
+
+        ok, reason = player.begin()      # 問閘門；被擋下就不要 feed
+        player.feed(samples)             # 任意長度的 float32（in_rate，單聲道）；不阻塞
+        player.finish()                  # 沒有更多資料；播完後呼叫 on_done("finished")
+        player.flush()                   # 立刻停、丟掉還沒播的；呼叫 on_done("flushed")
+
+    聲音只在記憶體的佇列裡，播完就沒有了。`on_started`／`on_done`／`on_level` 都在播放執行緒裡被呼叫。
+    48 kHz 輸出用線性內插把 24 kHz 升 2 倍（沒有另外做抗鏡像濾波；語音夠用，音質要等試聽）。
+    """
+
+    def __init__(
+        self,
+        sink_factory: Callable[[], Sink],
+        gate: PlaybackGate,
+        shifter_factory: Callable[[int], object] | None,
+        in_rate: int = 24000,
+        on_level: Callable[[float], None] | None = None,
+        on_started: Callable[[], None] | None = None,
+        on_done: Callable[[str], None] | None = None,
+    ) -> None:
+        if OUT_RATE % in_rate:
+            raise ValueError("in_rate 必須能整除 48000")
+        self.sink_factory, self.gate, self.shifter_factory = sink_factory, gate, shifter_factory
+        self.in_rate = in_rate
+        self.on_level, self.on_started, self.on_done = on_level, on_started, on_done
+        self.is_playing = False
+        self._q: queue.Queue | None = None
+        self._thread: threading.Thread | None = None
+        self._abort = threading.Event()
+        self._sink: Sink | None = None
+        self.frames_out = 0
+        self.peak = 0.0
+
+    def begin(self) -> tuple[bool, str | None]:
+        d = self.gate.decide("voice")
+        if not d.allowed:
+            return False, d.reason
+        if self.shifter_factory is None:
+            return False, "voice_changer_missing"
+        self.flush()
+        self._abort = threading.Event()
+        self._q = queue.Queue()
+        self.frames_out, self.peak = 0, 0.0
+        self.is_playing = True
+        self._thread = threading.Thread(target=self._run, args=(self._q, self._abort, d.gain), name="duck-voice-play", daemon=True)
+        self._thread.start()
+        return True, None
+
+    def feed(self, samples: np.ndarray) -> None:
+        if self._q is not None and self.is_playing:
+            self._q.put(np.asarray(samples, dtype=np.float32))
+
+    def finish(self) -> None:
+        if self._q is not None:
+            self._q.put(None)
+
+    def flush(self) -> None:
+        t = self._thread
+        if t is None or not t.is_alive():
+            return
+        self._abort.set()
+        if self._q is not None:
+            self._q.put(None)
+        sink = self._sink
+        if sink is not None and hasattr(sink, "abort"):
+            try:
+                sink.abort()
+            except Exception:  # noqa: BLE001
+                pass
+        t.join(timeout=5)
+
+    def _run(self, q: "queue.Queue", abort: threading.Event, gain: float) -> None:
+        up = OUT_RATE // self.in_rate
+        shifter = self.shifter_factory(self.in_rate)  # type: ignore[misc]
+        sink = None
+        last = 0.0
+        pend = np.zeros(0, dtype=np.float32)
+        hop = OUT_RATE // LEVEL_HZ
+        reason = "finished"
+        try:
+            while not abort.is_set():
+                item = q.get()
+                done = item is None
+                y = shifter.flush() if done else shifter.process(item)  # type: ignore[attr-defined]
+                if len(y):
+                    if up > 1:  # 線性內插升頻
+                        prev = np.concatenate([[last], y[:-1]])
+                        steps = [prev + (y - prev) * (k + 1) / up for k in range(up)]
+                        last = float(y[-1])
+                        y = np.stack(steps, axis=1).reshape(-1).astype(np.float32)
+                    pend = np.concatenate([pend, limit(y * gain, gain)])
+                while len(pend) >= hop or (done and len(pend)):
+                    block, pend = pend[:hop], pend[hop:]
+                    if sink is None:
+                        sink = self._sink = self.sink_factory()
+                        if self.on_started:
+                            self.on_started()
+                    sink.write(to_pcm(block))
+                    self.frames_out += len(block)
+                    self.peak = max(self.peak, float(np.max(np.abs(block))))
+                    if self.on_level:
+                        self.on_level(float(np.sqrt(np.mean(block**2))))
+                    if abort.is_set():
+                        break
+                if done:
+                    break
+            if abort.is_set():
+                reason = "flushed"
+        except PlaybackError:
+            reason = "flushed" if abort.is_set() else "error"
+        finally:
+            if sink is not None:
+                try:
+                    sink.abort() if abort.is_set() and hasattr(sink, "abort") else sink.close()
+                except Exception:  # noqa: BLE001
+                    reason = "flushed" if abort.is_set() else "error"
+            self._sink = None
+            self.is_playing = False
+            if self.on_level:
+                self.on_level(0.0)
+            if self.on_done:
+                self.on_done(reason)

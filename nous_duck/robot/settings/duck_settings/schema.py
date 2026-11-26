@@ -158,7 +158,8 @@ class Setting:
         return d
 
 
-DUCKD, DOA = "duckd", "duck-doa"
+DUCKD, DOA, VOICE = "duckd", "duck-doa", "duck-voice"
+_VOICE_TEST = "2026-11-26 語音服務實機紀錄（docs/validation/voice-duck-side-2026-11-26.md）"
 _HW_TEST = "2026-11-26 實機頭部與聽聲轉頭測試（docs/validation/duckd-head-hardware-2026-11-26.md）"
 
 
@@ -192,35 +193,55 @@ def _build() -> tuple[Setting, ...]:
     add(Setting("features.track_face", "features", "看著說話的人", "bool", True,
                 "用鏡頭找到人臉，頭跟著轉。", status="hardware_missing", blocked_by="雙目鏡頭還沒裝；人臉追蹤只在合成資料上測過"))
     add(Setting("features.wake_word", "features", "喚醒詞", "bool", True,
-                "聽到喚醒詞才開始對話。", status="planned", blocked_by="喚醒詞引擎只做過運算量測，還沒接成服務；喚醒詞也還沒決定"))
-    add(Setting("features.sound_effects", "features", "本機音效", "bool", True,
-                "表情切換、開始聽、聽完了等提示音。", status="planned", blocked_by="喇叭播放還沒接進 duckd；沒有人試聽過"))
+                "聽到喚醒詞才開始對話。關掉後語音服務不開麥克風，叫不醒鴨子。", consumer=VOICE, basis=_VOICE_TEST))
+    add(Setting("features.sound_effects", "features", "對話提示音", "bool", True,
+                "被叫醒時的「開始聽」、沒聽到人說話的「聽完了」、連不上 Nous 的提示音。目前只有語音服務會播；表情切換的音效還沒接。",
+                consumer=VOICE, basis=_VOICE_TEST))
 
-    # ------------------------------------------------------------ 語音與聲音（全部還沒有常駐服務在讀）
-    why_audio = "喇叭播放路徑（duck_audio.playback）還沒接成常駐服務；音量也還沒對著喇叭量過"
+    # ------------------------------------------------------------ 語音與聲音（duck-voice 服務）
+    add(Setting("audio.volume", "audio", "音量", "number", 0.2,
+                "鴨子出聲的音量（線性增益）。實際音量不會超過下面的上限。", consumer=VOICE, min=0.0, max=1.0, step=0.05,
+                basis="保守初值；沒有量過聲壓。" + _VOICE_TEST))
     add(Setting("audio.volume_cap_day", "audio", "白天音量上限", "number", 0.5,
-                "鴨子出聲的線性增益上限。Nous 只能在這個上限以內調音量。", status="planned", blocked_by=why_audio,
+                "鴨子出聲的線性增益上限。Nous 只能在這個上限以內調音量。", consumer=VOICE,
                 min=0.0, max=0.5, step=0.05, basis="ADR-0010 §7；duck_audio.playback.GateConfig 的初始值，未校準"))
     add(Setting("audio.volume_cap_night", "audio", "夜間音量上限", "number", 0.15,
-                "夜間時段的音量上限。", status="planned", blocked_by=why_audio, min=0.0, max=0.15, step=0.05,
-                basis="ADR-0010 §7；初始值，未校準"))
+                "夜間時段的音量上限。", status="planned", blocked_by="夜間模式的排程還沒做（ADR-0006 待決第 4 項），目前一律用白天上限",
+                min=0.0, max=0.15, step=0.05, basis="ADR-0010 §7；初始值，未校準"))
     add(Setting("audio.night_start", "audio", "夜間開始", "time", "22:00", "夜間模式開始的時間。", status="planned",
                 blocked_by="夜間模式的排程還沒做（ADR-0006 待決第 4 項）"))
     add(Setting("audio.night_end", "audio", "夜間結束", "time", "07:00", "夜間模式結束的時間。", status="planned",
                 blocked_by="夜間模式的排程還沒做（ADR-0006 待決第 4 項）"))
-    add(Setting("audio.mute", "audio", "本機靜音", "bool", False, "擋下所有聲音，包含安全提示。", status="planned", blocked_by=why_audio))
-    why_voice = "變聲參數要等使用者試聽後決定（ADR-0010）；串流播放迴圈還沒寫"
+    add(Setting("audio.mute", "audio", "本機靜音", "bool", False, "擋下鴨子的所有聲音（回話與提示音）。", consumer=VOICE))
     add(Setting("audio.voice_changer", "audio", "變聲方式", "enum", "phase_vocoder",
-                "把 Nous 的聲音變成鴨子的聲音的演算法。", status="planned", blocked_by=why_voice,
-                choices=(("delay_line", "延遲線（省運算，延遲 20 ms）"), ("phase_vocoder", "相位聲碼器（可控共振峰，延遲 53 ms）"))))
-    add(Setting("audio.voice_semitones", "audio", "音高平移", "number", 5.0, "聲音升高幾個半音。候選是 +3、+5、+7。",
-                status="planned", blocked_by=why_voice, min=0.0, max=7.0, step=1.0, unit=" 半音", basis="ADR-0010 §4 的候選值"))
-    add(Setting("audio.voice_formant_ratio", "audio", "共振峰比例", "number", 1.0, "1.0＝保留原本的共振峰；大於 1 聽起來身體比較小。",
-                status="planned", blocked_by=why_voice, min=1.0, max=1.2, step=0.01, basis="audio-2026-11-25 驗證紀錄的候選值"))
-    add(Setting("audio.wake_keyword", "audio", "喚醒詞", "enum", "HEI_YAZI", "用哪一句叫醒鴨子。", status="planned",
-                blocked_by="喚醒詞還沒決定；這裡列的是量測用的候選（config/wake_keywords.candidates.json）",
-                choices=(("HEI_YAZI", "嘿鴨子"), ("XIAOYA_XIAOYA", "小鴨小鴨"), ("YAZI_YAZI", "鴨子鴨子"), ("HEY_DUCK", "Hey Duck"),
-                         ("HELLO_DUCK", "Hello Duck"))))
+                "把 Nous 的聲音變成鴨子的聲音的演算法。下一句回話開始套用。", consumer=VOICE,
+                choices=(("delay_line", "延遲線（省運算，延遲 20 ms）"), ("phase_vocoder", "相位聲碼器（可控共振峰，延遲 53 ms）")),
+                basis="audio-2026-11-25 驗證紀錄；使用者還沒試聽定案"))
+    add(Setting("audio.voice_semitones", "audio", "音高平移", "number", 5.0, "聲音升高幾個半音。0＝不升。候選是 +3、+5、+7。",
+                consumer=VOICE, min=0.0, max=7.0, step=1.0, unit=" 半音", basis="ADR-0010 §4 的候選值；使用者還沒試聽定案"))
+    add(Setting("audio.voice_formant_ratio", "audio", "共振峰比例", "number", 1.12, "1.0＝保留原本的共振峰；大於 1 聽起來身體比較小。只對相位聲碼器有用。",
+                consumer=VOICE, min=1.0, max=1.2, step=0.01, basis="audio-2026-11-25 驗證紀錄建議的起點；使用者還沒試聽定案"))
+    add(Setting("audio.wake_keyword", "audio", "喚醒詞", "enum", "HEY_YAZI", "用哪一句叫醒鴨子。改了之後幾秒內生效。",
+                consumer=VOICE, basis="ADR-0003 §3：預設「Hey 鴨子」，可以改。清單在 robot/audio/config/wake_keywords.json；" + _VOICE_TEST,
+                choices=(("HEY_YAZI", "Hey 鴨子"), ("HEI_YAZI", "嘿鴨子"), ("HEY_DUCK", "Hey Duck"), ("HELLO_DUCK", "Hello Duck"),
+                         ("XIAOYA_XIAOYA", "小鴨小鴨"), ("HEY_NOUS", "Hey Nous（和 Nous 其他終端相同）"), ("HELLO_NOUS", "Hello Nous（和 Nous 其他終端相同）"))))
+    add(Setting("audio.wake_sensitivity", "audio", "喚醒門檻倍數", "number", 1.0,
+                "把喚醒詞的門檻乘上這個倍數。調高比較不會誤喚醒、但比較難叫醒；調低相反。", consumer=VOICE, min=0.5, max=3.0, step=0.1,
+                basis="門檻本身沿用 AIOS 的值，在鴨子的麥克風上沒有用真人聲音校準"))
+    add(Setting("audio.listen_no_speech_s", "audio", "叫醒後沒人說話，等多久", "number", 8.0,
+                "被叫醒後一直沒聽到說話，過這麼久就結束這一輪、關掉上行。", consumer=VOICE, min=3.0, max=20.0, step=1.0, unit=" 秒"))
+    add(Setting("audio.listen_end_silence_s", "audio", "說完後安靜多久算說完", "number", 1.5,
+                "鴨子自己判斷「說完了」的安靜時間。Nous 通常會更早通知說完了。", consumer=VOICE, min=0.5, max=5.0, step=0.1, unit=" 秒", advanced=True))
+    add(Setting("audio.listen_max_s", "audio", "單輪最長收音", "number", 30.0,
+                "一輪最多送這麼久的聲音給 Nous，時間到自動停。", consumer=VOICE, min=5.0, max=60.0, step=5.0, unit=" 秒"))
+    add(Setting("audio.reply_timeout_s", "audio", "等回話的上限", "number", 15.0,
+                "說完後等 Nous 回話，超過就放棄並播提示音。", consumer=VOICE, min=5.0, max=60.0, step=5.0, unit=" 秒", advanced=True))
+    add(Setting("audio.aec_reference", "audio", "把播出的聲音送給麥克風當回音消除的參考", "bool", True,
+                "打開時，鴨子播的聲音同時送進麥克風陣列，讓它把喇叭的聲音從收音裡消掉。", consumer=VOICE, advanced=True,
+                basis="2026-11-26 實機：處理後聲道在播放時的音量從 −19 dBFS 降到 −52～−58 dBFS。" + _VOICE_TEST))
+    add(Setting("audio.barge_in", "audio", "鴨子說話時可以用喚醒詞打斷", "bool", False,
+                "關掉時（預設）鴨子說話期間不聽喚醒詞。打開前要先確認鴨子自己的聲音不會誤觸發。", consumer=VOICE, advanced=True,
+                basis="還沒有用真人聲音量過說話中的喚醒率與自我觸發"))
 
     # ------------------------------------------------------------ 聽聲轉頭門檻
     add(Setting("hearing.min_speech_energy", "hearing", "語音能量門檻", "number", 200000.0,
@@ -282,8 +303,9 @@ def _build() -> tuple[Setting, ...]:
                 tighten=("normal", "guest", "night", "full")))
     add(Setting("privacy.camera", "privacy", "鏡頭", "bool", True, "關掉後不能導航、找人、回充。", status="hardware_missing",
                 blocked_by="雙目鏡頭還沒裝", tighten=(True, False)))
-    add(Setting("privacy.wake_listening", "privacy", "常駐喚醒聆聽（麥克風）", "bool", True, "關掉後叫不醒鴨子。", status="planned",
-                blocked_by="喚醒詞服務還沒做", tighten=(True, False)))
+    add(Setting("privacy.wake_listening", "privacy", "常駐喚醒聆聽（麥克風）", "bool", True,
+                "關掉後語音服務不開麥克風，叫不醒鴨子。喚醒前的聲音只在記憶體裡經過喚醒引擎，不存檔、不外傳。",
+                consumer=VOICE, tighten=(True, False), basis="ADR-0003 §6、ADR-0006 §4：規則在資料產生處執行"))
     add(Setting("privacy.face_recognition", "privacy", "臉部辨識", "bool", True, "關掉後找人只靠聲音方向與聲紋。", status="planned",
                 blocked_by="在 Nous 端執行（ADR-0006 §4），鴨子上沒有這個開關可以接", tighten=(True, False)))
 
@@ -320,4 +342,6 @@ def check_cross_rules(values: dict[str, Any]) -> list[str]:
             f"「頭停穩後等多久才再聽」（{values['hearing.settle_s']:g} 秒）要比「方位視窗」（{values['hearing.window_s']:g} 秒）長 0.1 秒以上，"
             "否則頭停下後還會收到轉動時的方位，頭會來回擺"
         )
+    if values["audio.listen_end_silence_s"] >= values["audio.listen_no_speech_s"]:
+        errors.append("「說完後安靜多久算說完」要比「叫醒後沒人說話，等多久」短")
     return errors

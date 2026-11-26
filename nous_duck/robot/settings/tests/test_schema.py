@@ -26,7 +26,7 @@ def test_keys_are_unique_and_every_default_is_valid():
 def test_unimplemented_settings_say_why_and_have_no_consumer():
     for s in SETTINGS:
         if s.status == "implemented":
-            assert s.consumer in ("duckd", "duck-doa") and not s.blocked_by, s.key
+            assert s.consumer in ("duckd", "duck-doa", "duck-voice") and not s.blocked_by, s.key
         else:
             assert s.status in ("planned", "hardware_missing") and s.consumer is None and s.blocked_by and not s.writable, s.key
     assert sum(s.writable for s in SETTINGS) >= 20
