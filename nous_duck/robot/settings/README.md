@@ -1,6 +1,6 @@
 # 鴨子設定（robot/settings）
 
-狀態：**第一版**（2026-11-26，E 線）。驗證層級：單元測試、對模擬服務的端到端（模擬麥克風、模擬身體，都是 mock）、無頭瀏覽器（桌面與手機寬度）。**還沒有部署到 Pi，也沒有在實機上用它調過任何東西**；紀錄見 [`docs/validation/settings-2026-11-26.md`](../../docs/validation/settings-2026-11-26.md)。設計見 [ADR-0019](../../docs/adr/ADR-0019-duck-settings-page.md)。
+狀態：**第一版**（2026-11-26，E 線）。驗證層級：單元測試、對模擬服務的端到端（模擬麥克風、模擬身體，都是 mock）、無頭瀏覽器（桌面與手機寬度）。2026-11-26 晚上設定頁已部署到 Pi 並經區網驗證（頁面、存檔、拒絕規則），Pi 上的 duckd 與 duck-doa 也已用會讀設定的版本重新部署，**但還沒有啟動過，所以還沒有在實機上用它調過任何東西**；紀錄見 [`docs/validation/settings-2026-11-26.md`](../../docs/validation/settings-2026-11-26.md)。設計見 [ADR-0019](../../docs/adr/ADR-0019-duck-settings-page.md)。
 
 鴨子沒有螢幕，所以設定用網頁改：手機或電腦連到鴨子（同一個區網），開 `http://duck-pi4.local:8081/`；手機認不得 `.local` 名稱時改用 Pi 的 IP：`http://<Pi 的 IP>:8081/`（IP 用 `ssh duck-pi4 hostname -I` 看）。不用密碼。
 
@@ -169,7 +169,8 @@ ssh duck-pi4 '~/duck/settings/duck-settings set privacy.sound_direction true'
 
 ## 還沒做
 
-- **Pi 上的部署與實機確認**（2026-11-26 這一批沒有做到）。
+- **在實機上看設定生效**：設定頁（啟動中、已設成開機自動啟動，還沒有經過一次重開機確認）與會讀設定的 duckd、duck-doa 都已在 Pi 上，但兩個服務還沒有啟動過；下次有人在場啟動時要補實機紀錄。
+- 頁面看不出 Pi 上裝的 duckd／duck-doa 是不是會讀設定的版本：服務沒在跑時一律說「下次啟動時會用這個值」（[驗證紀錄 §4.3](../../docs/validation/settings-2026-11-26.md)）。
 - 「語音與聲音」整區：等喇叭播放接成常駐服務（D 線）再接。
 - 隱私模式、鏡頭、常駐聆聽：等對應的服務與硬體。
 - Nous 經 duck-link 讀設定、收緊設定：只有[提案](../../protocol/proposals/e-settings-over-duck-link.md)。
