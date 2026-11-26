@@ -1,13 +1,13 @@
 # 麥克風陣列選型
 
-- 日期：2026-11-12（網路查詢結果，價格與庫存會變動，購買前請再確認）；2026-11-16 更新決定與標準版尺寸
+- 日期：2026-11-12（網路查詢結果，價格與庫存會變動，購買前請再確認）；2026-11-13 改選標準版；2026-11-16 改裝頭上並補標準版尺寸
 - 相關：[ADR-0005 §2.2](../../docs/adr/ADR-0005-compute-and-sensor-upgrade.md#22-感測器)、[ADR-0003 §4](../../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md#4-找人被叫醒後走去找是誰叫它)
 
 ## 決定（2026-11-16 改）
 
-**沿用 FamilyRecorder 用的標準版 reSpeaker XVF3800 USB 4-Mic Array（不含 XIAO），水平裝在頭頂。** 取代 2026-11-12 的「Flex Circular-4 裝在身體上」。理由與 CAD 檢查見 [ADR-0005 §2.3.1](../../docs/adr/ADR-0005-compute-and-sensor-upgrade.md#231-麥克風陣列裝在頭上2026-11-16-使用者改決定) 與[驗證紀錄](../../docs/validation/mic-placement-2026-11-16.md)：
+**用 FamilyRecorder 同款的標準版 reSpeaker XVF3800 USB 4-Mic Array（不含 XIAO，USB VID `0x2886`、PID `0x001A`），水平裝在頭頂。** 型號在 2026-11-13 由 Flex Circular-4 改過來（台灣好買；Flex 只有海外通路）；位置在 2026-11-16 由身體上改到頭上。理由與 CAD 檢查見 [ADR-0005 §2.3.1](../../docs/adr/ADR-0005-compute-and-sensor-upgrade.md#231-麥克風陣列裝在頭上2026-11-16-使用者改決定) 與[驗證紀錄](../../docs/validation/mic-placement-2026-11-16.md)：
 
-- 手上已經有這一片，方向讀取的程式在 FamilyRecorder 用過。
+- 和 FamilyRecorder 同款、台灣好買，方向讀取的程式在 FamilyRecorder 用過。
 - 放在脖子後方的機身頂面雖然放得下，但頭最多只能抬 30°（沒裝時 40°）；放頭頂不影響頭部動作，天線也碰不到。
 - 麥克風在頭上，聲音方向要加上頸頭關節角度換算成相對身體，見 [ADR-0003 §4.1](../../docs/adr/ADR-0003-mobile-terminal-wake-and-find.md#41-聲源方向換算麥克風在頭上)。
 
@@ -33,17 +33,22 @@
 
 | | FamilyRecorder | 鴨子 |
 |---|---|---|
+| 型號 | 標準版 XVF3800 | **同款**標準版 XVF3800 |
 | 主機 | Mac（Apple Silicon、CoreAudio） | Pi 4（Linux、ALSA、libusb 需 udev 權限） |
 | 擺放 | 固定在房間，水平 | 裝在會轉動的頭上；角度要加上頸頭關節換算（ADR-0003 §4.1） |
 | 噪音 | 房間環境音 | 頭偏航、側擺舵機就在板子正下方；走路時的舵機與腳步聲 |
 | 驗證狀態 | Mac 上已使用 | **尚未驗證**：Linux 上的 USB 音訊、方向讀取指令、斷線恢復 |
 
 <details>
-<summary>2026-11-12 的原決定（已被取代）</summary>
+<summary>之前的決定（已被取代）</summary>
 
-使用者原本決定購買 **reSpeaker Flex XVF3800 Circular-4（USB 版、不含 XIAO）**，水平裝在機身頂面，讓 0° 固定是身體正前方。2026-11-16 改用手上的標準版並裝在頭上，理由見上。
+- 2026-11-12：**reSpeaker Flex XVF3800 Circular-4（USB 版、不含 XIAO）**，水平裝在機身頂面，讓 0° 固定是身體正前方。
+- 2026-11-13：改選標準版（台灣好買），仍裝身體上，待 CAD 確認不擋頸部。
+- 2026-11-16：CAD 檢查發現裝背上會讓頭少抬約 10°，改裝頭上。
 
 </details>
+
+> FamilyRecorder 正在使用的那一片如果直接拿到鴨子上，FamilyRecorder 就會沒有麥克風。可以先借來在 Pi 4 上做早期測試，正式裝上鴨子時再買一片同款。
 
 ## 需求
 
@@ -60,15 +65,19 @@
 
 | 型號 | 晶片／麥克風 | DoA | AEC | 介面 | 尺寸 | 參考價格 | 適合度 |
 |---|---|---|---|---|---|---|---|
-| reSpeaker Flex XVF3800 Circular-4（不含 XIAO，USB 韌體） | XMOS XVF3800，4 麥克風圓形陣列（間距 44 mm） | 有 | 有 | USB-C（UAC 2.0）；麥克風板以 24-pin FPC 排線接處理板 | 圓形陣列直徑約 73 mm | 查詢時沒找到明確售價 | 原本的第一推薦（2026-11-12）：專為機器人設計，麥克風板與處理板分離；2026-11-16 改用手上的標準版 |
-| **reSpeaker XVF3800 USB 4-Mic Array（標準版，不含 XIAO）** | XMOS XVF3800，4 麥克風（邊長 66 mm 正方形） | 有 | 有 | USB（UAC 2.0），出廠為 USB 音訊韌體 | 直徑 100 mm 圓板（官方機構圖） | 約 £38～48（英國 The Pi Hut）、A$128（澳洲）、含外殼版在 Amazon 約 US$80 | **採用（2026-11-16）**：使用者手上已有、FamilyRecorder 用過；裝在頭頂 |
+| reSpeaker Flex XVF3800 Circular-4（不含 XIAO，USB 韌體） | XMOS XVF3800，4 麥克風圓形陣列（間距 44 mm） | 有 | 有 | USB-C（UAC 2.0）；麥克風板以 24-pin FPC 排線接處理板 | 圓形陣列直徑約 73 mm | Seeed 官網約 US$57.99（2026-11-13 查詢，型號 100005504） | 原本的第一推薦（2026-11-12）：專為機器人設計，麥克風板與處理板分離；**台灣沒有通路，2026-11-13 改用標準版** |
+| **reSpeaker XVF3800 USB 4-Mic Array（標準版，不含 XIAO）** | XMOS XVF3800，4 麥克風（邊長 66 mm 正方形） | 有 | 有 | USB（UAC 2.0），出廠為 USB 音訊韌體 | 直徑 100 mm 圓板（官方機構圖） | 約 £38～48（英國 The Pi Hut）、A$128（澳洲）、含外殼版在 Amazon 約 US$80 | **採用**：與 FamilyRecorder 同款、台灣好買、DoA 讀法已有可沿用的程式（2026-11-13）；裝在頭頂（2026-11-16） |
 | ReSpeaker Lite | XMOS XU316，2 麥克風 | **Seeed 規格表沒有列 DoA** | 有 | USB／I2S | 小 | — | 不建議：沒有方向判斷 |
 | ReSpeaker 4-Mic Array for Raspberry Pi（HAT） | 4 麥克風，沒有板上 DSP | 要用軟體算（例如 ODAS） | 沒有 | GPIO（I2S） | Pi HAT | — | 不建議：佔 Pi 4 的 GPIO、沒有 AEC，運算要 Pi 4 自己扛 |
 | miniDSP UMA-8 | 7 麥克風 | 要另外刷韌體並自行測試 | 依韌體 | USB | 較大 | — | 不建議：DoA 資料少、較舊 |
 
-## 建議（2026-11-12，已被 2026-11-16 的決定取代）
+## 建議
 
-當時首選 Flex Circular-4（要選不含 XIAO 的 USB 版、選 Circular-4 而不是只能判斷半平面的 Linear-4），買不到才用標準版。2026-11-16 改用使用者手上的標準版。
+1. **採用標準版 reSpeaker XVF3800 USB 4-Mic Array**（與 FamilyRecorder 同款），裝在頭頂。購買時注意：
+   - 選**不含 XIAO ESP32S3** 的 USB 版本；含 XIAO 的版本是給 MCU 用的另一種韌體與用法。
+   - 確認買到的是 USB VID `0x2886`、PID `0x001A` 的同款（FamilyRecorder 的 `list-devices` 可以檢查）。
+   - 建議用**不含外殼的裸板**，比較輕、比較薄；支架做進新頭殼（ADR-0005 §2.3.1）。
+2. Flex Circular-4 留作備案：麥克風板 73 mm、可與處理板分開放，但只有海外通路。
 
 ## 要驗證的事（尚未做）
 

@@ -21,7 +21,7 @@
 |---|---|---|
 | ~~雙板或單板運算、感知板型號~~ | 已決定（2026-11-12）：雙板，Pi Zero 2 W＋Pi 4；**2026-11-22 改為 Pi 4 單板**。待確認：Pi 4 在機身的安裝位置、5 V UBEC 額定（3 A 不夠）、散熱、2 GB 夠不夠 | [ADR-0008](adr/ADR-0008-single-board-pi4.md)（取代 ADR-0005 §2.1） |
 | ~~雙目鏡頭型號與位置~~ | 已決定：AR0144，裝在頭上（`head` 要重新設計） | ADR-0005 §2.3 |
-| ~~麥克風陣列型號與位置~~ | 已決定（2026-11-16 改）：沿用 FamilyRecorder 的標準版 reSpeaker XVF3800，裝在頭上；轉頭角度與聲音方向的換算見 [ADR-0003 §4.1](adr/ADR-0003-mobile-terminal-wake-and-find.md#41-聲源方向換算麥克風在頭上)。原為 Flex Circular-4 裝在身體上 | [選型](../hardware/sensors/mic_array_selection.md) |
+| ~~麥克風陣列型號與位置~~ | 已決定：reSpeaker XVF3800 USB 4-Mic Array 標準版（與 FamilyRecorder 同款，2026-11-13），裝在頭上（2026-11-16 改）；轉頭角度與聲音方向的換算見 [ADR-0003 §4.1](adr/ADR-0003-mobile-terminal-wake-and-find.md#41-聲源方向換算麥克風在頭上)。原為 Flex Circular-4 裝在身體上 | [選型](../hardware/sensors/mic_array_selection.md) |
 | ~~充電觸點方案~~ | 已決定：背後（`body_back` 要改、暫緩列印） | ADR-0004 |
 | ~~是否接受在家裡貼 AprilTag~~ | 已同意 | ADR-0002 |
 | ~~沒開燈時的定位備案~~ | 已決定（2026-11-13）：頭上紅外線補光燈為主，AR0144 判斷照度低於門檻就自動開。待確認：要支援的摸黑情況、AR0144 有無 IR-cut 濾片、是否加 ToF 落差感測器與藍牙房間輔助、夜間臥室是否允許紅外線 | [ADR-0002 §4.1](adr/ADR-0002-indoor-localization-and-navigation.md#41-沒開燈時的備案紅外線補光2026-11-13-使用者同意以此為主)、ADR-0006 §5 |
