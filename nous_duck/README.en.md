@@ -14,7 +14,7 @@ This directory holds all of this fork's own development. Upstream files are neve
 | Procurement | Sourcing hardware ([checklist and suppliers](docs/build_log/README.md)) |
 | Assembly | Not started |
 | Software | The first version of the assembly viewer is usable ([download the HTML](assembly_viewer/release/duck_viewer.html)): a single HTML file that opens offline and shows 138 parts, the 14 servo IDs, and the 15 assembly steps from the upstream CAD, with exploded and X-ray views ([pipeline record](docs/validation/viewer-pipeline-2026-11-13.md), [front-end record](docs/validation/viewer-web-2026-11-15.md), Traditional Chinese only; validated by unit tests and a headless browser). The head controller for V3 "look at the person who is talking" is done and passes unit tests and a MuJoCo simulation ([record](docs/validation/look-at-sim-2026-11-16.md), Traditional Chinese only; not on hardware). The BOM and all other modules are still "Planned" |
-| Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0006 (including switchable privacy settings) are drafts or partly accepted; the "follow me / wait here" requirement [R-002](docs/requirements/R-002-follow-me.md) and [ADR-0007](docs/adr/ADR-0007-follow-me-and-wait-here.md) are drafts (design only; implementation comes later); phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
+| Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0006 (including switchable privacy settings) are drafts or partly accepted; the "follow me / wait here" requirement [R-002](docs/requirements/R-002-follow-me.md) and [ADR-0007](docs/adr/ADR-0007-follow-me-and-wait-here.md) are drafts (design only; implementation comes later); the low-battery return-home interaction requirement [R-003](docs/requirements/R-003-low-battery-return.md) and [ADR-0009](docs/adr/ADR-0009-low-battery-return-interaction.md) are drafts (design and nominal estimates only, Traditional Chinese only); phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
 | Hardware validation | None |
 
 ## Division of work
@@ -30,7 +30,7 @@ See the [architecture](docs/architecture.md) and [ADR-0001](docs/adr/ADR-0001-du
 | Path | Contents | Status |
 |---|---|---|
 | [`docs/handoff/`](docs/handoff/README.md) | Handoff summary, environment survey, ChatGPT conversation log, upstream BOM | Done |
-| [`docs/requirements/`](docs/requirements/README.md) | Requirement records | R-001, R-002 |
+| [`docs/requirements/`](docs/requirements/README.md) | Requirement records | R-001, R-002, R-003 |
 | [`docs/architecture.md`](docs/architecture.md) | Division of work and data flow between the duck and Nous | Draft |
 | [`docs/roadmap.md`](docs/roadmap.md) | Phases and gates, decisions waiting for the owner | Draft |
 | [`docs/stereo_vision_plan.md`](docs/stereo_vision_plan.md) | Stereo vision plan: what the duck can do with the AR0144 camera, limits, and order of work (Traditional Chinese only) | Planned (draft) |
