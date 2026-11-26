@@ -1,7 +1,7 @@
 # R-003：快沒電時要求回家充電
 
 - 提出：使用者，2026-11-26
-- 狀態：**需求已記錄；設計為草案**（[ADR-0012](../adr/ADR-0012-low-battery-return-interaction.md)）。尚無程式、尚無硬體驗證
+- 狀態：**需求已記錄；設計部分採用**（[ADR-0012](../adr/ADR-0012-low-battery-return-interaction.md)；2026-11-26 決定夜間安靜回家、斷線也回家、只用電壓估電量）。尚無程式、尚無硬體驗證
 - 相關：[R-001](R-001-mobile-companion.md) S4（電量低或任務結束時自己回充電座）、[ADR-0004](../adr/ADR-0004-docking-and-charging.md)（充電座與回充流程）
 
 ## 1. 使用者原始需求
