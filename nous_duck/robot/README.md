@@ -11,8 +11,8 @@
 | 路徑 | 職責 | 狀態 |
 |---|---|---|
 | `nous_link/` | duck-link 端點：收發訊息、依 `../protocol/schemas` 驗證、心跳、ack | 規劃中 |
-| `behaviors/` | 把意圖轉成上游 runtime 的 7 維指令向量；預錄動作（點頭、搖頭）、天線、表情 | 規劃中 |
-| `safety/` | **最後一道關卡**：速度與角度上限、指令 TTL（deadman）、跌倒、過熱、低電壓、斷線處理、緊急停止 | 規劃中 |
+| `behaviors/` | 把意圖轉成上游 runtime 的 7 維指令向量；預錄動作（點頭、搖頭）、天線、表情；坐在充電座上的 `docked` 狀態（腿保持站姿、頭頸平滑軌跡，[ADR-0009](../docs/adr/ADR-0009-docked-interaction.md)） | 規劃中 |
+| `safety/` | **最後一道關卡**：速度與角度上限、指令 TTL（deadman）、跌倒、過熱、低電壓、斷線處理、緊急停止；坐在充電座上的頭頸範圍夾限與觸點監控（ADR-0009） | 規劃中 |
 | `config/` | 鴨子設定（對應上游 `example_config.json` 的 `expression_features`、`joints_offsets`）、safety 上限 | 規劃中 |
 | `deploy/` | 安裝與部署：pip 從 git 安裝上游 runtime 並鎖 commit、systemd 服務；[`deploy/pi4/`](deploy/pi4/README.md) Pi 4 的 SD 卡燒錄、首次開機、開機後檢查、上游 runtime 安裝 | 規劃中；`pi4/` 燒錄與 runtime 安裝實機通過（[開機](../docs/validation/pi4-firstboot-2026-11-22.md)、[runtime](../docs/validation/pi4-runtime-2026-11-22.md)）；systemd 服務未做 |
 | `navigation/` | （感知板）定位融合（VIO＋AprilTag，**不用步數**）、拓撲與柵格路徑規劃、避障、回充對位（[ADR-0002](../docs/adr/ADR-0002-indoor-localization-and-navigation.md)、[ADR-0004](../docs/adr/ADR-0004-docking-and-charging.md)）；跟隨任務與原地等待（[ADR-0007](../docs/adr/ADR-0007-follow-me-and-wait-here.md)） | 規劃中 |
