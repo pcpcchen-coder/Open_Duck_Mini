@@ -46,11 +46,24 @@
 3. **麥克風**：XVF3800 接上 Pi 的 USB。確認、校準、啟動的指令在 [`robot/audio` 的 README](../../../robot/audio/README.md#聲源方向doat4)。校準時站在鴨子正前方約 1 m 說話 5 秒；之後到左邊說話，看方位是不是正的。
 4. 告訴我麥克風放哪（頭上／身上／桌上），改 `~/duck/doa/config/doa.json` 的 `mount`。
 
+## 實機頭部與聽聲轉頭（2026-11-26 傍晚，分支 `claude/duck-head-hw-test`）
+
+紀錄：[`docs/validation/duckd-head-hardware-2026-11-26.md`](../../validation/duckd-head-hardware-2026-11-26.md)。驗證層級：**實機**；哪些有人眼確認、哪些只有回讀，看紀錄 §8。
+
+- T1：duckd 接手頭頸 4 顆（腿沒寫），`head_check.sh` 全程跑完；再用 B 線正式 hub＋`duckctl` 跑 `look` 與四個動作，都完成、沒被夾。三軸方向和預期一致（人眼確認），設定沒改。四個動作的 `verification` 改成 `real`（使用者確認「有動」，沒評論樣子）。
+- T4：XVF3800（`2886:001a`、韌體 2.06）在 Pi 上讀得到；正前方原始角 176.9°（只留在 Pi）；角度是順時針為正，`counterclockwise` 改成 `false`。
+- T5：第一次實測頭來回擺，原因是舵機聲被判成語音加上舊角度停留。改讀語音能量、停穩等待 1.0 s、上限用實際視窗後，電視關時通過（人眼確認）。
+- 沒確認：有電視聲時頭會不會被帶走（回讀說門檻 5e4 時被帶走 4 次，使用者說沒有）；門檻 2e5 是離線重算的，沒有實機驗過。
+- 給 B 線：duckd 重啟後 hub 把新事件當成重複丟掉（紀錄 §9）。
+- 收尾：頭回正後放鬆，14 顆扭力全關；`duckd`、`duck-doa` 已停、沒有 enable；舵機控制台服務在跑、未連線。沒有出聲。
+
+要你決定的：聽聲轉頭平時就開，還是只在喚醒／聆聽時才開（有背景人聲時只靠門檻不夠穩）。
+
 ## 需要你處理
 
 - **實機頭部測試還沒做**：舵機控制台整晚連著匯流排。控制台按「釋放硬體」後：`sudo systemctl start duckd`、`~/duck/duckd/duckd-ctl engage`，Mac 開通道與 `python -m duckd.mock_hub --e2e`（服務預設 ±15°、30°/s）。
 - 14 顆舵機整晚出力，電壓掉到 7.6 V，出現過 6.5 V 警告。
-- 動作都還是 `verification: none`，要加 `--allow-unverified-gestures` 才列給 Nous。
+- 四個動作 2026-11-26 傍晚已在實機跑過，`verification: real`，不用再加 `--allow-unverified-gestures`。
 - 要你決定：`idle` 要不要自己做小動作；頭部速度上限與視窗；`presence` 各狀態的幅度。
 - 協定缺口：[`protocol/proposals/a-duckd-gaps.md`](../../../protocol/proposals/a-duckd-gaps.md)。
 - Pi 上留下：`~/duck/duckd/`、`~/duck/duckd-venv/`、服務 `duckd`（disabled、已停止）。`duck-console` 沒動過。

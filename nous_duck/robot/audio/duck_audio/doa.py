@@ -38,8 +38,17 @@ KNOWN_PRODUCT_IDS = {0x001A: "reSpeaker XVF3800 (USB firmware)"}
 USB_VENDOR_DEVICE_IN = 0xC0
 DOA_RESOURCE_ID = 20
 DOA_COMMAND_ID = 18
+#: 語音能量與各波束方位（Seeed 公開的 `python_control/xvf_host.py` 參數表：`AEC_SPENERGY_VALUES` resource 33、command 80；
+#: `AEC_AZIMUTH_VALUES` resource 33、command 75；各回 4 個 little-endian float，索引 3＝自動選擇的波束）。
+#: 能量大於 0 才算有語音；方位是弧度，和 DOA_VALUE 的角度同一個基準（2026-11-26 實機對照）。
+AEC_RESOURCE_ID = 33
+AEC_AZIMUTH_COMMAND_ID = 75
+AEC_SPENERGY_COMMAND_ID = 80
+AUTO_SELECT_BEAM = 3
 CONTROL_SUCCESS = 0
 CONTROL_RETRY = 64
+#: 回「重試」時最多試幾次。2026-11-26 實機：兩個程式同時讀時 4 次不夠。
+CONTROL_ATTEMPTS = 10
 DEFAULT_ADDR = ("127.0.0.1", 8793)
 DEFAULT_CONFIG = Path(__file__).resolve().parents[1] / "config" / "doa.json"
 
@@ -56,6 +65,15 @@ def decode_doa(response: bytes) -> tuple[float, bool]:
         raise DoaError(f"DOA 回應狀態異常：{response[0]}")
     angle, speech = struct.unpack("<2H", response[1:])
     return float(angle % 360), bool(speech)
+
+
+def decode_floats(response: bytes, count: int = 4) -> tuple[float, ...]:
+    """1 byte 狀態 + count 個 little-endian float。"""
+    if len(response) != 1 + 4 * count:
+        raise DoaError(f"回應長度不對：{len(response)}")
+    if response[0] != CONTROL_SUCCESS:
+        raise DoaError(f"回應狀態異常：{response[0]}")
+    return struct.unpack(f"<{count}f", response[1:])
 
 
 class XVF3800Reader:
@@ -94,16 +112,28 @@ class XVF3800Reader:
             "known_pid": KNOWN_PRODUCT_IDS.get(self.product_id),
         }
 
-    def read(self) -> tuple[float, bool]:
+    def _control_in(self, resource: int, command: int, length: int) -> bytes:
         response = b""
-        for attempt in range(4):
-            raw = self._dev.ctrl_transfer(USB_VENDOR_DEVICE_IN, 0, 0x80 | DOA_COMMAND_ID, DOA_RESOURCE_ID, 5, self._timeout_ms)
+        for attempt in range(CONTROL_ATTEMPTS):
+            raw = self._dev.ctrl_transfer(USB_VENDOR_DEVICE_IN, 0, 0x80 | command, resource, length, self._timeout_ms)
             response = bytes(raw)
-            if response and response[0] == CONTROL_RETRY and attempt < 3:
+            if response and response[0] == CONTROL_RETRY and attempt < CONTROL_ATTEMPTS - 1:
                 time.sleep(0.01)
                 continue
             break
-        return decode_doa(response)
+        return response
+
+    def read(self) -> tuple[float, bool]:
+        """DOA_VALUE：角度與語音旗標。**旗標和角度在聲音停止後會停留 2–3 秒**（2026-11-26 實機），追蹤用 `read_energy`。"""
+        return decode_doa(self._control_in(DOA_RESOURCE_ID, DOA_COMMAND_ID, 5))
+
+    def read_energy(self) -> tuple[float, float]:
+        """自動選擇波束的（方位 0–359°, 語音能量）。能量 0＝這一刻沒有語音，不會停留。"""
+        energy = decode_floats(self._control_in(AEC_RESOURCE_ID, AEC_SPENERGY_COMMAND_ID, 17))[AUTO_SELECT_BEAM]
+        azimuth = decode_floats(self._control_in(AEC_RESOURCE_ID, AEC_AZIMUTH_COMMAND_ID, 17))[AUTO_SELECT_BEAM]
+        if math.isnan(azimuth) or math.isnan(energy):
+            return 0.0, 0.0
+        return math.degrees(azimuth) % 360.0, float(energy)
 
     def close(self) -> None:
         try:
@@ -178,12 +208,18 @@ class DoaConfig:
     #: 麥克風回報的哪個原始角度（度）對應到**鴨子身體的正前方**。麥克風不管裝在鴨子身上還是放在桌上，
     #: 都用 `--calibrate` 量這個值（人站在鴨子正前方說話）。預設 0＝沒校準。
     front_angle_deg: float = 0.0
-    #: 原始角度增加的方向。True＝從上面看逆時針（往左為正，FamilyRecorder 的標示方式）；實機確認後再改。
+    #: 原始角度增加的方向。True＝往鴨子的左為正（FamilyRecorder 的標示方式）。
+    #: 2026-11-26 實機：麥克風平放在頭頂、USB 接頭朝後時要設 **False**（設定檔已改；人眼確認）。換安裝方向要重新確認。
     counterclockwise: bool = True
     #: 麥克風裝在哪：`head`（裝在頭上，會跟著頭轉；ADR-0005 的規劃）、`body`（裝在身體上）、`desk`（放在桌上、不在鴨子身上）。
     #: `head` 時送出的方位是**相對頭部**（訊息帶 `"frame":"head"`），由 duckd 加上當下的頭部 yaw 換成相對身體；
     #: `body`／`desk` 時是相對身體正前方（`"frame":"body"`）。`desk` 只在聲源夠遠、麥克風離鴨子很近時才近似正確。
     mount: str = "body"
+    #: 怎麼判斷「有語音」：`energy`＝自動選擇波束的語音能量大於 `min_speech_energy`（即時，預設）；
+    #: `flag`＝DOA_VALUE 的語音旗標（聲音停了還會停留 2–3 秒，頭一轉動就會被自己的舵機聲帶著跑，只留作對照）。
+    speech_source: str = "energy"
+    #: 語音能量門檻。0＝晶片認為有語音就算；調高可以濾掉遠處或小聲的聲音。**初始值，待實測修訂。**
+    min_speech_energy: float = 0.0
     sample_hz: float = 20.0
     window_s: float = 0.5
     min_speech_samples: int = 4
@@ -200,7 +236,17 @@ class DoaConfig:
         cfg = cls(**known)
         if cfg.mount not in ("head", "body", "desk"):
             raise DoaError(f"mount 只能是 head／body／desk，不是 {cfg.mount!r}")
+        if cfg.speech_source not in ("energy", "flag"):
+            raise DoaError(f"speech_source 只能是 energy／flag，不是 {cfg.speech_source!r}")
         return cfg
+
+
+def read_sample(reader, cfg: DoaConfig) -> tuple[float, bool]:
+    """依設定讀一筆（原始角度, 有沒有語音）。讀不到語音能量的裝置（例如模擬裝置）用 DOA_VALUE。"""
+    if cfg.speech_source == "energy" and hasattr(reader, "read_energy"):
+        raw, energy = reader.read_energy()
+        return raw, energy > cfg.min_speech_energy
+    return reader.read()
 
 
 def to_bearing_rad(raw_deg: float, cfg: DoaConfig) -> float:
@@ -265,7 +311,7 @@ class DoaService:
         now = self.clock()
         ok = True
         try:
-            raw, speech = self.reader.read()
+            raw, speech = read_sample(self.reader, self.cfg)
             self.last_raw = raw
             self.estimator.add(now, raw, speech)
             self.last_error = ""
@@ -296,7 +342,7 @@ def calibrate(reader, seconds: float, cfg: DoaConfig, clock=time.monotonic, slee
     """人站在鴨子正前方說話；回傳這段時間語音樣本的主要原始角度。"""
     angles, total, end = [], 0, clock() + seconds
     while clock() < end:
-        raw, speech = reader.read()
+        raw, speech = read_sample(reader, cfg)
         total += 1
         if speech:
             angles.append(raw)
@@ -387,7 +433,7 @@ def main() -> int:
             est, end = DoaEstimator(cfg), time.monotonic() + args.watch
             while time.monotonic() < end:
                 now = time.monotonic()
-                raw, speech = reader.read()
+                raw, speech = read_sample(reader, cfg)
                 est.add(now, raw, speech)
                 e = est.estimate(now)
                 print(json.dumps({"raw": raw, "speech": speech, "bearing_deg": None if e is None else round(math.degrees(e[1]), 1), "confidence": None if e is None else round(e[2], 2)}), flush=True)
