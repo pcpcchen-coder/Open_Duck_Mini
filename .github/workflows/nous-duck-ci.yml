@@ -71,6 +71,9 @@ jobs:
       - name: 檢查 release/duck_viewer.html 和原始碼一致
         working-directory: nous_duck/assembly_viewer/web
         run: npm run check:release
+      - name: 打包舵機控制台頁面
+        working-directory: nous_duck/assembly_viewer/web
+        run: npm run build:console
       - name: 安裝 Playwright 與 Chromium
         working-directory: nous_duck/assembly_viewer/web
         run: |
@@ -87,6 +90,19 @@ jobs:
           name: viewer-web-screens
           path: nous_duck/assembly_viewer/dist/screens/
           if-no-files-found: ignore
+
+  servo-console:
+    name: 舵機控制台單元測試（模擬匯流排）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: 安裝依賴
+        run: pip install -r nous_duck/robot/servo_console/requirements-dev.txt
+      - name: 執行測試
+        run: python -m pytest nous_duck/robot/servo_console/tests -v
 
   dock-cad:
     name: 充電座 CAD 測試

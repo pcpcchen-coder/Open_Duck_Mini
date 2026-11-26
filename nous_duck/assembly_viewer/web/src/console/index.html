@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nous Duck 舵機控制台</title>
+<meta name="description" content="在 Pi 4 上用網頁控制 Open Duck Mini v2 的 14 顆舵機：即時 3D 姿勢、扭力、姿勢、偏移、感測器。">
+<style>/*__STYLE__*/</style>
+</head>
+<body class="is-loading">
+<header class="topbar console-top">
+  <div class="brand">
+    <h1>Nous Duck 舵機控制台</h1>
+    <p><span id="conn-chip" class="chip">連線中…</span> <span id="mode-chip" class="chip" hidden>模擬匯流排</span> <span id="auth-chip" class="chip" hidden title="伺服器沒有開 token 檢查：同一個網路裡的任何人都能操作">不需 token（區網內都能操作）</span></p>
+  </div>
+  <div class="top-actions">
+    <button type="button" id="btn-connect" class="btn">連線匯流排</button>
+    <button type="button" id="btn-torque-on" class="btn">全部出力</button>
+    <button type="button" id="btn-torque-off" class="btn">全部放鬆</button>
+    <button type="button" id="btn-hold" class="btn">停在這裡</button>
+    <label class="toggle">速度 <select id="speed"></select></label>
+    <label class="toggle">kp <select id="kp-all"><option value="">—</option></select></label>
+    <button type="button" id="btn-estop" class="btn estop" title="快捷鍵 Esc">緊急停止</button>
+  </div>
+</header>
+
+<div id="estop-bar" class="estop-bar" role="alert" hidden>
+  <span id="estop-text"></span>
+  <button type="button" id="btn-reset-estop" class="btn">解除緊急停止</button>
+</div>
+<div id="alarm-bar" class="alarm-bar" role="status" hidden></div>
+<p class="notice" role="note">
+  <strong>這是開發用的本機工具，會讓舵機真的動。</strong>操作前先把鴨子懸空或躺平，隨時可以按「緊急停止」或 Esc（全部關扭力，鴨子會變軟）。
+  角度上限來自上游 <code>robot.xml</code>（往內縮 2°），不代表實際機構或線材不會卡；溫度、電壓門檻是暫定值，沒有實機依據。
+  3D 姿勢是用舵機回讀扣掉偏移畫的，偏移不準時畫面和實物會不一樣。
+</p>
+
+<main class="console-layout">
+  <aside class="panel joints-panel" aria-label="舵機">
+    <div class="panel-head">
+      <h2>舵機</h2>
+      <span id="joint-summary" class="muted"></span>
+    </div>
+    <div id="joint-list" class="joint-list"></div>
+  </aside>
+
+  <section class="stage" aria-label="3D 姿勢">
+    <div class="toolbar" role="toolbar" aria-label="檢視控制">
+      <div class="seg" role="group" aria-label="3D 顯示">
+        <button type="button" id="show-actual" aria-pressed="true">實際</button>
+        <button type="button" id="show-target" aria-pressed="false">目標</button>
+      </div>
+      <label class="toggle"><input id="xray" type="checkbox"> 透視外殼</label>
+      <label class="toggle"><input id="labels" type="checkbox" checked> 舵機 ID</label>
+      <div class="seg" role="group" aria-label="視角">
+        <button type="button" data-view="iso">斜前</button>
+        <button type="button" data-view="front">正面</button>
+        <button type="button" data-view="left">左側</button>
+        <button type="button" data-view="right">右側</button>
+        <button type="button" data-view="back">背面</button>
+        <button type="button" data-view="top">俯視</button>
+      </div>
+    </div>
+    <div id="stage-canvas" class="stage-canvas">
+      <div class="loading" aria-live="polite">載入 3D 模型中…</div>
+      <div id="fatal" class="fatal" role="alert" hidden></div>
+    </div>
+    <p class="hint stage-hint">拖曳旋轉 · 滾輪縮放 · 右鍵平移 · 點舵機選取 · 灰色＝沒出力</p>
+  </section>
+
+  <aside class="panel side-panel" aria-label="工具">
+    <div class="tabbar" role="tablist" aria-label="工具">
+      <button type="button" role="tab" data-tab="joint" aria-selected="true">選取</button>
+      <button type="button" role="tab" data-tab="poses" aria-selected="false">姿勢</button>
+      <button type="button" role="tab" data-tab="offsets" aria-selected="false">偏移</button>
+      <button type="button" role="tab" data-tab="sensors" aria-selected="false">感測</button>
+      <button type="button" role="tab" data-tab="sound" aria-selected="false">音效</button>
+      <button type="button" role="tab" data-tab="log" aria-selected="false">紀錄</button>
+    </div>
+    <section data-pane="joint" class="pane" id="pane-joint"></section>
+    <section data-pane="poses" class="pane" hidden>
+      <p class="muted small">套用姿勢只會移動「出力中」的舵機，速度依上方的最高速度。</p>
+      <ul id="pose-list" class="plain-list"></ul>
+      <form id="pose-form" class="inline-form">
+        <input id="pose-name" type="text" maxlength="30" placeholder="姿勢名稱" aria-label="姿勢名稱">
+        <button type="submit" class="btn">儲存目前目標</button>
+      </form>
+    </section>
+    <section data-pane="offsets" class="pane" hidden>
+      <p class="muted small">偏移＝舵機角度 − 關節角度（上游 <code>duck_config.json</code> 的 <code>joints_offsets</code>）。調整時關節角度不變，出力中的舵機會轉同樣的角度。存檔前會先備份。</p>
+      <div id="offset-table"></div>
+      <div class="row-actions">
+        <button type="button" id="btn-offsets-save" class="btn primary">存入 duck_config.json</button>
+        <button type="button" id="btn-offsets-reload" class="btn">還原成檔案的值</button>
+      </div>
+      <p id="offset-path" class="muted small"></p>
+    </section>
+    <section data-pane="sensors" class="pane" hidden>
+      <h3>BNO055 IMU</h3>
+      <div id="imu"></div>
+      <h3>足底開關</h3>
+      <div id="feet"></div>
+      <h3>Pi 4</h3>
+      <div id="pi"></div>
+    </section>
+    <section data-pane="sound" class="pane" hidden>
+      <p class="muted small">播放上游 runtime 附的音效（ALSA 預設輸出，目前是 USB 喇叭）。</p>
+      <div id="sound-list" class="button-grid"></div>
+    </section>
+    <section data-pane="log" class="pane" hidden>
+      <ol id="log-list" class="log-list"></ol>
+    </section>
+  </aside>
+</main>
+
+<dialog id="token-dialog">
+  <form method="dialog" id="token-form">
+    <h2>輸入控制台 token</h2>
+    <p class="muted">伺服器開了 token 檢查（<code>--require-token</code>）。token 在 Pi 的 <code>~/.config/nous-duck/console_token</code>。</p>
+    <input id="token-input" type="password" autocomplete="off" aria-label="token">
+    <button type="submit" class="btn primary">確定</button>
+  </form>
+</dialog>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<footer class="footer">
+  <p id="build-info"></p>
+  <p>Open Duck Mini 由 Antoine Pirrone 與貢獻者製作（Apache-2.0），本頁的網格取自其 CAD。3D 引擎 three.js（MIT）。本頁由 <a href="https://github.com/pcpcchen-coder/Open_Duck_Mini/tree/v2/nous_duck/robot/servo_console" target="_blank" rel="noopener noreferrer">nous_duck/robot/servo_console</a> 提供，3D 模型沿用 assembly_viewer。</p>
+</footer>
+
+<script type="application/json" id="viewer-data">/*__DATA__*/</script>
+<script type="application/octet-stream" id="mesh-data">/*__MESHES__*/</script>
+<script>/*__SCRIPT__*/</script>
+</body>
+</html>

@@ -24,6 +24,9 @@ npm run check      # 檢查是單一檔、沒有外部資源、大小在 16 MB �
 # 更新進版控的成品（原始碼先 commit）
 npm run release        # build＋複製到 ../release/duck_viewer.html
 npm run check:release  # 檢查 release 和目前原始碼一致（CI 也會跑）
+
+# 舵機控制台的頁面（nous_duck/robot/servo_console 用，不進版控）
+npm run build:console  # → ../dist/duck_console.html、../dist/console_joints.json
 ```
 
 打包好的 `duck_viewer.html` 直接用瀏覽器開（雙擊或拖進瀏覽器），不需要網路。不想自己建置的話，直接下載 [`../release/duck_viewer.html`](../release/duck_viewer.html)。
@@ -55,6 +58,8 @@ npm run check:release  # 檢查 release 和目前原始碼一致（CI 也會跑�
 | `src/data.ts` | 讀內嵌資料、解壓網格（`DecompressionStream`）、依量化格式還原頂點 |
 | `src/viewer.ts` | three.js 場景：零件、步驟著色、爆炸、透視、點選、標籤、鏡頭 |
 | `src/main.ts` | 介面：步驟面板、零件清單與搜尋、資訊卡、檢視控制 |
+| `src/console/` | 舵機控制台的頁面（[`robot/servo_console`](../../robot/servo_console/README.md)）：`pose_viewer.ts` 依 body 樹與關節角度擺姿勢，`main.ts` 輪詢 Pi 上的 API；共用 `data.ts`、`types.ts`、`style.css` |
+| `build_console.mjs` | 打包舵機控制台頁面與關節範圍檔 |
 | `build.mjs` | esbuild 打包程式與樣式，把資料與 gzip＋base64 的網格填進範本 |
 | `check_output.mjs` | 輸出檢查 |
 | `release.mjs` | 把建置結果複製到 `../release/`（原始碼有未 commit 的改動時拒絕） |
