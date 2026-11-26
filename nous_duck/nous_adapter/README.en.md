@@ -120,7 +120,7 @@ npm run typecheck
 npm test
 ```
 
-Results on 2026-11-26: 144 passed (`validator` 33, `hub` 24, `duck-adapter` 51, `terminal` 18, `cli` 18), about 4 seconds. The tests connect only to ephemeral local ports, do not touch 8791, and do not connect to the running Nous. The test tooling is the same as AIOS's: vitest 5.0.3, tsx 4.23.15, TypeScript 7.0.2.
+Results on 2026-11-26: 145 passed (`validator` 33, `hub` 25, `duck-adapter` 51, `terminal` 18, `cli` 18), about 4 seconds. The tests connect only to ephemeral local ports, do not touch 8791, and do not connect to the running Nous. The test tooling is the same as AIOS's: vitest 5.0.3, tsx 4.23.15, TypeScript 7.0.2.
 
 End-to-end check against line A's duckd (mock body):
 
@@ -197,6 +197,7 @@ Tools not done yet: `app.duck.announce` (whether to do it depends on the voice p
 | `tests/` | vitest tests |
 | `docs/aios-integration-plan.md` | The plan for moving into AIOS (file and function level) |
 | `docs/voice-path.md` | Voice path design |
+| `docs/voice-test.md` | Step-by-step voice test for the user to follow (telling the duck by voice to turn its head, nod and shake its head) |
 
 ## AIOS conventions followed
 
