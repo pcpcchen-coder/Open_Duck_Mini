@@ -11,9 +11,9 @@
 | 路徑 | 職責 | 狀態 |
 |---|---|---|
 | `nous_link/` | duck-link 端點：收發訊息、依 `../protocol/schemas` 驗證、心跳、ack | 規劃中 |
-| `behaviors/` | 把意圖轉成上游 runtime 的 7 維指令向量；預錄動作（點頭、搖頭）、天線、表情 | 規劃中 |
+| `behaviors/` | 把意圖轉成上游 runtime 的 7 維指令向量；預錄動作（點頭、搖頭）、天線、表情；坐在充電座上的 `docked` 狀態（腿保持站姿、頭頸平滑軌跡，[ADR-0018](../docs/adr/ADR-0018-docked-interaction.md)） | 規劃中 |
 | `behaviors/look_at.py` | 說話時看著對方：人臉位置（只有位置，不含影像與身分）＋說話者方向 → 頭部 4 維指令與轉身角速度。**在感知服務執行**（需要影像結果；ADR-0008 單板下仍和步態＋安全服務分開），輸出送步態＋安全服務，由 safety 再夾限 | 控制器完成；單元測試＋[模擬](../docs/validation/look-at-sim-2026-11-16.md)，未實機；人臉偵測器與兩個服務之間的介面未做 |
-| `safety/` | **最後一道關卡**：速度與角度上限、指令 TTL（deadman）、跌倒、過熱、低電壓、斷線處理、緊急停止 | 規劃中 |
+| `safety/` | **最後一道關卡**：速度與角度上限、指令 TTL（deadman）、跌倒、過熱、低電壓、斷線處理、緊急停止；坐在充電座上的頭頸範圍夾限與觸點監控（ADR-0018） | 規劃中 |
 | [`eyes/`](eyes/README.md) | （感知板）眼睛渲染：25 個表情、狀態環（實際鏡頭狀態）、過場與眨眼；表情與音效設計見 [`docs/eye_expressions.md`](../docs/eye_expressions.md) | **可用（單元測試＋預覽圖）**；SPI 驅動未寫、未實機 |
 | `config/` | 鴨子設定（對應上游 `example_config.json` 的 `expression_features`、`joints_offsets`）、safety 上限 | 規劃中 |
 | `deploy/` | 安裝與部署：pip 從 git 安裝上游 runtime 並鎖 commit、systemd 服務；[`deploy/pi4/`](deploy/pi4/README.md) Pi 4 的 SD 卡燒錄、首次開機、開機後檢查、上游 runtime 安裝 | 規劃中；`pi4/` 燒錄與 runtime 安裝實機通過（[開機](../docs/validation/pi4-firstboot-2026-11-22.md)、[runtime](../docs/validation/pi4-runtime-2026-11-22.md)）；systemd 服務未做 |

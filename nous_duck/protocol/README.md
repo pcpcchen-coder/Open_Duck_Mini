@@ -20,7 +20,7 @@ duck-link 是鴨子（Pi Zero 2 W）與 Nous（Mac mini）之間**唯一**的介
 | `schemas/privacy_policy.schema.json` | 隱私設定文件（全域、房間、家人、模式、時段；只含 ID、版本化），由 Nous 同步到鴨子（[ADR-0006](../docs/adr/ADR-0006-privacy-settings.md)） | 規劃中 |
 | `examples/` | 每個 schema 的合法與不合法範例，供兩端測試共用 | 規劃中 |
 
-R-001（2026-11-12）後，`state` 還要加入：所在房間／地點、位姿與定位不確定度、地圖版本、充電狀態與電量估算；`event` 加入 `mission_*`、`lost`、`door_closed`、`docked`／`undocked`、`wake_detected`（含聲源方向）。
+R-001（2026-11-12）後，`state` 還要加入：所在房間／地點、位姿與定位不確定度、地圖版本、充電狀態與電量估算；`event` 加入 `mission_*`、`lost`、`door_closed`、`docked`／`undocked`、`wake_detected`（含聲源方向）。[ADR-0018](../docs/adr/ADR-0018-docked-interaction.md)（2026-11-26，草案）再加：`state` 的 `docked` 子狀態（`docked_idle`／`docked_engaged`／`docked_quiet`）與充電細節（充電中、充飽、觸點不穩），`event` 的 `dock_contact_unstable` 與 `undocked` 的原因代碼（例如 `contact_lost`），以及 ack 的 `clamped`（坐在充電座上頭頸目標被夾到範圍邊界）。
 
 R-002（2026-11-19，「跟著我來／在這等我」）後，草案再加入：mission 類型 `follow`（進度帶 `phase`）、指令 `wait_here`、事件 `follow_target_acquired`、`follow_reacquired`、`follow_falling_behind`、`follow_target_lost`、`follow_blocked`、`wait_started`、`wait_timeout`；這些訊息不帶影像或外觀特徵（[ADR-0007 §9.3](../docs/adr/ADR-0007-follow-me-and-wait-here.md#93-duck-link-新增草案正式定義放-protocol先改-schema-再改兩端)）。
 

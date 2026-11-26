@@ -9,7 +9,7 @@
 | P2 | 硬體升級決策與上機：感知板、雙目鏡頭（含紅外線補光燈；用途與批次 V0～V7 見[雙目視覺規劃](stereo_vision_plan.md)）、麥克風陣列、喇叭（[ADR-0005](adr/ADR-0005-compute-and-sensor-upgrade.md)）；更新模擬質量、必要時重新訓練步態 | `hardware/`、`sim/` | 加裝後實機行走穩定；步態迴圈抖動在可接受範圍（數字待定） |
 | P3 | duck-link 協定與 DuckAdapter 基本工具（status、walk、stop、look）；鴨子當行動終端可對話（[ADR-0003](adr/ADR-0003-mobile-terminal-wake-and-find.md) §2） | `protocol/`、`robot/nous_link/`、`nous_adapter/` | mock 測試通過；實機上 Nous 能讓鴨子動並回讀確認；在鴨子旁邊能對話 |
 | P4 | 帶看建圖、AprilTag 定位、`go_to` 房間（單一樓層）（[ADR-0002](adr/ADR-0002-indoor-localization-and-navigation.md)）；沒開燈時紅外線補光（ADR-0002 §4.1） | `robot/navigation/`、`robot/perception/`、`sim/` | 從客廳到指定房間連續 N 次成功（N 待定）；迷路、門關、禁區處理正確；樓梯口不靠近；關燈時紅外線補光下能讀標籤，太暗時停下回報、不摸黑前進 |
-| P5 | 充電座與自動回充（[ADR-0004](adr/ADR-0004-docking-and-charging.md)） | `hardware/dock/`、`robot/navigation/` | 從家中任一點回充、電氣確認充電，連續 N 次成功 |
+| P5 | 充電座與自動回充（[ADR-0004](adr/ADR-0004-docking-and-charging.md)）；坐在充電座上照樣對話與互動（[ADR-0018](adr/ADR-0018-docked-interaction.md)） | `hardware/dock/`、`robot/navigation/`、`robot/behaviors/`、`robot/safety/` | 從家中任一點回充、電氣確認充電，連續 N 次成功；坐在充電座上動頭 10 分鐘充電電流不中斷、保持站姿 8 小時舵機不過熱、邊充邊用淨充電為正（ADR-0018 §5） |
 | P6 | 鴨子喚醒詞與找人（[ADR-0003](adr/ADR-0003-mobile-terminal-wake-and-find.md) §3–4） | `robot/audio/`、`robot/perception/`、`nous_adapter/` | 同房間與隔壁房間的喚醒找人成功率（目標待定）；找不到時誠實回報 |
 | P7 | 情境任務：叫人起床、排程 | `nous_adapter/`、AIOS | R-001 S1 情境實機通過 |
 | P8 | 視覺地圖重定位，減少 AprilTag | `robot/navigation/` | 標籤數量減少後 P4 的 gate 仍通過 |
@@ -34,6 +34,7 @@
 | 跟隨的細節：距離與逾時、鏡頭使用清單加「跟隨」、臥室與夜間規則、沒有地圖時能否跟、是否必須加 ToF、跟丟後怎麼辦 | 待決（2026-11-19 使用者要求先設計，實作晚點做） | [ADR-0007 §13](adr/ADR-0007-follow-me-and-wait-here.md#13-待決需要使用者決定) |
 | 低電量回家：門檻倍數、L2 沒人回答等多久、延後規則、夜間模式是否列為例外、斷線時 L3 是否照樣回家、是否加電流感測 | 待決（2026-11-26 設計草案） | [ADR-0012 §12](adr/ADR-0012-low-battery-return-interaction.md#12-待決需要使用者決定) |
 | ~~鴨子的記憶系統~~ | 已決定（2026-11-26）：沿用 Nous 記憶層、不另做 Hermes 式記憶；可以在鴨子旁邊用語音說「記住」；任務歷程保存 30 天並記錄家人 ID，刪除家人時只拿掉 ID；環境筆記預設開；地圖副本不加密；`places` 只回 ID（名稱表保證能對應回來） | [ADR-0011 §11](adr/ADR-0011-duck-memory.md#11-決定紀錄2026-11-26-使用者決定) |
+| 坐在充電座上的動作：腿用位置保持或靠椅背、待機要不要「呼吸」動作、座上收到 `walk` 怎麼辦、邊充邊用的電路、yaw 要不要放寬 | 待決（2026-11-26 使用者要求充電時照樣對話與互動） | [ADR-0018 §8](adr/ADR-0018-docked-interaction.md#8-待決需要使用者決定) |
 | 物品位置記憶（「遙控器上次在哪」） | 已決定要做（2026-11-26），**ADR 尚未撰寫**：白名單、只送類別＋地點＋時間、臥室規則、保存期限、Pi 4 運算預算 | [ADR-0011 §3](adr/ADR-0011-duck-memory.md#3-記憶分層) |
 | ~~隱私設定的預設值~~ | 已同意建議預設值 | [ADR-0006](adr/ADR-0006-privacy-settings.md) §5 |
 | ~~是否加實體隱私開關、鏡頭提示方式~~ | 已決定：加實體開關；鏡頭提示用眼睛螢幕的外環顏色（2026-11-17 由 RGB 眼燈改為兩片 1.28 吋 GC9A01 圓形螢幕，已購買）。也決定（2026-11-17）：加硬體直連的鏡頭電源指示燈、眼睛螢幕只畫合成圖形、螢幕無法顯示時不開鏡頭 | ADR-0006 §4 |

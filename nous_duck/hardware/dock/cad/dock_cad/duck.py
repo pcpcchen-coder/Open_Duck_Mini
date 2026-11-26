@@ -59,6 +59,8 @@ class DuckGeometry:
     print_to_dock_offset: np.ndarray
     #: 地板在 MuJoCo 世界座標的高度（mm）。
     floor_world_z: float
+    #: MuJoCo 世界座標（mm）減掉這個向量＝充電座座標。
+    world_to_dock: np.ndarray = field(default_factory=lambda: np.zeros(3))
     notes: list[str] = field(default_factory=list)
 
     def print_to_dock(self, pts: np.ndarray) -> np.ndarray:
@@ -115,5 +117,5 @@ def load_duck(repo_root: Path | None = None) -> DuckGeometry:
 
     world_to_dock = np.array([boss_face_world_x, 0.0, floor])
     parts = [DuckPart(n, v - world_to_dock, f) for n, v, f in raw]
-    return DuckGeometry(parts=parts, print_to_dock_offset=offset, floor_world_z=float(floor))
+    return DuckGeometry(parts=parts, print_to_dock_offset=offset, floor_world_z=float(floor), world_to_dock=world_to_dock)
 
