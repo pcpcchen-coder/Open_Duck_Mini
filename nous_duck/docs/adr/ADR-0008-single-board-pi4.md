@@ -43,6 +43,8 @@ Pi 4 和 Pi Zero 2 W 的 40 pin 排針腳位相同，上游 runtime 寫死的腳
 | BNO055 SDA／SCL | 3／5 | 2／3 |
 | MAX98357A LRC／BCLK／DIN | 35／12／40 | 19／18／21 |
 
+眼燈：2026-11-17 改成兩片 1.28 吋 GC9A01 圓形螢幕，接 Pi 4 的 SPI0（GPIO 7–11），GPIO 23／24 不再接眼燈（[ADR-0006 §4.2.1](ADR-0006-privacy-settings.md#421-硬體)）。
+
 舵機驅動板（Waveshare Bus Servo Adapter (A)）照上游用 USB 接，裝置名 `/dev/ttyACM0`。
 
 ### 2.4 單板裡的隔離（取代「安全在另一片板子」）

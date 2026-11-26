@@ -1,8 +1,8 @@
 # ADR-0010：鴨子的語音（收音、播放、變聲與本機音效）
 
 - 狀態：**部分採用**：使用者 2026-11-15 決定鴨子說話用「**Nous 的聲音加變聲**」；其餘為草案
-- 日期：2026-11-15；**2026-11-26 修訂**：配合 [ADR-0008](ADR-0008-single-board-pi4.md) 改成單板 Pi 4；把 Pi 4 已接上的 USB 喇叭列入考量；加上與 [ADR-0007](ADR-0007-follow-me-and-wait-here.md) 本機停止句、V3「說話時看著對方」的關係；麥克風陣列改成**標準版 XVF3800**（2026-11-13 使用者決定，見[選型](../../hardware/sensors/mic_array_selection.md)），喇叭方案 A 跟著改。原稿編號是 ADR-0007，合併前兩度改號（0007 給了「跟著我來與在這等我」，0009 給了 duck-link 傳輸），定為 ADR-0010
-- 相關：[R-001](../requirements/R-001-mobile-companion.md)（S2、S3）、[ADR-0001](ADR-0001-duck-role-in-nous.md)、[ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md)（行動終端、喚醒、找人）、[ADR-0005](ADR-0005-compute-and-sensor-upgrade.md)（麥克風陣列、喇叭）、[ADR-0006](ADR-0006-privacy-settings.md)（隱私設定、眼燈）、[ADR-0007](ADR-0007-follow-me-and-wait-here.md)（本機停止句）、[ADR-0008](ADR-0008-single-board-pi4.md)（單板 Pi 4）、[麥克風陣列選型](../../hardware/sensors/mic_array_selection.md)、[`robot/behaviors/look_at.py`](../../robot/behaviors/look_at.py)（V3）
+- 日期：2026-11-15；**2026-11-26 修訂**：配合 [ADR-0008](ADR-0008-single-board-pi4.md) 改成單板 Pi 4；把 Pi 4 已接上的 USB 喇叭列入考量；眼燈改為眼睛螢幕（ADR-0006 §4.2，2026-11-17）；加上與 [ADR-0007](ADR-0007-follow-me-and-wait-here.md) 本機停止句、V3「說話時看著對方」的關係；麥克風陣列改成**標準版 XVF3800**（2026-11-13 使用者決定，見[選型](../../hardware/sensors/mic_array_selection.md)），喇叭方案 A 跟著改。原稿編號是 ADR-0007，合併前兩度改號（0007 給了「跟著我來與在這等我」，0009 給了 duck-link 傳輸），定為 ADR-0010
+- 相關：[R-001](../requirements/R-001-mobile-companion.md)（S2、S3）、[ADR-0001](ADR-0001-duck-role-in-nous.md)、[ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md)（行動終端、喚醒、找人）、[ADR-0005](ADR-0005-compute-and-sensor-upgrade.md)（麥克風陣列、喇叭）、[ADR-0006](ADR-0006-privacy-settings.md)（隱私設定、眼睛螢幕）、[ADR-0007](ADR-0007-follow-me-and-wait-here.md)（本機停止句）、[ADR-0008](ADR-0008-single-board-pi4.md)（單板 Pi 4）、[麥克風陣列選型](../../hardware/sensors/mic_array_selection.md)、[`robot/behaviors/look_at.py`](../../robot/behaviors/look_at.py)（V3）
 - 實機紀錄：[Pi 4 上的上游 runtime §4.2 USB 喇叭](../validation/pi4-runtime-2026-11-22.md)
 - AIOS 參考（唯讀，main `7b0257d`）：`prototype/ambient-shell/shared/realtime-route.ts`（`LIVE_VOICES`、預設聲音 `cove`）、`terminals/rpi4/README.md`、`docs/adr/ADR-0003-local-wake-and-voice-recognition.md`（自我觸發防護）、`docs/Current_Implementation_Status.md`（瀏覽器語音與 WebRTC 雙路徑、選擇聲音輸出裝置、處理中音效、日／夜間對話音量）
 - 上游參考（唯讀）：Open_Duck_Mini_Runtime `v2` commit `376de65` 的 `mini_bdx_runtime/sounds.py` 與 `assets/*.wav`；上游 BOM「Expression package」的 Speaker、Amplifier；上游 `docs/assembly_guide.md` 的 MAX98357A 腳位
@@ -120,7 +120,7 @@
 
 - 音訊服務從**實際播出的聲音**算音量包絡，以低頻率（草案 10 Hz）送「正在說話＋音量等級」的意圖給步態與安全服務（同一片 Pi 4、不同的程序）；**不送關節角度流**（ADR-0001「Nous 只下意圖」）。
 - 說話時只動**天線**，角度與速度上限由 safety 夾限。**頭部交給 V3 的頭部控制器**（說話時看著對方），說話的動作不疊加在頭上，免得兩邊搶頭部。
-- 眼燈依 ADR-0006 §4.2：鏡頭關、通話中是綠色慢呼吸；鏡頭開著時青色優先，說話不能蓋掉鏡頭提示。
+- 眼睛螢幕依 ADR-0006 §4.2（2026-11-17 改成兩片圓形螢幕）：鏡頭關、通話中是綠色環慢呼吸；鏡頭開著時青色實心環優先，說話時的表情動畫不能蓋掉鏡頭提示。
 - 動作只跟著真實的播放聲音走，不假裝是嘴型或情緒（鴨子沒有嘴部機構）。
 
 ## 6. 本機音效與預錄提示
@@ -145,7 +145,7 @@
 - **播放閘門在 Pi 4**（ADR-0006 §4：「可否出聲」在鴨子端執行）：房間禁止出聲、夜間模式、實體隱私開關關閉時，`duck_voice` 靜音，`app.duck.announce` 回 `refused`（原因代碼 `privacy_policy`）。例外只有安全提示（跌倒、電量低），而且仍受音量上限限制；夜間要不要出聲列為待決。
 - **音量上限是鴨子本機設定**，Nous 不能調高；夜間另有較低的上限（對應 AIOS 的日／夜間對話音量）。叫人起床需要多大音量、上限設多少，都要實測（ADR-0005 §2.2 已列「音量是否足夠」）。
 - 實體隱私開關切斷 XVF3800 電源時：
-  - 用方案 A（XVF3800 板上功放）：**麥克風與喇叭一起斷**，鴨子沒辦法說「隱私開關已關閉」。退路是改用眼燈紅色表示（ADR-0006 §4.2）並回報給 Nous，由其他終端說出來，或另接一個不經過 XVF3800 的小蜂鳴器（待決）。
+  - 用方案 A（XVF3800 板上功放）：**麥克風與喇叭一起斷**，鴨子沒辦法說「隱私開關已關閉」。退路是改用眼睛螢幕的紅色提示（ADR-0006 §4.2）並回報給 Nous，由其他終端說出來，或另接一個不經過 XVF3800 的小蜂鳴器（待決）。
   - 用方案 B 或 C：喇叭不受影響，安全提示照常能播。
 - 沿用 AIOS 紅線：未喚醒的音訊不寫檔、不進 trace、不外傳；變聲處理只在記憶體裡串流，不留檔；音量包絡只送等級，不送聲音。
 
