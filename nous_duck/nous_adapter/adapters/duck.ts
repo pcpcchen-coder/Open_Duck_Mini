@@ -2,7 +2,7 @@ import type { DuckLink, LinkSnapshot } from "../hub/duck-link-hub.ts";
 import { toolResult, type IntegrationToolId, type ToolResult } from "../shared/aios-integrations.ts";
 import type { AdapterCatalog, ExecutionContext, HealthReport, IntegrationAdapter, ToolDefinition } from "../shared/aios-contracts.ts";
 import type { AckMessage, PresenceState } from "../shared/duck-link.ts";
-import { compactState, DUCK_TIMING, isMock, lookReadback, missionReadback, runDuckCommand, stateReadback, type CommandSpec, type DuckTiming } from "./duck-exec.ts";
+import { compactState, DUCK_TIMING, isMock, lookReadback, missionReadback, runDuckCommand, sendDuckPresence, stateReadback, type CommandSpec, type DuckTiming } from "./duck-exec.ts";
 import { DUCK_TEXT } from "./duck-text.ts";
 
 // DuckAdapter：AIOS IntegrationAdapter，service = "duck"（ADR-0001）。把 app.duck.* 工具轉成 duck-link 指令。
@@ -286,8 +286,8 @@ const ALL_TOOLS: readonly ToolDefinition[] = [
   },
 ];
 
-/** 全部 17 個工具的定義；enabled 依 DUCK_STAGE1_TOOLS。 */
-export const DUCK_TOOLS: readonly ToolDefinition[] = ALL_TOOLS.map((tool) => ({ ...tool, enabled: DUCK_STAGE1_TOOLS.has(tool.id) }));
+/** 全部 17 個工具的定義；enabled 依 DUCK_STAGE1_TOOLS。還沒啟用的工具在給人看的總表上隱藏（hidden），不讓人以為現在能用。 */
+export const DUCK_TOOLS: readonly ToolDefinition[] = ALL_TOOLS.map((tool) => (DUCK_STAGE1_TOOLS.has(tool.id) ? { ...tool, enabled: true } : { ...tool, enabled: false, catalog: { ...tool.catalog, hidden: true } }));
 
 /** 對面是真的鴨子還是模擬，要看連進來的那一端（hello.mock），所以是 "config"。 */
 export const DUCK_CATALOG: AdapterCatalog = { id: "duck", service: "duck", label: "鴨子", mock: "config", tools: DUCK_TOOLS };
@@ -512,17 +512,7 @@ export class DuckAdapter implements IntegrationAdapter {
 
   /** presence：語音工作階段的真實狀態。由 DuckTerminal 的 PresenceDriver 呼叫，不是模型工具。 */
   presence(state: PresenceState, speechLevel?: number, signal?: AbortSignal): Promise<ToolResult> {
-    return runDuckCommand(
-      this.link,
-      {
-        action: "presence",
-        params: { state, ...(speechLevel !== undefined ? { speech_level: speechLevel } : {}) },
-        ttlMs: 2_000,
-        ...(signal ? { signal } : {}),
-        readback: stateReadback((s) => s.presence === state, { confirmed: DUCK_TEXT.presenceConfirmed, unconfirmed: DUCK_TEXT.presenceUnconfirmed }),
-      },
-      this.timing,
-    );
+    return sendDuckPresence(this.link, state, speechLevel, signal, this.timing);
   }
 
   /** resume：解除暫停。只給在場的人用（開發 CLI）；不是模型工具。 */
