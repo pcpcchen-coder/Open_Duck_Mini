@@ -1,7 +1,8 @@
 // 舵機控制台的頁面：輪詢 /api/state、畫 3D 姿勢、送指令。所有安全規則在伺服器端；這裡只負責顯示與送出。
 import { readMeshBin } from "../data";
+import { drawChart } from "./charts";
 import { type CameraView, PoseViewer } from "./pose_viewer";
-import type { ConsoleBundle, ConsoleState, JointState } from "./types";
+import type { ConsoleBundle, ConsoleState, HistorySample, JointState } from "./types";
 
 const TOKEN_KEY = "nous-duck-console:token";
 const POLL_MS = 200;
@@ -202,7 +203,7 @@ function updateRows(s: ConsoleState): void {
       if (v !== null) r.slider.value = String(v);
     }
     r.val.textContent = `目標 ${fmt(j.target_deg)} · 實際 ${fmt(j.actual_deg)}`;
-    r.temp.textContent = j.temperature === null ? "—" : `${j.temperature}°C`;
+    r.temp.textContent = (j.temperature === null ? "—" : `${j.temperature}°C`) + (j.voltage === null ? "" : ` · ${j.voltage.toFixed(1)}V`);
     r.temp.className = "jtemp" + (j.temperature !== null && j.temperature >= s.limits.temp_stop_c ? " bad" : j.temperature !== null && j.temperature >= s.limits.temp_warn_c ? " warn" : "");
   }
   const on = s.joints.filter((j) => j.torque).length;
@@ -410,6 +411,148 @@ function renderSensors(s: ConsoleState): void {
   );
 }
 
+// ---------------------------------------------------------------- 電力
+const BATT_LO = 6.0; // 電力條的左端：自動停止門檻
+const BATT_HI = 8.4; // 右端：2S 滿電
+let powerHistory: HistorySample[] = [];
+let historyAt = 0;
+
+function pct(v: number): string {
+  return `${Math.min(100, Math.max(0, ((v - BATT_LO) / (BATT_HI - BATT_LO)) * 100)).toFixed(1)}%`;
+}
+
+function renderPower(s: ConsoleState): void {
+  const p = s.power;
+  const batt = $("#battery");
+  batt.replaceChildren();
+  if (!p.available || p.battery_v === undefined) {
+    batt.appendChild(el("p", "muted small", "還沒連線匯流排，沒有舵機回報的電壓與電流。按上方「連線匯流排」（只讀取，不會改扭力）。"));
+  } else {
+    batt.appendChild(el("div", "muted small", "電池電壓（由舵機回報推估）"));
+    batt.appendChild(el("div", "big-num", `${p.battery_v.toFixed(1)} V`));
+    batt.appendChild(el("div", "muted small", `每顆電芯約 ${p.cell_v!.toFixed(2)} V · 舵機最低 ${p.servo_v_min!.toFixed(1)} V／最高 ${p.servo_v_max!.toFixed(1)} V`));
+    const bar = el("div", "vbar");
+    bar.style.setProperty("--stop", pct(s.limits.volt_stop_v));
+    bar.style.setProperty("--warn", pct(s.limits.volt_warn_v));
+    const needle = el("div", "needle");
+    needle.style.left = pct(p.battery_v);
+    bar.appendChild(needle);
+    for (const [v, label] of [
+      [BATT_LO, `${BATT_LO} V 停止`],
+      [s.limits.volt_warn_v, `${s.limits.volt_warn_v} V 警告`],
+      [BATT_HI, `${BATT_HI} V 滿電`],
+    ] as const) {
+      const t = el("span", "tick", label);
+      t.style.left = pct(v);
+      if (v === BATT_HI) t.style.transform = "translateX(-100%)";
+      if (v === BATT_LO) t.style.transform = "none";
+      bar.appendChild(t);
+    }
+    batt.appendChild(bar);
+  }
+  const totals = $("#power-totals");
+  totals.replaceChildren(
+    kv([
+      ["舵機總電流", p.available && p.current_a != null ? `${p.current_a.toFixed(2)} A` : "—"],
+      ["舵機總功率（估計）", p.available && p.power_w != null ? `${p.power_w.toFixed(1)} W` : "—"],
+      ["舵機最高溫度", p.available && p.temp_max_c != null ? `${p.temp_max_c} °C` : "—"],
+      ["出力中", p.available ? `${p.torque_on}／14` : "—"],
+      ["回報異常", p.available ? (p.flagged?.length ? p.flagged.map((i) => `ID ${i}`).join("、") : "沒有") : "—"],
+    ]),
+  );
+
+  const table = el("table", "ptable");
+  const head = el("tr");
+  for (const h of ["舵機", "V", "mA", "W", "°C", "負載%", "旗標"]) head.appendChild(el("th", undefined, h));
+  table.appendChild(el("thead")).appendChild(head);
+  const body = el("tbody");
+  for (const j of s.joints) {
+    const tr = el("tr");
+    const w = j.voltage !== null && j.current_ma !== null ? (j.voltage * j.current_ma) / 1000 : null;
+    tr.append(
+      el("td", undefined, `${j.id} ${j.zh}`),
+      el("td", undefined, j.voltage === null ? "—" : j.voltage.toFixed(1)),
+      el("td", undefined, j.current_ma === null ? "—" : j.current_ma.toFixed(0)),
+      el("td", undefined, w === null ? "—" : w.toFixed(2)),
+      el("td", undefined, j.temperature === null ? "—" : String(j.temperature)),
+      el("td", undefined, j.load === null ? "—" : j.load.toFixed(1)),
+      el("td", j.status.length ? "flag" : undefined, j.status.length ? j.status.join("、") : "—"),
+    );
+    body.appendChild(tr);
+  }
+  table.appendChild(body);
+  if (p.available) {
+    const foot = el("tr");
+    foot.append(
+      el("td", undefined, "合計"),
+      el("td", undefined, ""),
+      el("td", undefined, p.current_a == null ? "—" : (p.current_a * 1000).toFixed(0)),
+      el("td", undefined, p.power_w == null ? "—" : p.power_w.toFixed(2)),
+      el("td", undefined, ""),
+      el("td", undefined, ""),
+      el("td", undefined, ""),
+    );
+    table.appendChild(el("tfoot")).appendChild(foot);
+  }
+  $("#servo-power").replaceChildren(table);
+
+  const pi = s.pi;
+  const v = pi.volts ?? {};
+  const vs = (k: string) => (v[k] == null ? "—" : `${v[k]!.toFixed(3)} V`);
+  $("#pi-power").replaceChildren(
+    kv([
+      ["get_throttled", pi.throttled ? `${pi.throttled}${pi.throttled_flags?.length ? "：" + pi.throttled_flags.join("、") : "（正常）"}` : "—"],
+      ["5 V 輸入", "Pi 4 量不到，只能看上面的電壓不足旗標"],
+      ["核心電壓", vs("core")],
+      ["SDRAM 電壓 c／i／p", `${vs("sdram_c")} / ${vs("sdram_i")} / ${vs("sdram_p")}`],
+      ["ARM 時脈", pi.arm_mhz == null ? "—" : `${pi.arm_mhz} MHz`],
+      ["CPU 溫度", fmt(pi.cpu_temp_c, 1, " °C")],
+    ]),
+  );
+  drawPowerCharts(s);
+}
+
+function drawPowerCharts(s: ConsoleState): void {
+  if ($('[data-pane="power"]').hidden) return;
+  const t = powerHistory.map((h) => h.t);
+  drawChart($<HTMLCanvasElement>("#chart-volt"), t, [{ label: "電池", values: powerHistory.map((h) => h.battery_v), color: "--accent", band: { lo: powerHistory.map((h) => h.v_min), hi: powerHistory.map((h) => h.v_max) } }], {
+    unit: "V",
+    digits: 1,
+    minSpan: 0.6,
+    marks: [
+      { value: s.limits.volt_warn_v, color: "--warn-ink", label: "警告" },
+      { value: s.limits.volt_stop_v, color: "--danger", label: "停止" },
+    ],
+  });
+  drawChart($<HTMLCanvasElement>("#chart-current"), t, [{ label: "電流", values: powerHistory.map((h) => h.current_a), color: "--current" }], { unit: "A", digits: 2, minSpan: 0.2 });
+  drawChart(
+    $<HTMLCanvasElement>("#chart-temp"),
+    t,
+    [
+      { label: "舵機最高", values: powerHistory.map((h) => h.temp_max_c), color: "--current" },
+      { label: "Pi CPU", values: powerHistory.map((h) => h.cpu_temp_c), color: "--ok" },
+    ],
+    { unit: "°C", digits: 0, minSpan: 10, marks: [{ value: s.limits.temp_warn_c, color: "--warn-ink", label: "舵機警告" }] },
+  );
+  const undervolt = powerHistory.filter((h) => h.throttled !== null && (h.throttled & 0x1) !== 0).length;
+  const first = powerHistory[0];
+  $("#history-note").textContent = powerHistory.length
+    ? `歷史 ${powerHistory.length} 筆（每秒一筆，從 ${new Date(first.t * 1000).toLocaleTimeString("zh-TW", { hour12: false })} 起）；Pi 電壓不足的秒數：${undervolt}`
+    : "還沒有歷史資料";
+}
+
+async function pollHistory(): Promise<void> {
+  if ($('[data-pane="power"]').hidden || Date.now() - historyAt < 2000) return;
+  historyAt = Date.now();
+  try {
+    const res = await request<{ samples: HistorySample[] }>("/api/history");
+    powerHistory = res.samples;
+    if (state) drawPowerCharts(state);
+  } catch {
+    /* 下次再試 */
+  }
+}
+
 function renderSounds(s: ConsoleState): void {
   const box = $("#sound-list");
   const key = s.sounds.join(",");
@@ -474,6 +617,7 @@ function render(s: ConsoleState): void {
   renderPoses(s);
   renderOffsets(s);
   renderSensors(s);
+  renderPower(s);
   renderSounds(s);
   renderLog(s);
   if (viewer) {
@@ -497,6 +641,7 @@ async function poll(): Promise<void> {
     state = await request<ConsoleState>("/api/state");
     failCount = 0;
     render(state);
+    void pollHistory();
   } catch (err) {
     failCount++;
     if (err instanceof HttpError && err.status === 401) askToken();
@@ -532,7 +677,14 @@ function bindControls(): void {
     const input = $<HTMLInputElement>("#pose-name");
     void send("pose_save", { name: input.value }).then((r) => r && (input.value = ""));
   });
-  document.querySelectorAll<HTMLButtonElement>(".tabbar [data-tab]").forEach((b) => b.addEventListener("click", () => selectTab(b.dataset.tab!)));
+  document.querySelectorAll<HTMLButtonElement>(".tabbar [data-tab]").forEach((b) =>
+    b.addEventListener("click", () => {
+      selectTab(b.dataset.tab!);
+      historyAt = 0;
+      void pollHistory();
+      if (state) drawPowerCharts(state);
+    }),
+  );
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       e.preventDefault();

@@ -51,6 +51,33 @@ export interface JointState {
   kp: number | null;
   offset_deg: number;
   offset_saved_deg: number;
+  current_ma: number | null;
+  status: string[];
+}
+
+export interface PowerSummary {
+  available: boolean;
+  battery_v?: number;
+  cell_v?: number;
+  servo_v_min?: number;
+  servo_v_max?: number;
+  current_a?: number | null;
+  power_w?: number | null;
+  temp_max_c?: number | null;
+  torque_on?: number;
+  flagged?: number[];
+}
+
+export interface HistorySample {
+  t: number;
+  battery_v: number | null;
+  v_min: number | null;
+  v_max: number | null;
+  current_a: number | null;
+  power_w: number | null;
+  temp_max_c: number | null;
+  cpu_temp_c: number | null;
+  throttled: number | null;
 }
 
 export interface Alarm {
@@ -92,6 +119,9 @@ export interface FeetState {
 
 export interface PiState {
   throttled?: string | null;
+  throttled_value?: number | null;
+  volts?: Record<string, number | null>;
+  arm_mhz?: number | null;
   throttled_flags?: string[];
   cpu_temp_c?: number | null;
   load?: number[] | null;
@@ -120,5 +150,6 @@ export interface ConsoleState {
   imu: ImuState;
   feet: FeetState;
   pi: PiState;
+  power: PowerSummary;
   sounds: string[];
 }

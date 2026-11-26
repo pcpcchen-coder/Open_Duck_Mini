@@ -71,6 +71,7 @@
   <aside class="panel side-panel" aria-label="工具">
     <div class="tabbar" role="tablist" aria-label="工具">
       <button type="button" role="tab" data-tab="joint" aria-selected="true">選取</button>
+      <button type="button" role="tab" data-tab="power" aria-selected="false">電力</button>
       <button type="button" role="tab" data-tab="poses" aria-selected="false">姿勢</button>
       <button type="button" role="tab" data-tab="offsets" aria-selected="false">偏移</button>
       <button type="button" role="tab" data-tab="sensors" aria-selected="false">感測</button>
@@ -78,6 +79,34 @@
       <button type="button" role="tab" data-tab="log" aria-selected="false">紀錄</button>
     </div>
     <section data-pane="joint" class="pane" id="pane-joint"></section>
+    <section data-pane="power" class="pane" hidden>
+      <div id="battery" class="battery"></div>
+      <div id="power-totals"></div>
+      <h3>電池電壓（推估）</h3>
+      <p class="legend-line"><span class="sw sw-accent"></span>中位數 <span class="sw sw-band"></span>最低～最高舵機</p>
+      <canvas id="chart-volt" class="chart" aria-label="電池電壓趨勢"></canvas>
+      <h3>舵機總電流</h3>
+      <canvas id="chart-current" class="chart" aria-label="舵機總電流趨勢"></canvas>
+      <h3>溫度</h3>
+      <p class="legend-line"><span class="sw sw-current"></span>舵機最高 <span class="sw sw-ok"></span>Pi CPU</p>
+      <canvas id="chart-temp" class="chart" aria-label="溫度趨勢"></canvas>
+      <p id="history-note" class="muted small"></p>
+      <h3>每顆舵機</h3>
+      <div id="servo-power" class="table-wrap"></div>
+      <h3>Pi 4 電源</h3>
+      <div id="pi-power"></div>
+      <details class="small muted">
+        <summary>數據來源與限制</summary>
+        <ul>
+          <li>沒有電池電壓感測器：電池電壓用 14 顆舵機回報電壓的<strong>中位數推估</strong>（舵機經驅動板直接吃 2S 電池），解析度 0.1 V，負載大時會比電池端低。</li>
+          <li>不是電量百分比：鋰電在負載下電壓會往下掉，電壓只能大概看出快沒電。</li>
+          <li>電流：STS3215 回報的「目前電流」，每單位 6.5 mA（Waveshare 記憶表），<strong>沒有用電表校正</strong>；功率＝電壓×電流的估計。</li>
+          <li>狀態旗標：位址 65，依 pypot／Waveshare 的定義（STS3215 官方表沒查到）。</li>
+          <li>Pi 4 沒有量 5 V 輸入的電路，只能看 <code>get_throttled</code> 的電壓不足旗標；核心／SDRAM 電壓是 Pi 內部穩壓後的值。</li>
+          <li>歷史每秒一筆、保留 15 分鐘，只存在 Pi 的記憶體，服務重啟就清空。</li>
+        </ul>
+      </details>
+    </section>
     <section data-pane="poses" class="pane" hidden>
       <p class="muted small">套用姿勢只會移動「出力中」的舵機，速度依上方的最高速度。</p>
       <ul id="pose-list" class="plain-list"></ul>
