@@ -1,12 +1,12 @@
-# ADR-0009：鴨子的語音（收音、播放、變聲與本機音效）
+# ADR-0010：鴨子的語音（收音、播放、變聲與本機音效）
 
 - 狀態：**部分採用**：使用者 2026-11-15 決定鴨子說話用「**Nous 的聲音加變聲**」；其餘為草案
-- 日期：2026-11-15；**2026-11-26 修訂**：配合 [ADR-0008](ADR-0008-single-board-pi4.md) 改成單板 Pi 4；把 Pi 4 已接上的 USB 喇叭列入考量；加上與 [ADR-0007](ADR-0007-follow-me-and-wait-here.md) 本機停止句、V3「說話時看著對方」的關係。原稿編號是 ADR-0007，合併前改號，因為 0007 已經給了「跟著我來與在這等我」
+- 日期：2026-11-15；**2026-11-26 修訂**：配合 [ADR-0008](ADR-0008-single-board-pi4.md) 改成單板 Pi 4；把 Pi 4 已接上的 USB 喇叭列入考量；加上與 [ADR-0007](ADR-0007-follow-me-and-wait-here.md) 本機停止句、V3「說話時看著對方」的關係；麥克風陣列改成**標準版 XVF3800**（2026-11-13 使用者決定，見[選型](../../hardware/sensors/mic_array_selection.md)），喇叭方案 A 跟著改。原稿編號是 ADR-0007，合併前兩度改號（0007 給了「跟著我來與在這等我」，0009 給了 duck-link 傳輸），定為 ADR-0010
 - 相關：[R-001](../requirements/R-001-mobile-companion.md)（S2、S3）、[ADR-0001](ADR-0001-duck-role-in-nous.md)、[ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md)（行動終端、喚醒、找人）、[ADR-0005](ADR-0005-compute-and-sensor-upgrade.md)（麥克風陣列、喇叭）、[ADR-0006](ADR-0006-privacy-settings.md)（隱私設定、眼燈）、[ADR-0007](ADR-0007-follow-me-and-wait-here.md)（本機停止句）、[ADR-0008](ADR-0008-single-board-pi4.md)（單板 Pi 4）、[麥克風陣列選型](../../hardware/sensors/mic_array_selection.md)、[`robot/behaviors/look_at.py`](../../robot/behaviors/look_at.py)（V3）
 - 實機紀錄：[Pi 4 上的上游 runtime §4.2 USB 喇叭](../validation/pi4-runtime-2026-11-22.md)
 - AIOS 參考（唯讀，main `7b0257d`）：`prototype/ambient-shell/shared/realtime-route.ts`（`LIVE_VOICES`、預設聲音 `cove`）、`terminals/rpi4/README.md`、`docs/adr/ADR-0003-local-wake-and-voice-recognition.md`（自我觸發防護）、`docs/Current_Implementation_Status.md`（瀏覽器語音與 WebRTC 雙路徑、選擇聲音輸出裝置、處理中音效、日／夜間對話音量）
 - 上游參考（唯讀）：Open_Duck_Mini_Runtime `v2` commit `376de65` 的 `mini_bdx_runtime/sounds.py` 與 `assets/*.wav`；上游 BOM「Expression package」的 Speaker、Amplifier；上游 `docs/assembly_guide.md` 的 MAX98357A 腳位
-- 硬體資料（2026-11-15 查閱 [Seeed wiki：reSpeaker Flex](https://wiki.seeedstudio.com/respeaker_flex_introduction/)、[Seeed wiki：reSpeaker XVF3800](https://wiki.seeedstudio.com/respeaker_xvf3800_introduction/)）
+- 硬體資料（2026-11-15 查閱 [Seeed wiki：reSpeaker XVF3800](https://wiki.seeedstudio.com/respeaker_xvf3800_introduction/)；當時也查了已不採用的 [Flex 版](https://wiki.seeedstudio.com/respeaker_flex_introduction/)）
 
 本 ADR 只有設計：**沒有程式，也沒有做任何變聲或回音消除的量測**。唯一的實機資料是 Pi 4 能透過 USB 喇叭播出聲音（2026-11-22 紀錄）。文中的數字若沒有標出處，都是待實測的項目。
 
@@ -23,13 +23,13 @@
 - 鴨子上的喇叭與功放，現在有三種來源：
   - 上游表情套件：MAX98357A I2S 功放（Pi GPIO 19／18／21，ADR-0008 §2.3）加小喇叭，原本放在頭裡。
   - 目前 Pi 4 接著的 USB 喇叭 `CD002`（`e2b7:0811`，只能播放，48 kHz／16 bit／立體聲）。2026-11-22 實機播過 440 Hz 測試音與上游 wav，使用者確認聽到；`~/.asoundrc` 已把 ALSA `default` 指向它。
-  - Flex 麥克風陣列的處理板（Seeed wiki，2026-11-15）：3.5 mm 音訊輸出（板上 DAC），以及 JST 喇叭接頭（板上 TPA3139D2 D 類功放，最大 10 W／4 Ω）。兩個都接時只從 3.5 mm 出聲；要推 10 W 喇叭得從外部電源端子供 12 V。USB 為 UAC 2.0。**wiki 沒有寫回音消除（AEC）的參考訊號從哪裡來**，也沒有寫 USB 播放的聲道與取樣率。
+  - 標準版 XVF3800 麥克風陣列板（Seeed wiki，2026-11-15）：3.5 mm 音訊輸出（給耳機或主動式喇叭），以及 JST 喇叭接頭（板上 LM48511 D 類功放，wiki 寫「支援 5 W 喇叭」）。USB-C 同時供電與傳資料，為 UAC 2.0。**wiki 沒有寫回音消除（AEC）的參考訊號從哪裡來**，也沒有寫 USB 播放的聲道與取樣率。
 
 ## 2. 決定：整條語音鏈
 
 ```text
                ┌──────────────── 鴨子：Pi 4（音訊服務，在自己的 slice） ────────────────┐
-人說話 ─► Flex 麥克風陣列（XVF3800：AEC、波束、降噪、DOA）
+人說話 ─► XVF3800 麥克風陣列（AEC、波束、降噪、DOA）
                │ USB 收音
                ├─► 本機關鍵詞偵測（sherpa-onnx KWS，常駐）：喚醒詞（ADR-0003 §3）＋停止句（ADR-0007 §6.2）
                │      └─ 喚醒 ─► 本機回應音效「來了」（§6，不等網路）
@@ -103,9 +103,9 @@
 
 ## 4. 收音、回音消除與關鍵詞
 
-- 收音用 Flex 麥克風陣列（ADR-0005，裝在身體頂面），XVF3800 晶片上做 AEC、波束成形與降噪；DOA 讀法沿用 FamilyRecorder（ADR-0003 §4）。
+- 收音用標準版 XVF3800 麥克風陣列（ADR-0005，裝在身體頂面，與 FamilyRecorder 同款），晶片上做 AEC、波束成形與降噪；DOA 讀法沿用 FamilyRecorder（ADR-0003 §4）。
 - **AEC 的參考訊號必須是喇叭真正播出的聲音（變聲之後）**，否則鴨子會聽到自己的聲音，造成誤喚醒或打斷自己。
-- 只有喇叭由 **Flex 驅動**（§8 方案 A）時，XVF3800 才有機會直接拿到播放訊號當參考。但它是否真的這樣做，wiki 沒寫，**要到貨驗證**。用 MAX98357A 或 USB 喇叭（方案 B、C）時，XVF3800 看不到播放的聲音，要走下面的退路。
+- 只有喇叭由 **XVF3800 板子驅動**（§8 方案 A）時，XVF3800 才有機會直接拿到播放訊號當參考。但它是否真的這樣做，wiki 沒寫，**要實測**。用 MAX98357A 或 USB 喇叭（方案 B、C）時，XVF3800 看不到播放的聲音，要走下面的退路。
 - 退路：
   1. 在 Pi 4 上做軟體 AEC（例如 PipeWire 的 echo-cancel 模組，內部是 WebRTC AEC），以 `duck_voice`／`duck_raw` 的輸出當參考。會多佔 CPU 與記憶體，要量。
   2. 路線 A 時，Chromium 的 `echoCancellation` 也能用，但它看不到 `duck_raw` 播出的本機音效。
@@ -144,8 +144,8 @@
 
 - **播放閘門在 Pi 4**（ADR-0006 §4：「可否出聲」在鴨子端執行）：房間禁止出聲、夜間模式、實體隱私開關關閉時，`duck_voice` 靜音，`app.duck.announce` 回 `refused`（原因代碼 `privacy_policy`）。例外只有安全提示（跌倒、電量低），而且仍受音量上限限制；夜間要不要出聲列為待決。
 - **音量上限是鴨子本機設定**，Nous 不能調高；夜間另有較低的上限（對應 AIOS 的日／夜間對話音量）。叫人起床需要多大音量、上限設多少，都要實測（ADR-0005 §2.2 已列「音量是否足夠」）。
-- 實體隱私開關切斷 Flex 電源時：
-  - 用方案 A（Flex 功放）：**麥克風與喇叭一起斷**，鴨子沒辦法說「隱私開關已關閉」。退路是改用眼燈紅色表示（ADR-0006 §4.2）並回報給 Nous，由其他終端說出來，或另接一個不經過 Flex 的小蜂鳴器（待決）。
+- 實體隱私開關切斷 XVF3800 電源時：
+  - 用方案 A（XVF3800 板上功放）：**麥克風與喇叭一起斷**，鴨子沒辦法說「隱私開關已關閉」。退路是改用眼燈紅色表示（ADR-0006 §4.2）並回報給 Nous，由其他終端說出來，或另接一個不經過 XVF3800 的小蜂鳴器（待決）。
   - 用方案 B 或 C：喇叭不受影響，安全提示照常能播。
 - 沿用 AIOS 紅線：未喚醒的音訊不寫檔、不進 trace、不外傳；變聲處理只在記憶體裡串流，不留檔；音量包絡只送等級，不送聲音。
 
@@ -153,7 +153,7 @@
 
 | 方案 | 說明 | 優點 | 缺點 |
 |---|---|---|---|
-| **A. Flex 板上功放＋JST 喇叭（建議，正式機）** | TPA3139D2，最大 10 W／4 Ω；喇叭裝在身體裡 | 播放與 AEC 在同一塊板，AEC 參考最可能是播放訊號（待驗證）；頭部不用再穿喇叭線 | 推大功率要 12 V 外部供電，鴨子是 2S 電池；只用 USB 供電時能推多大聲、能不能直接接電池，要查 TI 規格書並實測；隱私開關會連喇叭一起切（§7） |
+| **A. XVF3800 板上功放＋JST 喇叭（建議，正式機）** | LM48511，wiki 寫支援 5 W 喇叭；由 USB-C 供電；喇叭裝在身體裡 | 播放與 AEC 在同一塊板，AEC 參考最可能是播放訊號（待驗證）；頭部不用再穿喇叭線 | 板子靠 USB 供電，大聲播放時的電流會算到 Pi 4 的 USB 與 5 V 電源上（ADR-0008 電源要重選）；實際音量要量；隱私開關會連喇叭一起切（§7） |
 | B. 上游表情套件：MAX98357A I2S＋小喇叭 | 腳位照上游（GPIO 19／18／21）；上游放在頭裡 | 上游已有這組零件與腳位 | XVF3800 看不到播放的聲音，要軟體 AEC；放在頭裡的話，線要穿過頸部 4 個關節（ADR-0008 §4.1） |
 | C. USB 喇叭（目前手上的 `CD002`） | 已在 Pi 4 實機播放成功（2026-11-22） | **現在就能用來開發**：變聲、閘門、音量包絡都能先在 Pi 4 上試 | 同 B，要軟體 AEC；體積、固定方式與音量都還沒評估，正式機用不用待定 |
 
@@ -174,7 +174,7 @@
 |---|---|---|
 | 離線（雲端可做） | 變聲原型；用公開或合成語音做試聽檔；CER 可懂度比較；演算法的區塊延遲 | 不需要硬體 |
 | Pi 4＋USB 喇叭（**現在就能做**） | ALSA `duck_voice`／`duck_raw`、混音、音量閘門；變聲在 Pi 4 上的 CPU 與延遲；和步態服務同時跑時的負載 | 已有（Pi 4、`CD002`） |
-| Pi 4＋Flex（到貨後） | XVF3800 的 AEC 參考是不是播放訊號；方案 A 的音量與供電；軟體 AEC 退路的負載；喚醒詞與停止句在鴨子說話時的表現 | Flex 到貨 |
+| Pi 4＋XVF3800 | XVF3800 的 AEC 參考是不是播放訊號；方案 A 的音量與供電；軟體 AEC 退路的負載；喚醒詞與停止句在鴨子說話時的表現 | XVF3800（可先借 FamilyRecorder 那片測，見選型） |
 | 上機 | 舵機噪音下的 AEC、喚醒詞與停止句；喇叭振動對 IMU 的影響；與導航同時運作的負載；叫人起床的音量 | 組裝完成（P2） |
 
 只完成離線層級，或只在 USB 喇叭上試過時，不能宣稱「鴨子會說話」或「回音消除可用」。
@@ -194,8 +194,8 @@
 
 1. 變聲參數（§3.3）：試聽後由使用者決定。
 2. 透過鴨子說話時自稱 Nous 還是用鴨子的名字（喚醒詞與名字本來就待決，ADR-0003 §8、ADR-0007 §13）。
-3. 喇叭方案（§8）：正式機用 A、B 或 C，以及 Flex 功放的供電方式。
-4. XVF3800 的 AEC 參考是不是自己的播放訊號（到貨驗證）。
+3. 喇叭方案（§8）：正式機用 A、B 或 C，以及 XVF3800 板上功放的供電與耗電。
+4. XVF3800 的 AEC 參考是不是自己的播放訊號（要實測）。
 5. 安全提示在夜間模式與禁止出聲的房間要不要出聲（§7）。
 6. 實體隱私開關關閉時的聲音提示方式（§7，只有方案 A 有這個問題）。
 7. 本機音效與預錄檔的產生工具、存放位置，以及要不要進版控（§6）。

@@ -14,7 +14,7 @@ This directory holds all of this fork's own development. Upstream files are neve
 | Procurement | Sourcing hardware ([checklist and suppliers](docs/build_log/README.md)) |
 | Assembly | Not started |
 | Software | The first version of the assembly viewer is usable ([download the HTML](assembly_viewer/release/duck_viewer.html)): a single HTML file that opens offline and shows 138 parts, the 14 servo IDs, and the 15 assembly steps from the upstream CAD, with exploded and X-ray views ([pipeline record](docs/validation/viewer-pipeline-2026-11-13.md), [front-end record](docs/validation/viewer-web-2026-11-15.md), Traditional Chinese only; validated by unit tests and a headless browser). The head controller for V3 "look at the person who is talking" is done and passes unit tests and a MuJoCo simulation ([record](docs/validation/look-at-sim-2026-11-16.md), Traditional Chinese only; not on hardware). The BOM and all other modules are still "Planned" |
-| Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0006 (including switchable privacy settings) are drafts or partly accepted; the "follow me / wait here" requirement [R-002](docs/requirements/R-002-follow-me.md) and [ADR-0007](docs/adr/ADR-0007-follow-me-and-wait-here.md) are drafts (design only; implementation comes later); the duck's voice (Nous's voice with a voice changer) is in [ADR-0009](docs/adr/ADR-0009-duck-voice.md) (design only, Traditional Chinese only); phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
+| Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0006 (including switchable privacy settings) are drafts or partly accepted; the "follow me / wait here" requirement [R-002](docs/requirements/R-002-follow-me.md) and [ADR-0007](docs/adr/ADR-0007-follow-me-and-wait-here.md) are drafts (design only; implementation comes later); the duck's voice (Nous's voice with a voice changer) is in [ADR-0010](docs/adr/ADR-0010-duck-voice.md) (design only, Traditional Chinese only); phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
 | Hardware validation | None |
 
 ## Division of work
@@ -52,7 +52,7 @@ Documents other than this README and the `protocol/` and `nous_adapter/` READMEs
 - Feetech STS3215-C001 (7.4 V, 1:345) × 14. IDs: right leg 10–14, left leg 20–24, neck and head 30–33.
 - Raspberry Pi Zero 2 W, Waveshare Bus Servo Adapter, BNO055 IMU, 2S 18650 battery (per the [upstream BOM](docs/handoff/upstream_bom.csv)).
 - The five MG995 servos on hand are used only for a head prototype.
-- R-001 additions (planned): a Raspberry Pi 4 perception board, a Waveshare AR0144 stereo camera, a reSpeaker Flex XVF3800 Circular-4 microphone array (camera on the head, microphone array on the body), a physical privacy switch, RGB eye lights, rear charging contacts, and a charging dock.
+- R-001 additions (planned): a Raspberry Pi 4 perception board, a Waveshare AR0144 stereo camera, a standard reSpeaker XVF3800 USB 4-Mic Array (the same model FamilyRecorder uses; camera on the head, microphone array on the body), a physical privacy switch, RGB eye lights, rear charging contacts, and a charging dock.
 
 ## Dependencies
 
