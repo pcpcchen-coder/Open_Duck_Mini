@@ -52,7 +52,7 @@ Documents other than this README and the `protocol/` and `nous_adapter/` READMEs
 - Feetech STS3215-C001 (7.4 V, 1:345) × 14. IDs: right leg 10–14, left leg 20–24, neck and head 30–33.
 - Raspberry Pi Zero 2 W, Waveshare Bus Servo Adapter, BNO055 IMU, 2S 18650 battery (per the [upstream BOM](docs/handoff/upstream_bom.csv)).
 - The five MG995 servos on hand are used only for a head prototype.
-- R-001 additions (planned): a Raspberry Pi 4 perception board, a Waveshare AR0144 stereo camera, a standard reSpeaker XVF3800 USB 4-Mic Array (the same model FamilyRecorder uses; camera on the head, microphone array on the body), a physical privacy switch, GC9A01 round-display eyes, rear charging contacts, and a charging dock.
+- R-001 additions (planned): a Raspberry Pi 4 perception board, a Waveshare AR0144 stereo camera, a standard reSpeaker XVF3800 USB 4-Mic Array (the same model FamilyRecorder uses; camera on the head, microphone array on the body), a physical privacy switch, two 1.28-inch round displays as eyes, rear charging contacts, and a charging dock.
 
 ## Dependencies
 

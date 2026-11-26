@@ -11,7 +11,7 @@ from dataclasses import dataclass, fields, replace
 
 RGB = tuple[float, float, float]
 
-# ---- 調色盤（0～1）。青色系保留給「鏡頭開著」的狀態環（ADR-0006 §4.2.1），表情不能用 ----
+# ---- 調色盤（0～1）。青色系保留給「鏡頭開著」的狀態環（ADR-0006 §4.2.2），表情不能用 ----
 AMBER_IN: RGB = (1.00, 0.78, 0.36)
 AMBER_RIM: RGB = (0.86, 0.42, 0.10)
 SUN_IN: RGB = (1.00, 0.88, 0.40)  # 開心

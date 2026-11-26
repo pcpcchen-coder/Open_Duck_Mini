@@ -3,7 +3,7 @@
 - 狀態：**設計 v1**。渲染程式 [`robot/eyes/`](../robot/eyes/README.md) 可以產生每一幀畫面，單元測試與預覽圖通過；**還沒上螢幕、沒實機**（螢幕未到貨，SPI 驅動要等 E1）。**音效只有規格，聲音檔還沒做。**
 - 日期：2026-11-18
 - 硬體：GC9A01 1.28 吋圓形螢幕 ×2（[眼睛硬體設計](../hardware/expression_mods/gc9a01_eyes.md)）
-- 相關：[ADR-0006 §4.2](adr/ADR-0006-privacy-settings.md#42-鏡頭狀態提示眼燈顏色2026-11-12-決定)（狀態環顏色）、[ADR-0013](adr/ADR-0013-camera-always-on-and-home-monitoring.md)（鏡頭常開）、[雙目視覺規劃](stereo_vision_plan.md)（看著對方說話）
+- 相關：[ADR-0006 §4.2](adr/ADR-0006-privacy-settings.md#42-鏡頭狀態提示眼睛螢幕2026-11-17-修訂)（狀態環顏色）、[ADR-0013](adr/ADR-0013-camera-always-on-and-home-monitoring.md)（鏡頭常開）、[雙目視覺規劃](stereo_vision_plan.md)（看著對方說話）
 - 驗證紀錄：[`validation/eyes-render-2026-11-18.md`](validation/eyes-render-2026-11-18.md)
 
 ![表情總覽](validation/media/eyes-expressions-2026-11-18.png)
