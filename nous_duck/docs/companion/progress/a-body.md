@@ -29,7 +29,7 @@
 
 - duckd：`track sound`（死區 8°、0.8 s 內兩筆一致才採用、頭在動與停下 0.5 s 內不聽、8 s 沒聲音回正、超出範圍轉到極限並在事件註明、坐著不轉身）；感知來源的存活訊息；`capabilities.tracking_sound` 依來源實際狀態回報。
 - `robot/audio/duck_audio/doa.py`：USB 控制介面讀 XVF3800 的角度與語音旗標（沿用 FamilyRecorder 的讀法，MIT），環狀分群、正前方校準，只在有語音時送方位；不占用音訊串流。
-- 麥克風位置做成設定 `mount: head｜body｜desk`（預設 `desk`）。`head` 時 duckd 會把頭部 yaw 加回去（ADR-0003 §4.1 的簡化式）。
+- 麥克風位置做成設定 `mount: head｜body｜desk`（原本預設 `desk`；2026-11-26 使用者決定麥克風放頭頂，設定檔改為 `head`）。`head` 時 duckd 會把頭部 yaw 加回去（ADR-0003 §4.1 的簡化式）。
 - Pi 上：`duckd`、`duck-doa` 兩個服務與 udev 規則已部署，**都沒有 enable、沒有在跑**。舵機控制台 11:42 已釋放序列埠（服務照舊在跑、未連線）。
 - 沒有出聲。動作庫的 `verification` 沒有改（沒有實機跑過）。頭部視窗沒有放寬。
 

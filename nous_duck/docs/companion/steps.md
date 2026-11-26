@@ -108,4 +108,4 @@
 | T5 | 聽聲辨位轉頭：`track sound` | A 線 | 程式完成；實機等 T1、T4 | 單元測試；真實通道上對模擬身體、模擬聲源 |
 | T6 | 鴨子自己的喇叭與麥克風進行對話（Pi 上無螢幕跑 Nous 頁面） | B 線 | 準備完成；連 Nous 與出聲**等你**（也等麥克風） | Pi 4 上不連 Nous、不出聲的量測 |
 
-A 線的成果在 [PR #38](https://github.com/pcpcchen-coder/Open_Duck_Mini/pull/38)（base 是整合分支，還沒合併）；B 線本 repo 這一側的修改在分支 `claude/duck-b-nous-a19b67`，2026-11-26 11:58 時還有未提交的部分。上表是兩條線自己回報的狀態，整合線還沒有重跑它們這一批的測試。
+2026-11-26 下午：PR #38（A 線）、#39（B 線）已合併進整合分支。使用者決定 **XVF3800 放頭頂**，`robot/audio/config/doa.json` 的 `mount` 改為 `head`（Pi 上已部署的 `~/duck/doa/config/doa.json` 要在下次部署時更新）。上表是兩條線自己回報的狀態；實機仍等舵機電源與麥克風接上。
