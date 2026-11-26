@@ -1,8 +1,22 @@
 # B 線進度：Nous 端（`nous_adapter/`）
 
-分支：`claude/duck-b-nous-a19b67`，PR 的 base 是 `claude/duck-companion-overnight`。最後更新：2026-11-26。
+最後更新：2026-11-26 傍晚。前兩批的分支 `claude/duck-b-nous-a19b67` 已經併進 `v2`（PR #39）；AIOS 的 #156 已經併進 AIOS main。
 
 一句話：**Nous 這一端的程式（本 repo 與 AIOS 分支）都寫好了、fixture 測試全過，和 duckd 的模擬身體端到端講得通；還沒有人用真實語音試過，也還沒有對真的鴨子下過指令。**
+
+## 2026-11-26 傍晚：hub 事件去重的 bug 與語音實測步驟
+
+分支 `claude/duck-b-hub-event-dedupe`（從 `origin/v2` 開出），對 `v2` 的 PR，沒有合併。
+
+| 項目 | 狀態 | 驗證層級 |
+|---|---|---|
+| hub 在 duckd 重啟後把新事件當成重複丟掉 | **已修正**。原因：duckd 的 `event_id` 是行程內的流水號（`e_000001` 起跳，重啟就從頭編），hub 的去重表卻跨連線保留。修正：每次鴨子完成 `hello`（新連線）就清空去重表。協定沒有規定 `event_id` 的範圍，寫成提案 [`b-nous-event-id-scope`](../../../protocol/proposals/b-nous-event-id-scope.md)，沒有改 schema | 單元／整合測試（mock 鴨子照 duckd 的編法重現：修正前測試失敗、修正後通過）。**沒有在實機重跑** |
+| AIOS main 的 `/duck-link` 是否有同一個問題 | **有**（唯讀確認，沒有改 AIOS）。位置：`prototype/ambient-shell/server/duck/link.ts`，去重表在第 131 行、判斷在第 278～283 行、`adopt()`（第 304～316 行）沒有清空。影響：AIOS 目前沒有人訂閱鴨子的事件，受影響的是工具的回讀——duckd 重啟後，`gesture_done` 這類帶 `request_id` 的事件可能被丟掉，`app.duck.gesture` 就只能靠 state 判斷，最壞得到 `unconfirmed`（不會誤報成功）。修正大小：`link.ts` 一行＋測試約 30 行（`tests/duck-link.test.ts`、`tests/fixtures/mock-duck.ts`）。要不要改等整合線問過你 | 讀程式碼 |
+| 語音實測步驟 | 寫好：[`nous_adapter/docs/voice-test.md`](../../../nous_adapter/docs/voice-test.md)（＋英文）。**還沒有人照著跑過** | 文件 |
+
+你要親手做的：照 `voice-test.md` 跑一次語音實測。重點是開發實例用 `PORT=8791`——和 duckd 服務預設的埠、通道的埠相同，Pi 上什麼都不用改；正在跑的 Nous（8787）不會被動到。`.env`、登入或 API key、`npm start`、開通道、啟動 duckd 與 `engage` 都由你執行。
+
+測試：`nous_adapter` 145 項通過（`hub` 多 1 項）。
 
 ## 2026-11-26：桌上互動（T2、T3、T6）
 

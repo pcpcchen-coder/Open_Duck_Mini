@@ -120,7 +120,7 @@ npm run typecheck
 npm test
 ```
 
-2026-11-26 的結果：144 項通過（`validator` 33、`hub` 24、`duck-adapter` 51、`terminal` 18、`cli` 18），約 4 秒。測試只連本機的臨時埠，不碰 8791，也不連執行中的 Nous。測試工具與 AIOS 相同：vitest 5.0.3、tsx 4.23.15、TypeScript 7.0.2。
+2026-11-26 的結果：145 項通過（`validator` 33、`hub` 25、`duck-adapter` 51、`terminal` 18、`cli` 18），約 4 秒。測試只連本機的臨時埠，不碰 8791，也不連執行中的 Nous。測試工具與 AIOS 相同：vitest 5.0.3、tsx 4.23.15、TypeScript 7.0.2。
 
 對 A 線 duckd（mock 身體）的端到端檢查：
 
@@ -197,6 +197,7 @@ npx tsx scripts/e2e-duckd.ts --port 18792
 | `tests/` | vitest 測試 |
 | `docs/aios-integration-plan.md` | 搬進 AIOS 的計畫（檔案與函式層級） |
 | `docs/voice-path.md` | 語音路徑設計 |
+| `docs/voice-test.md` | 給使用者照做的語音實測步驟（用說的讓鴨子轉頭、點頭、搖頭） |
 
 ## 沿用的 AIOS 慣例
 
