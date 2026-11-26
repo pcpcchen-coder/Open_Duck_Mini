@@ -1,0 +1,280 @@
+[
+ {
+  "mock_input": true,
+  "input": "檔案（合成語音，say）",
+  "microphone": false,
+  "machine": "aarch64",
+  "python": "3.13.5",
+  "sherpa_onnx": "2.0.1",
+  "model": "kws-zh-en",
+  "num_threads": 1,
+  "keywords": [
+   "HEI_YAZI",
+   "XIAOYA_XIAOYA",
+   "YAZI_YAZI",
+   "HEY_DUCK",
+   "HELLO_DUCK"
+  ],
+  "keywords_score": 1.5,
+  "keywords_threshold": 0.15,
+  "reset_on_silence_s": 0.7,
+  "loadavg_before": [
+   0.93,
+   0.7,
+   0.52
+  ],
+  "model_load_s": 3.18,
+  "rss_before_load_mb": 28.5,
+  "rss_after_load_mb": 74.8,
+  "rss_after_run_mb": 97.9,
+  "stream_s": 125.3,
+  "fast": {
+   "rtf": 0.1363,
+   "cpu_pct_while_running": 100,
+   "chunk_ms_mean": 13.62,
+   "chunk_ms_p95": 42.38,
+   "chunk_ms_max": 47.4
+  },
+  "realtime": {
+   "seconds": 40.0,
+   "cpu_pct_of_one_core": 14.7,
+   "late_chunks": 0,
+   "chunks": 400
+  },
+  "synthetic_set": {
+   "note": "合成語音、無麥克風：不是喚醒率",
+   "keyword_utterances": 17,
+   "reported": 12,
+   "reported_per_keyword": {
+    "HEI_YAZI": "2/3",
+    "HELLO_DUCK": "3/4",
+    "HEY_DUCK": "4/4",
+    "XIAOYA_XIAOYA": "2/3",
+    "YAZI_YAZI": "1/3"
+   },
+   "other_keyword_reported_instead": 0,
+   "negative_utterances": 24,
+   "triggers_on_negatives": 0
+  },
+  "delay_after_keyword_end_ms": {
+   "n": 12,
+   "min": 304,
+   "median": 492,
+   "max": 714,
+   "note": "音訊時間（100 ms 一塊的粒度）＋該塊的運算時間；不含麥克風與音訊驅動的緩衝"
+  },
+  "loadavg_after": [
+   0.85,
+   0.72,
+   0.54
+  ]
+ },
+ {
+  "mock_input": true,
+  "input": "檔案（合成語音，say）",
+  "microphone": false,
+  "machine": "aarch64",
+  "python": "3.13.5",
+  "sherpa_onnx": "2.0.1",
+  "model": "kws-zh-en",
+  "num_threads": 2,
+  "keywords": [
+   "HEI_YAZI",
+   "XIAOYA_XIAOYA",
+   "YAZI_YAZI",
+   "HEY_DUCK",
+   "HELLO_DUCK"
+  ],
+  "keywords_score": 1.5,
+  "keywords_threshold": 0.15,
+  "reset_on_silence_s": 0.7,
+  "loadavg_before": [
+   0.99,
+   0.76,
+   0.56
+  ],
+  "model_load_s": 3.34,
+  "rss_before_load_mb": 28.4,
+  "rss_after_load_mb": 74.9,
+  "rss_after_run_mb": 95.3,
+  "stream_s": 125.3,
+  "fast": {
+   "rtf": 0.1304,
+   "cpu_pct_while_running": 366,
+   "chunk_ms_mean": 13.02,
+   "chunk_ms_p95": 42.72,
+   "chunk_ms_max": 85.95
+  },
+  "realtime": {
+   "seconds": 40.0,
+   "cpu_pct_of_one_core": 75.4,
+   "late_chunks": 0,
+   "chunks": 400
+  },
+  "synthetic_set": {
+   "note": "合成語音、無麥克風：不是喚醒率",
+   "keyword_utterances": 17,
+   "reported": 12,
+   "reported_per_keyword": {
+    "HEI_YAZI": "2/3",
+    "HELLO_DUCK": "3/4",
+    "HEY_DUCK": "4/4",
+    "XIAOYA_XIAOYA": "2/3",
+    "YAZI_YAZI": "1/3"
+   },
+   "other_keyword_reported_instead": 0,
+   "negative_utterances": 24,
+   "triggers_on_negatives": 0
+  },
+  "delay_after_keyword_end_ms": {
+   "n": 12,
+   "min": 296,
+   "median": 489,
+   "max": 708,
+   "note": "音訊時間（100 ms 一塊的粒度）＋該塊的運算時間；不含麥克風與音訊驅動的緩衝"
+  },
+  "loadavg_after": [
+   1.64,
+   1.04,
+   0.67
+  ]
+ },
+ {
+  "mock_input": true,
+  "input": "檔案（合成語音，say）",
+  "microphone": false,
+  "machine": "aarch64",
+  "python": "3.13.5",
+  "sherpa_onnx": "2.0.1",
+  "model": "kws-zh-en",
+  "num_threads": 1,
+  "keywords": [
+   "HEI_YAZI",
+   "XIAOYA_XIAOYA",
+   "YAZI_YAZI",
+   "HEY_DUCK",
+   "HELLO_DUCK"
+  ],
+  "keywords_score": 1.5,
+  "keywords_threshold": 0.15,
+  "reset_on_silence_s": null,
+  "loadavg_before": [
+   1.64,
+   1.04,
+   0.67
+  ],
+  "model_load_s": 3.31,
+  "rss_before_load_mb": 28.4,
+  "rss_after_load_mb": 74.7,
+  "rss_after_run_mb": 98.0,
+  "stream_s": 125.3,
+  "fast": {
+   "rtf": 0.1382,
+   "cpu_pct_while_running": 100,
+   "chunk_ms_mean": 13.81,
+   "chunk_ms_p95": 43.23,
+   "chunk_ms_max": 68.36
+  },
+  "realtime": {
+   "seconds": 5.0,
+   "cpu_pct_of_one_core": 13.8,
+   "late_chunks": 0,
+   "chunks": 50
+  },
+  "synthetic_set": {
+   "note": "合成語音、無麥克風：不是喚醒率",
+   "keyword_utterances": 17,
+   "reported": 7,
+   "reported_per_keyword": {
+    "HEI_YAZI": "2/3",
+    "HELLO_DUCK": "1/4",
+    "HEY_DUCK": "1/4",
+    "XIAOYA_XIAOYA": "2/3",
+    "YAZI_YAZI": "1/3"
+   },
+   "other_keyword_reported_instead": 0,
+   "negative_utterances": 24,
+   "triggers_on_negatives": 1
+  },
+  "delay_after_keyword_end_ms": {
+   "n": 7,
+   "min": 304,
+   "median": 472,
+   "max": 695,
+   "note": "音訊時間（100 ms 一塊的粒度）＋該塊的運算時間；不含麥克風與音訊驅動的緩衝"
+  },
+  "loadavg_after": [
+   1.91,
+   1.15,
+   0.72
+  ]
+ },
+ {
+  "mock_input": true,
+  "input": "檔案（合成語音，melo）",
+  "microphone": false,
+  "machine": "aarch64",
+  "python": "3.13.5",
+  "sherpa_onnx": "2.0.1",
+  "model": "kws-zh-en",
+  "num_threads": 1,
+  "keywords": [
+   "HEI_YAZI",
+   "XIAOYA_XIAOYA",
+   "YAZI_YAZI",
+   "HEY_DUCK",
+   "HELLO_DUCK"
+  ],
+  "keywords_score": 1.5,
+  "keywords_threshold": 0.15,
+  "reset_on_silence_s": 0.7,
+  "loadavg_before": [
+   1.91,
+   1.15,
+   0.72
+  ],
+  "model_load_s": 3.33,
+  "rss_before_load_mb": 28.4,
+  "rss_after_load_mb": 74.8,
+  "rss_after_run_mb": 89.7,
+  "stream_s": 32.7,
+  "fast": {
+   "rtf": 0.1378,
+   "cpu_pct_while_running": 100,
+   "chunk_ms_mean": 13.76,
+   "chunk_ms_p95": 43.16,
+   "chunk_ms_max": 49.28
+  },
+  "realtime": {
+   "seconds": 5.0,
+   "cpu_pct_of_one_core": 14.2,
+   "late_chunks": 0,
+   "chunks": 50
+  },
+  "synthetic_set": {
+   "note": "合成語音、無麥克風：不是喚醒率",
+   "keyword_utterances": 9,
+   "reported": 1,
+   "reported_per_keyword": {
+    "HEI_YAZI": "0/3",
+    "HEY_DUCK": "0/3",
+    "XIAOYA_XIAOYA": "1/3"
+   },
+   "other_keyword_reported_instead": 0,
+   "negative_utterances": 5,
+   "triggers_on_negatives": 0
+  },
+  "delay_after_keyword_end_ms": {
+   "n": 1,
+   "min": 445,
+   "median": 445,
+   "max": 445,
+   "note": "音訊時間（100 ms 一塊的粒度）＋該塊的運算時間；不含麥克風與音訊驅動的緩衝"
+  },
+  "loadavg_after": [
+   1.84,
+   1.16,
+   0.73
+  ]
+ }
+]

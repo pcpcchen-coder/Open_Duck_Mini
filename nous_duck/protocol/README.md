@@ -2,7 +2,31 @@
 
 # ② duck-link 協定（protocol）
 
-狀態：**規劃中**（尚無 schema）。
+狀態：**v0 草案可用**（2026-11-25）：[`schemas/duck-link.v0.schema.json`](schemas/duck-link.v0.schema.json)、合法與不合法範例、schema 測試（層級：單元測試）。欄位仍可能變動；隱私設定文件的 schema 還是規劃中。兩端實作見[夥伴功能分步進度](../docs/companion/steps.md)。
+
+## v0 內容（2026-11-25）
+
+| 路徑 | 內容 |
+|---|---|
+| [`schemas/duck-link.v0.schema.json`](schemas/duck-link.v0.schema.json) | 單一檔案，六種訊息：`hello`、`heartbeat`、`command`、`ack`、`state`、`event`；`protocol_version` 固定 `"0.1"` |
+| [`examples/valid.jsonl`](examples/valid.jsonl)、[`examples/invalid.jsonl`](examples/invalid.jsonl) | 每行一則訊息；兩端測試共用 |
+| [`tests/test_schema.py`](tests/test_schema.py) | 合法範例全部通過、不合法範例全部被拒；確認協定裡沒有關扭力、重開機、寫偏移這類操作 |
+
+```bash
+uv run --no-project --with jsonschema --with pytest python -m pytest nous_duck/protocol/tests -q
+```
+
+v0 的重點：
+
+- **傳輸**：WebSocket 文字框，一框一則 JSON。鴨子是 client，連自己的 `127.0.0.1:<port>/duck-link`，由 SSH 通道接到 Mac 的 loopback（[ADR-0009](../docs/adr/ADR-0009-duck-link-transport-and-command-bridge.md) §2.1）。
+- **租約**：Nous 每 500 ms 送 `heartbeat`；鴨子 1.5 s 沒收到就停下動作、送 `link_lost`。
+- **指令**（`action`）：`status`、`stop`、`resume`、`walk`、`look`、`track`、`gesture`、`express`、`antennas`、`sound`、`presence`、`where`、`places`、`mission_status`、`go_to`、`find_person`、`return_home`、`follow_me`、`wait_here`、`cancel_mission`。
+- **`presence`**：Nous 語音工作階段的真實狀態（`idle`／`wake`／`listening`／`thinking`／`speaking`／`working`／`error`／`sleeping`），鴨子依此做眼睛、頭、天線的動作。
+- **`track`**：視覺或聲音連動的頭部（可選身體）跟隨，在鴨子本機計算；Nous 只開關。
+- **`capabilities`**：每項能力回報 `available`／`degraded`／`unsupported`／`mock`。硬體沒裝或沒驗證過，不能回 `available`。
+- 模擬或 mock 的一端，`hello` 與 `state` 必須帶 `mock: true`。
+
+以下「預計內容」是 2026-11-12 的原規劃，保留當紀錄；v0 把 command／state／event／mission 合成一個檔案。
 
 ## 職責
 

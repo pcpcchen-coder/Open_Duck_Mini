@@ -25,6 +25,8 @@ This directory holds all of this fork's own development. Upstream files are neve
 
 See the [architecture](docs/architecture.md) and [ADR-0001](docs/adr/ADR-0001-duck-role-in-nous.md) (both Traditional Chinese only).
 
+**Update 2026-11-26**: for implementation progress on the companion features (conversation, eyes, walking, vision-linked motion, navigation, docking) see [`docs/companion/steps.md`](docs/companion/steps.md), and for the design see [`docs/companion/README.md`](docs/companion/README.md) (both Traditional Chinese).
+
 ## Directories
 
 | Path | Contents | Status |
@@ -38,10 +40,10 @@ See the [architecture](docs/architecture.md) and [ADR-0001](docs/adr/ADR-0001-du
 | [`docs/build_log/`](docs/build_log/README.md) | Printing, procurement, assembly, and calibration progress | Printing complete, procurement underway |
 | [`docs/validation/`](docs/validation/README.md) | Hardware and test records | 10 records (3 include hardware runs on the Pi 4 and servos; the duck is not assembled or walking yet) |
 | [`assembly_viewer/`](assembly_viewer/README.md) | ① Offline single-HTML 3D assembly viewer (first deliverable) | First version usable (pipeline, steps, front end); BOM planned |
-| [`protocol/`](protocol/README.en.md) | ② duck-link protocol (JSON Schema) | Planned |
-| [`robot/`](robot/README.md) | ③ On-board software (single Pi 4 on trial, Python) | Mostly planned; `servo_console/` and `behaviors/look_at.py` (simulation only) exist |
-| [`nous_adapter/`](nous_adapter/README.en.md) | ④ `app.duck.*` adapter and terminal to move into AIOS (TypeScript) | Planned |
-| [`sim/`](sim/README.md) | ⑤ MuJoCo simulation | Mostly planned; `look_at_sim/` exists |
+| [`protocol/`](protocol/README.en.md) | ② duck-link protocol (JSON Schema) | v0 draft usable (schema, examples, tests) |
+| [`robot/`](robot/README.md) | ③ On-board software (single Pi 4 on trial, Python) | [`duckd/`](robot/duckd/README.md) (unit tests, tunnel end-to-end with a simulated body; real head untested), [`navigation/`](robot/navigation/README.md) (simulation), [`perception/`](robot/perception/README.md) and [`audio/`](robot/audio/README.md) (synthetic data, measurements on the Pi), `eyes/` (preview images), [`servo_console/`](robot/servo_console/README.md) (real hardware) |
+| [`nous_adapter/`](nous_adapter/README.en.md) | ④ `app.duck.*` adapter and terminal to move into AIOS (TypeScript) | Hub, 17 tools, and `duckctl` usable (against the mock and duckd with a simulated body); not yet in AIOS |
+| [`sim/`](sim/README.md) | ⑤ MuJoCo simulation | `walk_sim/` (whole-body walking), `nav_sim/` (navigation and docking), `look_at_sim/` usable; none compared against the real robot |
 | [`hardware/`](hardware/README.md) | ⑥ Modifications: MG995 head prototype, expression modules, wiring, sensor head, perception board, charging dock | Planned; the [charging dock](hardware/dock/README.md) is design v0 (STL files generated; not printed, not tested on hardware; docs in Traditional Chinese) |
 | [`tools/`](tools/README.md) | Development tools (upstream-untouched check, ChatGPT share-page converter, ChatGPT viewer comparison) | Usable |
 

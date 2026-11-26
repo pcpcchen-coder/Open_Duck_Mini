@@ -1,0 +1,10 @@
+# duckd 執行依賴（鎖定版本；Mac 開發與 Pi 上的 ~/duck/duckd-venv 都用這份）。
+# numpy（眼睛渲染）、pypot（頭部實機後端）不在這裡：Pi 上以唯讀方式沿用 ~/duck/runtime-venv 的版本
+# （numpy 1.26.4、pypot f6d305e，見 deploy/pi4/runtime-constraints.txt），由 deploy_duckd.sh 用 .pth 接進來。
+websockets==17.4
+jsonschema==4.26.0
+attrs==26.1.0
+jsonschema-specifications==2025.9.1
+referencing==0.37.0
+rpds-py==2026.9.1
+typing-extensions==4.16.0

@@ -1,0 +1,3 @@
+# DOA 讀取（duck_audio.doa）才需要；版本和 Pi 上 runtime-venv 的一樣（deploy/pi4/runtime-constraints.txt）。
+# 另外需要系統的 libusb-1.0（Raspberry Pi OS 預設有）。
+pyusb==1.3.1

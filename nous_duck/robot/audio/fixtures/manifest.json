@@ -1,0 +1,158 @@
+{
+  "comment": "合成語音 fixture（MeloTTS zh_en，MIT；經 sherpa-onnx 合成）。不是真人錄音，不含任何人名或家裡的資訊。只有一個合成聲音：不能用來宣稱喚醒率。",
+  "synthetic": true,
+  "generator": "python tools/make_speech_fixture.py",
+  "tts_model": "vits-melo-tts-zh_en（sherpa-onnx tts-models；MeloTTS，MIT）",
+  "files": [
+    {
+      "file": "speech_zh_synthetic_fixture.wav",
+      "role": "voice",
+      "key": "speech_zh",
+      "text": "你好，我是鴨子。今天天氣很好，我們一起去客廳看看吧。",
+      "speed": 1.0,
+      "rate_hz": 24000,
+      "duration_s": 4.264,
+      "sha256": "fe470e1ffa75d11ac9f3e8bc62dbd7bc8a3bca86f07e85a2881c8a585fed9bb5"
+    },
+    {
+      "file": "kws/hei_yazi_x0.90_synthetic.wav",
+      "role": "keyword",
+      "key": "hei_yazi",
+      "text": "嘿鴨子",
+      "speed": 0.9,
+      "rate_hz": 16000,
+      "duration_s": 0.673,
+      "sha256": "5dd2785ebab678d2663c2e9ad259174cdaf8112c988a0dc595bdff83083fe7d3"
+    },
+    {
+      "file": "kws/hei_yazi_x1.00_synthetic.wav",
+      "role": "keyword",
+      "key": "hei_yazi",
+      "text": "嘿鴨子",
+      "speed": 1.0,
+      "rate_hz": 16000,
+      "duration_s": 0.595,
+      "sha256": "7e85dc1dd79e83e231bfaf623620a22cb52c783f18818ce8b28dc9f633414ca5"
+    },
+    {
+      "file": "kws/hei_yazi_x1.15_synthetic.wav",
+      "role": "keyword",
+      "key": "hei_yazi",
+      "text": "嘿鴨子",
+      "speed": 1.15,
+      "rate_hz": 16000,
+      "duration_s": 0.529,
+      "sha256": "352efc2d439e09fde43167402065e954d8b1973fba5282a3330c85b15937784d"
+    },
+    {
+      "file": "kws/hey_duck_x0.90_synthetic.wav",
+      "role": "keyword",
+      "key": "hey_duck",
+      "text": "Hey Duck",
+      "speed": 0.9,
+      "rate_hz": 16000,
+      "duration_s": 0.604,
+      "sha256": "4fb372a8251780304b97fea274f1f75f69b1bdf8bf99d7a4b7ae1837222fe583"
+    },
+    {
+      "file": "kws/hey_duck_x1.00_synthetic.wav",
+      "role": "keyword",
+      "key": "hey_duck",
+      "text": "Hey Duck",
+      "speed": 1.0,
+      "rate_hz": 16000,
+      "duration_s": 0.397,
+      "sha256": "4c7b5fefabe61c17711a81cd4e7957f629411d6e0f7f33d8d1412093e7931155"
+    },
+    {
+      "file": "kws/hey_duck_x1.15_synthetic.wav",
+      "role": "keyword",
+      "key": "hey_duck",
+      "text": "Hey Duck",
+      "speed": 1.15,
+      "rate_hz": 16000,
+      "duration_s": 0.476,
+      "sha256": "01747bf0d88b2ad84e2e9dbdc140d851cbfc883ab38f4529a0b6a06785be3468"
+    },
+    {
+      "file": "kws/xiaoya_xiaoya_x0.90_synthetic.wav",
+      "role": "keyword",
+      "key": "xiaoya_xiaoya",
+      "text": "小鴨小鴨",
+      "speed": 0.9,
+      "rate_hz": 16000,
+      "duration_s": 0.842,
+      "sha256": "fdec4764f9362548af4da8f8925a7601954eeaef600b171f9905f432064ffac1"
+    },
+    {
+      "file": "kws/xiaoya_xiaoya_x1.00_synthetic.wav",
+      "role": "keyword",
+      "key": "xiaoya_xiaoya",
+      "text": "小鴨小鴨",
+      "speed": 1.0,
+      "rate_hz": 16000,
+      "duration_s": 0.806,
+      "sha256": "5c1312d92fefb8f9fd7f3bdb7d57b499d87ab2905d2081514c816662bd463ddc"
+    },
+    {
+      "file": "kws/xiaoya_xiaoya_x1.15_synthetic.wav",
+      "role": "keyword",
+      "key": "xiaoya_xiaoya",
+      "text": "小鴨小鴨",
+      "speed": 1.15,
+      "rate_hz": 16000,
+      "duration_s": 0.738,
+      "sha256": "5e445703ff3e40d33493e55342a5f95a0b616e46b47b0de684e18cccb315e8b7"
+    },
+    {
+      "file": "kws/neg_weather_synthetic.wav",
+      "role": "negative",
+      "key": "neg_weather",
+      "text": "今天天氣很好，我們去散步吧。",
+      "speed": 1.0,
+      "rate_hz": 16000,
+      "duration_s": 2.317,
+      "sha256": "3dc7e70918fd9b4b62381465786c00a88c41744cbae665399f51d6629986ac6a"
+    },
+    {
+      "file": "kws/neg_black_shoes_synthetic.wav",
+      "role": "negative",
+      "key": "neg_black_shoes",
+      "text": "黑色的鞋子放在架子上。",
+      "speed": 1.0,
+      "rate_hz": 16000,
+      "duration_s": 1.795,
+      "sha256": "5b2cb4016b8466abdf7ba14892e6f6c7ab2ed3b932ec221ac07b4986406056ee"
+    },
+    {
+      "file": "kws/neg_duck_pond_synthetic.wav",
+      "role": "negative",
+      "key": "neg_duck_pond",
+      "text": "鴨子在池塘裡游泳。",
+      "speed": 1.0,
+      "rate_hz": 16000,
+      "duration_s": 1.375,
+      "sha256": "a89422de8ca22608095b89ba7bb106f92d638108281bcb6462655b4b8d6a1e9e"
+    },
+    {
+      "file": "kws/neg_hey_doug_synthetic.wav",
+      "role": "negative",
+      "key": "neg_hey_doug",
+      "text": "Hey Doug, the dock is over there.",
+      "speed": 1.0,
+      "rate_hz": 16000,
+      "duration_s": 1.752,
+      "sha256": "c8c72392120a76d7adbc4cf49f6751590d4bb579ac83480885c9e99ed91e8aa2"
+    },
+    {
+      "file": "kws/neg_time_synthetic.wav",
+      "role": "negative",
+      "key": "neg_time",
+      "text": "現在幾點了？",
+      "speed": 1.0,
+      "rate_hz": 16000,
+      "duration_s": 0.971,
+      "sha256": "1c99725226e71d94583d43d3d028eeaa7b2cb545202ec8cc655ada2cf088cdb2"
+    }
+  ]
+}

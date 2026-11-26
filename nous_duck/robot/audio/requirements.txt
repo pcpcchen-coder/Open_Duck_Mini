@@ -1,0 +1,3 @@
+# robot/audio 執行依賴（鎖定版本；Pi 4 上也用這份）
+# 音效合成、播放路徑、變聲只需要 numpy；播放用系統的 aplay（alsa-utils）
+numpy==2.5.3

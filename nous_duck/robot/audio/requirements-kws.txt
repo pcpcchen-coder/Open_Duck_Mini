@@ -1,0 +1,4 @@
+# 喚醒詞 spike（D7）與合成語音 fixture 另外需要 sherpa-onnx（Apache-2.0）
+# 版本線與 AIOS 相同（AIOS wake-runtime 釘 sherpa-onnx v2.0.1）
+-r requirements.txt
+sherpa-onnx==2.0.1

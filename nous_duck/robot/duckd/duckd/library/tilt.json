@@ -1,0 +1,38 @@
+{
+  "id": "tilt",
+  "version": 1,
+  "category": "A",
+  "description": "歪頭一下再回正",
+  "interpolation": "min_jerk",
+  "allowed_modes": [
+    "standing"
+  ],
+  "requires": [],
+  "tracks": {
+    "head": {
+      "head_roll": [
+        [
+          0,
+          0
+        ],
+        [
+          0.8,
+          0.2
+        ],
+        [
+          1.6,
+          0.2
+        ],
+        [
+          2.4,
+          0
+        ]
+      ]
+    }
+  },
+  "verification": {
+    "level": "none",
+    "hardware_profile": null,
+    "record": null
+  }
+}

@@ -1,6 +1,6 @@
 # ⑤ MuJoCo 模擬（sim）
 
-狀態：**大部分規劃中**。已有 [`look_at_sim/`](look_at_sim/)：V3「說話時看著對方」的模擬（2026-11-16，[驗證紀錄](../docs/validation/look-at-sim-2026-11-16.md)）。
+狀態：**三個模擬可用**（都只在開發機上跑，結果是模擬值，不是實機）：[`look_at_sim/`](look_at_sim/)（2026-11-16，[驗證紀錄](../docs/validation/look-at-sim-2026-11-16.md)）、[`walk_sim/`](walk_sim/) 全身走路與 [`nav_sim/`](nav_sim/) 家中導航（2026-11-25，[驗證紀錄](../docs/validation/sim-nav-2026-11-25.md)）。加裝後的質量模型、duck-link 端到端模擬仍是規劃中。
 
 ## 職責
 
@@ -29,18 +29,42 @@ R-001（2026-11-12）後新增：
 
 | 路徑 | 內容 | 狀態 |
 |---|---|---|
-| [`look_at_sim/`](look_at_sim/) | `robot/behaviors/look_at.py` 的模擬：上游 `robot.xml` **固定機身**（只動頭頸）、依幾何投影產生的**合成人臉偵測**（fixture）、轉身用運動學近似；7 個情境（站著的大人與小孩、太近、走過、側邊叫、兩人換說話者、離開） | 可用；**不驗證平衡**（沒跑步態策略） |
+| [`look_at_sim/`](look_at_sim/) | `robot/behaviors/look_at.py` 的模擬：上游 `robot.xml` **固定機身**（只動頭頸）、依幾何投影產生的**合成人臉偵測**（fixture）、轉身用運動學近似；7 個情境 | 可用；**不驗證平衡**（沒跑步態策略） |
+| [`walk_sim/`](walk_sim/) | **全身走路**：用 `MjSpec` 由上游 `robot.xml` 組出浮動機身模型（不改原檔），跑上游步態策略 `BEST_WALK_ONNX_2.onnx`，50 Hz、7 維指令。觀測向量與動作的組法、參數來源寫在 `model.py` 與 `sim.py` 檔頭 | 可用；跟 Playground 自己的場景交叉檢查過；**沒有對照實機** |
+| [`walk_sim/measure.py`](walk_sim/measure.py) | 走、停、轉的量測：指令 vs 實際速度、起步門檻、起步與停下、轉身、頭部指令的影響、加速度限制、多種子跌倒率、里程誤差；另外產生導航用的步態反應表 | 可用（模擬值） |
+| [`nav_sim/`](nav_sim/) | 把導航核心 [`robot/navigation/duck_nav`](../robot/navigation/README.md) 接上全身走路模擬：依地圖蓋牆、家具、充電座與貼了 tag36h11 貼圖的標籤；標籤觀測、障礙點、充電訊號是 **mock** | 可用；充電座的 V 形導引與電氣行為**沒有模擬** |
+| [`nav_sim/tagcheck.py`](nav_sim/tagcheck.py) | 頭上相機算圖＋OpenCV 的 tag36h11 偵測器，對照 mock 的標籤觀測 | 可用；算圖沒有畸變、模糊、雜訊 |
 
 ```bash
-pip install -r nous_duck/sim/requirements-dev.txt
-python -m pytest nous_duck/sim/tests -v
-cd nous_duck/sim && python -m look_at_sim   # 輸出結果表
+cd nous_duck/sim
+uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requirements-dev.txt
+.venv/bin/python -m pytest tests -q              # 29 通過、2 跳過，約 8 秒
+.venv/bin/python -m pytest tests -q --runslow    # 31 通過，約 1 分鐘
+.venv/bin/python -m look_at_sim                  # look_at 的結果表
+
+# 全身走路：軌跡 CSV、截圖、短 GIF
+.venv/bin/python -m walk_sim --vx 0.15 --duration 10 --png --out walk_sim_out
+.venv/bin/python -m walk_sim --script "2:0,0,0;8:0.15,0,0;4:0,0,1.0;3:0,0,0" --gif --out walk_sim_out
+.venv/bin/python -m walk_sim.measure --out ../docs/validation/data/walk-measure-2026-11-25.json   # 約 3 分鐘
+
+# 端到端：充電座 → 房間 → return_home，輸出軌跡圖 trips.png 與 summary.json
+.venv/bin/python -m nav_sim.demo --trips 10 --seed 100 --out nav_demo_out --topview
+.venv/bin/python -m nav_sim.tagcheck
 ```
+
+無頭執行；截圖、GIF 與 `tagcheck` 需要離螢幕 OpenGL（macOS 直接可用，Linux 設 `MUJOCO_GL=egl`）。
+
+### 模擬裡的發現（細節在驗證紀錄）
+
+- 上游策略有**起步門檻**：從站立開始，前進指令要 ≥ 0.10 m/s、後退要 ≤ −0.12 m/s，否則鴨子留在原地；實際速度約是指令的 0.75 倍（後退 0.35 倍）。
+- 速度指令為 0 時**不踏步**，兩腳一直著地。
+- 走路時大角度的頭部指令會讓步態停下來，部分角度會跌倒。
+- 端到端 60 趟（合成的家）全部成功、沒有跌倒；回充第一次就對準的有 50 趟。
 
 ## 依賴
 
-`requirements.txt` 鎖定 mujoco 4.0.1、numpy 2.5.4（與 `hardware/dock/cad` 相同）。之後跑步態策略還需要 onnxruntime（待鎖定）；上游 `v2_rl_walk_mujoco.py` 可作為參考。
+`requirements.txt` 鎖定 mujoco 4.0.1、numpy 2.5.4（與 `hardware/dock/cad` 相同；numpy 2.5.4 需要 **Python 3.12**）、onnxruntime 1.32.0、pillow、matplotlib、opencv-contrib-python-headless。`sim/` 只在開發機上跑，不上鴨子。
 
 ## 限制
 
-模擬結果不等於實機：舵機背隙、摩擦、電壓變化、足底材質都會不同。
+模擬結果不等於實機：舵機背隙、摩擦、電壓變化、足底材質都會不同；Pi 4 等加裝件的重量與重心還沒放進模型（只試過機身加點質量）。差距的清單見[驗證紀錄 §9](../docs/validation/sim-nav-2026-11-25.md#9-模擬與實機的差距)。

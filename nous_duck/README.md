@@ -25,6 +25,8 @@
 
 詳見 [架構](docs/architecture.md) 與 [ADR-0001](docs/adr/ADR-0001-duck-role-in-nous.md)。
 
+**2026-11-26 更新**：夥伴功能（對話、眼睛、走路、視覺連動、導航、回充）的實作進度看 [`docs/companion/steps.md`](docs/companion/steps.md)，設計看 [`docs/companion/README.md`](docs/companion/README.md)。
+
 ## 目錄
 
 | 路徑 | 內容 | 狀態 |
@@ -38,10 +40,10 @@
 | [`docs/build_log/`](docs/build_log/README.md) | 列印、採購、組裝、校正進度 | 列印完成，周邊採購中 |
 | [`docs/validation/`](docs/validation/README.md) | 實機與測試紀錄 | 10 份（3 份含 Pi 4 與舵機的實機紀錄；鴨子尚未組裝行走） |
 | [`assembly_viewer/`](assembly_viewer/README.md) | ① 離線單一 HTML 3D 組裝檢視器（第一個交付） | 第一版可用（pipeline、步驟、前端）；BOM 規劃中 |
-| [`protocol/`](protocol/README.md) | ② duck-link 協定（JSON Schema） | 規劃中 |
-| [`robot/`](robot/README.md) | ③ 機上程式（單板 Pi 4 試用，Python） | 大部分規劃中；已有 `servo_console/`、`behaviors/look_at.py`（模擬） |
-| [`nous_adapter/`](nous_adapter/README.md) | ④ 要搬進 AIOS 的 `app.duck.*` adapter 與終端（TypeScript） | 規劃中 |
-| [`sim/`](sim/README.md) | ⑤ MuJoCo 模擬 | 大部分規劃中；`look_at_sim/` 已有 |
+| [`protocol/`](protocol/README.md) | ② duck-link 協定（JSON Schema） | v0 草案可用（schema、範例、測試） |
+| [`robot/`](robot/README.md) | ③ 機上程式（單板 Pi 4 試用，Python） | [`duckd/`](robot/duckd/README.md)（單元測試、通道端到端用模擬身體；實機頭部未測）、[`navigation/`](robot/navigation/README.md)（模擬）、[`perception/`](robot/perception/README.md) 與 [`audio/`](robot/audio/README.md)（合成資料、Pi 量測）、`eyes/`（預覽圖）、[`servo_console/`](robot/servo_console/README.md)（實機） |
+| [`nous_adapter/`](nous_adapter/README.md) | ④ 要搬進 AIOS 的 `app.duck.*` adapter 與終端（TypeScript） | hub、17 個工具、`duckctl` 可用（對 mock 與 duckd 模擬身體）；還沒進 AIOS |
+| [`sim/`](sim/README.md) | ⑤ MuJoCo 模擬 | `walk_sim/`（全身走路）、`nav_sim/`（導航與回充）、`look_at_sim/` 可用；都未對照實機 |
 | [`hardware/`](hardware/README.md) | ⑥ 改裝：MG995 頭部原型、表情模組、接線、感測頭、感知板、充電座 | 規劃中；[充電座](hardware/dock/README.md)為設計 v0（STL 已產生，未列印、未實機） |
 | [`tools/`](tools/README.md) | 開發工具（上游未修改檢查、ChatGPT 分享頁轉檔、ChatGPT 版檢視器比對） | 可用 |
 

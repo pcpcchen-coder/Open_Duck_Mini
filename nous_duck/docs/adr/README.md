@@ -17,6 +17,10 @@
 | [ADR-0011](ADR-0011-duck-memory.md) | 鴨子的記憶系統（沿用 Nous 記憶層，不另做 Hermes 式記憶；鴨子只補身體、空間、任務記憶；可以在鴨子旁邊說「記住」） | 採用 | 2026-11-26 |
 | [ADR-0012](ADR-0012-low-battery-return-interaction.md) | 低電量時的回家互動與「直接回家」的條件（L0～L4 電量等級；L1、L2 由 Nous 商量，L3 起鴨子本機直接回家） | 草案 | 2026-11-26 |
 | [ADR-0013](ADR-0013-camera-always-on-and-home-monitoring.md) | 鏡頭常開與家庭監控（C：只回報文字事件）、夜間紅外線、渲染程式故障保護 | 部分採用 | 2026-11-18 |
+| [ADR-0014](ADR-0014-duckd-head-direct-and-single-process.md) | duckd 第一版：頭部直控、單一程序、本機控制介面 | 草案 | 2026-11-25 |
+| [ADR-0015](ADR-0015-gesture-library.md) | 動作庫：先用現有步態策略編排具名動作，動態動作另開訓練批次（原 PR #13） | 草案 | 2026-11-15 |
+| [ADR-0016](ADR-0016-navigation-core-and-sim-findings.md) | 導航核心的作法，以及模擬對既有 ADR 的回饋（起步門檻、速度為 0 不踏步、走路時頭回正） | 草案 | 2026-11-25 |
+| [ADR-0017](ADR-0017-audio-playback-path-v1.md) | 音訊播放路徑第一版：直接寫 ALSA，暫不裝 PipeWire | 草案 | 2026-11-25 |
 
 編號說明：本序列只屬於本 repo 的 `nous_duck/docs/adr/`，與 AIOS repo 的 `docs/adr/`（ADR-0001 本機家人辨識等）是不同的序列。
 

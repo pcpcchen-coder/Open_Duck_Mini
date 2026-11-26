@@ -1,0 +1,76 @@
+{
+  "id": "look_around",
+  "version": 1,
+  "category": "A",
+  "description": "慢慢東張西望",
+  "interpolation": "min_jerk",
+  "allowed_modes": [
+    "standing"
+  ],
+  "requires": [],
+  "tracks": {
+    "head": {
+      "head_yaw": [
+        [
+          0,
+          0
+        ],
+        [
+          1.0,
+          0.24
+        ],
+        [
+          1.5,
+          0.24
+        ],
+        [
+          3.3,
+          -0.24
+        ],
+        [
+          3.8,
+          -0.24
+        ],
+        [
+          4.8,
+          0
+        ]
+      ],
+      "head_pitch": [
+        [
+          0,
+          0
+        ],
+        [
+          1.0,
+          0.06
+        ],
+        [
+          1.5,
+          0.06
+        ],
+        [
+          2.4,
+          0
+        ],
+        [
+          3.3,
+          0.06
+        ],
+        [
+          3.8,
+          0.06
+        ],
+        [
+          4.8,
+          0
+        ]
+      ]
+    }
+  },
+  "verification": {
+    "level": "none",
+    "hardware_profile": null,
+    "record": null
+  }
+}

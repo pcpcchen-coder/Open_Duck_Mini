@@ -168,3 +168,48 @@ jobs:
         run: python -m pytest nous_duck/robot/tests -v
       - name: 模擬（固定機身、合成人臉偵測）
         run: python -m pytest nous_duck/sim/tests -v
+
+  duck-link-protocol:
+    name: duck-link 協定 schema 測試
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: 安裝依賴
+        run: pip install jsonschema==4.26.0 pytest==9.2.0
+      - name: 合法範例通過、不合法範例被拒
+        run: python -m pytest nous_duck/protocol/tests -v
+
+  duckd:
+    name: duckd 單元測試（模擬身體、模擬匯流排）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 安裝依賴
+        run: pip install -r nous_duck/robot/duckd/requirements-dev.txt
+      - name: 執行測試
+        working-directory: nous_duck/robot/duckd
+        run: python -m pytest tests -v
+
+  nous-adapter:
+    name: Nous 端 adapter（型別檢查、對 mock 鴨子的測試）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: 安裝依賴
+        working-directory: nous_duck/nous_adapter
+        run: npm ci
+      - name: 型別檢查
+        working-directory: nous_duck/nous_adapter
+        run: npm run typecheck
+      - name: 執行測試
+        working-directory: nous_duck/nous_adapter
+        run: npm test

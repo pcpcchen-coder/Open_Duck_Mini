@@ -1,0 +1,15 @@
+{
+  "comment": "喚醒詞候選（**使用者還沒決定喚醒詞**）。這份只給 D7 的運算量測用，不是產品設定。門檻與提升分數沿用 AIOS wake-runtime.json 的全域值（1.5／0.15），在鴨子上未校準。tokens 的寫法：中文是帶聲調的拼音聲母與韻母，英文是 ARPAbet（zh-en-3M 模型的 tokens.txt）。",
+  "status": "candidates_for_benchmark",
+  "model": "kws-zh-en",
+  "keywords_score": 1.5,
+  "keywords_threshold": 0.15,
+  "num_threads": 1,
+  "entries": [
+    { "id": "HEI_YAZI", "text": "嘿鴨子", "tokens": "h ēi y ā z i", "boost": null, "threshold": null },
+    { "id": "XIAOYA_XIAOYA", "text": "小鴨小鴨", "tokens": "x iǎo y ā x iǎo y ā", "boost": null, "threshold": null },
+    { "id": "YAZI_YAZI", "text": "鴨子鴨子", "tokens": "y ā z i y ā z i", "boost": null, "threshold": null },
+    { "id": "HEY_DUCK", "text": "Hey Duck", "tokens": "HH EY1 D AH1 K", "boost": null, "threshold": null },
+    { "id": "HELLO_DUCK", "text": "Hello Duck", "tokens": "HH AH0 L OW1 D AH1 K", "boost": null, "threshold": null }
+  ]
+}

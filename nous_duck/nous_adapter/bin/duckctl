@@ -1,0 +1,9 @@
+#!/bin/sh
+# duckctl：從終端機對鴨子下 app.duck.* 工具（開發用）。用法：bin/duckctl help
+set -eu
+DIR="$(cd "$(dirname "$0")/.." && pwd)"
+if [ ! -x "$DIR/node_modules/.bin/tsx" ]; then
+  echo "還沒安裝依賴。請先執行：cd \"$DIR\" && npm ci" >&2
+  exit 3
+fi
+exec "$DIR/node_modules/.bin/tsx" "$DIR/cli/duckctl.ts" "$@"
