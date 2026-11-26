@@ -7,8 +7,10 @@ import { parseToolArgs } from "../cli/args.ts";
 import { ControlClient } from "../cli/control.ts";
 import { devExecute, validateArgs } from "../cli/dev-dispatch.ts";
 import { runHub, type RunningHub } from "../cli/hub-main.ts";
+import { interpretTextCommand, TEXT_COMMAND_EXAMPLES } from "../cli/text-command.ts";
 import { MockDuck } from "../mock/mock-duck.ts";
-import { toolResult, type IntegrationAdapter, type ToolResult } from "../shared/aios-contracts.ts";
+import { toolResult, type ToolResult } from "../shared/aios-integrations.ts";
+import type { IntegrationAdapter } from "../shared/aios-contracts.ts";
 import { until } from "./helpers.ts";
 
 // duckctl 的三個部分：參數解析、開發用 Dispatcher、hub 行程的控制通道（對 mock 鴨子）。
@@ -40,6 +42,38 @@ describe("參數解析", () => {
     expect(() => parseToolArgs("look", ["--yaw", "left"], schemaOf("look"))).toThrow(/要是數字/);
     expect(() => parseToolArgs("look", ["--yaw"], schemaOf("look"))).toThrow(/後面要接一個值/);
     expect(() => parseToolArgs("stop", ["now"], schemaOf("stop"))).toThrow(/多出來的參數/);
+  });
+});
+
+describe("開發用文字命令（固定規則，不是 Nous）", () => {
+  const full = { gestures: ["nod", "shake", "tilt", "look_around"], expressions: ["happy", "sad", "neutral", "wink"] };
+  const none = { gestures: [], expressions: [] };
+
+  it("轉頭：左右上下、一點、回正（符號照 duckd：yaw 正＝左、pitch 正＝抬頭）", () => {
+    expect(interpretTextCommand("往左看", full)).toMatchObject({ tool: "app.duck.look", args: { head_yaw: 0.2, duration_s: 1.5 } });
+    expect(interpretTextCommand("往右看一點。", full)).toMatchObject({ tool: "app.duck.look", args: { head_yaw: -0.1 } });
+    expect(interpretTextCommand("抬頭", full)).toMatchObject({ args: { head_pitch: 0.2 } });
+    expect(interpretTextCommand("低頭", full)).toMatchObject({ args: { head_pitch: -0.2 } });
+    expect(interpretTextCommand("回正", full)).toMatchObject({ args: { head_yaw: 0, head_pitch: 0, head_roll: 0, neck_pitch: 0 } });
+    expect(interpretTextCommand("look left", full)).toMatchObject({ args: { head_yaw: 0.2 } });
+  });
+
+  it("動作與表情只用鴨子回報清單裡有的；沒有就對應不到，不硬送", () => {
+    expect(interpretTextCommand("點點頭", full)).toMatchObject({ tool: "app.duck.gesture", args: { name: "nod" } });
+    expect(interpretTextCommand("點頭", none)).toBeNull();
+    expect(interpretTextCommand("笑一個", full)).toMatchObject({ tool: "app.duck.express", args: { expression: "happy" } });
+    expect(interpretTextCommand("笑一個", none)).toBeNull();
+    expect(interpretTextCommand("歪頭", none)).toMatchObject({ tool: "app.duck.look", args: { head_roll: 0.2 } });
+  });
+
+  it("停止最優先；認不得的句子回 null", () => {
+    expect(interpretTextCommand("停！不要往左看了", full)).toMatchObject({ tool: "app.duck.stop" });
+    expect(interpretTextCommand("今天天氣如何", full)).toBeNull();
+    expect(interpretTextCommand("   ", full)).toBeNull();
+  });
+
+  it("help 列的每個例句都對應得到", () => {
+    for (const example of TEXT_COMMAND_EXAMPLES) expect(interpretTextCommand(example, full), example).not.toBeNull();
   });
 });
 
@@ -142,6 +176,18 @@ describe("hub 行程與控制通道（對 mock 鴨子）", () => {
     duck!.emitEvent("battery_low");
     await until(() => pushed.length === 1);
     expect(pushed[0]).toMatchObject({ stream: "event", event: { name: "battery_low", attention: "notify", mock: true } });
+  });
+
+  it("say_command：文字 → 工具 → 結果，標示來源是開發用規則；認不得不送", async () => {
+    const c = await start();
+    const ok = await c.request<Record<string, any>>("say_command", { text: "往左看" });
+    expect(ok).toMatchObject({ source: "dev_text_rules", matched: { tool: "app.duck.look" }, result: { status: "confirmed", data: { mock: true } } });
+    const before = duck!.received.length;
+    const no = await c.request<Record<string, any>>("say_command", { text: "幫我訂披薩" });
+    expect(no.matched).toBeNull();
+    const dry = await c.request<Record<string, any>>("say_command", { text: "點頭", dry_run: true });
+    expect(dry).toMatchObject({ matched: { tool: "app.duck.gesture" }, result: null });
+    expect(duck!.received.length).toBe(before);
   });
 
   it("沒有鴨子時：工具回 failed（沒有送出），不假裝成功", async () => {

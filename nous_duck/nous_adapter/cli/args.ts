@@ -1,4 +1,4 @@
-import type { InputSchema } from "../shared/aios-contracts.ts";
+import type { InputSchema } from "../shared/aios-schema.ts";
 
 // duckctl 的參數解析：把「duckctl look --yaw 0.2」這種寫法轉成工具的參數物件。
 // 規則：--head-yaw 與 --head_yaw 相同；每個工具有幾個短別名與一個位置參數；值依工具 inputSchema 的型別轉換。

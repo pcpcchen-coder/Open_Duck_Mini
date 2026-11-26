@@ -99,6 +99,35 @@ describe("連線與守門", () => {
   });
 });
 
+describe("掛到既有的 http.Server（AIOS 核心的作法）", () => {
+  it("attach：只接 /duck-link；Host 要在允許清單裡；stop 之後拿掉監聽、不關別人的 server", async () => {
+    const { createServer } = await import("node:http");
+    const { DuckLinkHub } = await import("../hub/duck-link-hub.ts");
+    const { MockDuck } = await import("../mock/mock-duck.ts");
+    const server = createServer((_req, res) => res.writeHead(200).end("core"));
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const port = (server.address() as { port: number }).port;
+    const hub = new DuckLinkHub({ heartbeatMs: 40 });
+    hub.attach(server, { hosts: new Set([`127.0.0.1:${port}`, `localhost:${port}`]) });
+    try {
+      expect((await rawClient(`ws://127.0.0.1:${port}/other`)).status).toBe(404);
+      expect((await rawClient(`ws://127.0.0.1:${port}/duck-link`, { Host: `127.0.0.1:${port + 1}` })).status).toBe(403);
+      expect((await rawClient(`ws://127.0.0.1:${port}/duck-link`, { Origin: `http://127.0.0.1:${port}` })).status).toBe(403);
+      const duck = new MockDuck({ url: `ws://127.0.0.1:${port}/duck-link`, stateIntervalMs: 50 });
+      await duck.connect();
+      await until(() => hub.snapshot().connected);
+      // 既有的 HTTP 路由不受影響。
+      expect(await (await fetch(`http://127.0.0.1:${port}/`)).text()).toBe("core");
+      await hub.stop();
+      expect(server.listening).toBe(true);
+      expect(server.listenerCount("upgrade")).toBe(0);
+      duck.disconnect();
+    } finally {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+  });
+});
+
 describe("心跳與往返時間", () => {
   it("定期送 heartbeat，並用回聲量到往返時間", async () => {
     r = await rig();

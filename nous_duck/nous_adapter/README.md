@@ -2,7 +2,7 @@
 
 # ④ Nous adapter（nous_adapter）
 
-狀態（2026-11-25）：**程式完成，驗證到「單元／整合測試」與「對 A 線 duckd 的 mock 模式端到端」；還沒有搬進 AIOS，也還沒有對真的鴨子下過指令。**
+狀態（2026-11-26）：**程式完成，驗證到「單元／整合測試」與「對 duckd 的模擬身體端到端」。D1、D2、D4a 已經搬進 AIOS 的分支 `claude/duck-link` 並開了 PR（旗標預設關閉、還沒合併）；還沒有用真實語音試過，也還沒有對真的鴨子下過指令。**
 
 這個目錄放**之後要搬回 AIOS** 的程式：讓 Nous 透過 duck-link 使用鴨子。現在它可以獨立執行（不需要 AIOS），用來開發與親手測試。
 
@@ -13,11 +13,12 @@
 | DuckTerminal（[`terminal/`](terminal/duck-terminal.ts)） | 鴨子事件的入口；`presence` 的來源介面與節流 | 完成（AIOS 的真實事件還沒接，只有開發用手動來源） | 單元／整合測試（mock 鴨子） |
 | `duckctl`（[`cli/`](cli/duckctl.ts)） | 不經過 AIOS，從終端機下 `app.duck.*` | 完成 | 整合測試；手動試過（對 mock） |
 | mock 鴨子（[`mock/`](mock/mock-duck.ts)） | **模擬**的鴨子，只給測試與試用；`hello` 與 `state` 帶 `mock: true` | 完成 | — |
-| 搬進 AIOS | 註冊 adapter、`/duck-link` 端點、真實的 `presence` 事件 | **未開始**（AIOS 唯讀；計畫見 [`docs/aios-integration-plan.md`](docs/aios-integration-plan.md)） | — |
+| 開發用文字命令（[`cli/text-command.ts`](cli/text-command.ts)） | `duckctl say-command "往左看"`：固定關鍵字規則把一句文字對應到一個工具。**不是 Nous、不是語音辨識、不是語言模型** | 完成 | 單元／整合測試（mock 鴨子） |
+| 搬進 AIOS | `/duck-link` 端點（D1）、註冊 adapter（D2，第一階段 6 個工具）、工作階段事件 → `presence`（D4a） | **已在 AIOS 分支 `claude/duck-link` 實作、PR 待審**（使用者 2026-11-26 同意；見 [`docs/aios-integration-plan.md` §0](docs/aios-integration-plan.md#0-2026-11-26-更新d1d2d4a-已在-aios-分支實作)） | AIOS 的 fixture 測試 122 項＋對 duckd 模擬身體的本機檢查；沒有實機、沒有真實語音 |
 
 沒有做的事、不能宣稱的事：
 
-- **沒有整合進 Nous。** 現在不能用語音叫鴨子做任何事；那要等 AIOS 的批次（[`docs/aios-integration-plan.md` §8](docs/aios-integration-plan.md#8-aios-批次清單與建議順序)）。
+- **還不能宣稱「用語音叫得動鴨子」。** AIOS 那一端的程式在分支上、旗標預設關閉、還沒合併；沒有人用真實的即時語音試過。要試的步驟在 AIOS 分支的 `docs/validation/duck-link-2026-11-26.md` §5（另起開發實例，不影響正在跑的 Nous），由使用者自己啟動。
 - **沒有對真的鴨子下過指令。** 所有工具結果都來自 mock（這裡的 TypeScript mock，或 A 線 duckd 的 mock 身體）。實機步驟寫在下面的「對真的鴨子」。
 - `presence` 目前只有**開發用手動來源**（`duckctl presence`），不是 Nous 語音工作階段的事件。
 - 語音不在這裡：Nous 的聲音怎麼到鴨子見 [`docs/voice-path.md`](docs/voice-path.md)（設計，未實作）。
@@ -53,6 +54,7 @@ bin/duckctl gesture nod               # 點頭
 bin/duckctl express happy             # 眼睛表情
 bin/duckctl presence speaking --level 0.4   # 手動送互動狀態（開發用，不是 Nous 的事件）
 bin/duckctl go_to brother_room        # 任務：confirmed 只代表「已出發」
+bin/duckctl say-command "往左看"      # 開發用：文字 → 工具（固定規則，不是 Nous；認不得就不送）
 bin/duckctl events --follow           # 看鴨子回報的事件
 bin/duckctl help                      # 完整用法
 ```
@@ -118,7 +120,7 @@ npm run typecheck
 npm test
 ```
 
-2026-11-25 的結果：137 項通過（`validator` 33、`hub` 23、`duck-adapter` 50、`terminal` 18、`cli` 13），約 4 秒。測試只連本機的臨時埠，不碰 8791，也不連執行中的 Nous。測試工具與 AIOS 相同：vitest 5.0.3、tsx 4.23.15、TypeScript 7.0.2。
+2026-11-26 的結果：144 項通過（`validator` 33、`hub` 24、`duck-adapter` 51、`terminal` 18、`cli` 18），約 4 秒。測試只連本機的臨時埠，不碰 8791，也不連執行中的 Nous。測試工具與 AIOS 相同：vitest 5.0.3、tsx 4.23.15、TypeScript 7.0.2。
 
 對 A 線 duckd（mock 身體）的端到端檢查：
 
@@ -154,6 +156,8 @@ npx tsx scripts/e2e-duckd.ts --port 18792
 | `app.duck.follow_me` | reversible_write | 開始找你（不是已跟上） | `walk`、`camera` |
 | `app.duck.wait_here` | reversible_write | state 讀到 `mode: waiting` | — |
 
+**第一階段只啟用 6 個**（`DUCK_STAGE1_TOOLS`，使用者 2026-11-26 決定）：`status`、`stop`、`look`、`gesture`、`express`、`track`。其餘 11 個的定義都在，但 `enabled: false`、在給人看的總表上隱藏；AIOS 的 Dispatcher 對它們回 `refused`／`disabled`。`duckctl` 是開發入口，17 個全開（`enableAllTools`）。
+
 鴨子回報某項能力 `unsupported` 時，對應的工具不會送出，直接回 `refused`（`data.duck_reason: "unsupported"`、`data.capability`）。以鴨子現在的硬體（只有頭部舵機與喇叭），實機上會動的只有 `status`、`stop`、`look`、`gesture`。
 
 不給模型的 duck-link 指令與理由：
@@ -174,14 +178,15 @@ npx tsx scripts/e2e-duckd.ts --port 18792
 
 | 路徑 | 內容 |
 |---|---|
-| `hub/duck-link-hub.ts` | duck-link hub 與 `DuckLink` 介面 |
+| `hub/duck-link-hub.ts` | duck-link hub 與 `DuckLink` 介面；`start()` 獨立執行，`attach(server)` 掛到既有的 http server（AIOS 核心的接法） |
 | `adapters/duck.ts` | 工具定義與 `DuckAdapter` |
 | `adapters/duck-exec.ts` | 一則指令 → ack → 回讀 → `ToolResult` 的共用流程 |
 | `adapters/duck-text.ts` | 結果的固定句（中文與英文） |
 | `terminal/duck-terminal.ts` | 事件入口（分類、任務紀錄、sink） |
 | `terminal/presence.ts` | `PresenceDriver`：語音工作階段事件 → `presence`，去抖動與節流 |
 | `terminal/manual-presence-source.ts` | **開發用**的手動 presence 來源 |
-| `shared/aios-contracts.ts` | AIOS 契約的最小重新宣告（註明來源 commit；搬回 AIOS 時刪掉） |
+| `shared/aios-integrations.ts`、`aios-schema.ts`、`aios-contracts.ts` | AIOS 契約的最小重新宣告，一個檔對應 AIOS 的一個模組（註明來源 commit；AIOS 那邊直接 import 原檔，不需要這三個檔） |
+| `cli/text-command.ts` | **開發用**的文字命令規則（不是 Nous） |
 | `shared/duck-link.ts`、`shared/capabilities.ts` | duck-link 訊息型別；指令 → 能力對照 |
 | `shared/validator.ts` | 用 `../protocol/schemas/duck-link.v0.schema.json` 驗證（Ajv 8.20.0） |
 | `mock/mock-duck.ts` | **模擬**的鴨子 |

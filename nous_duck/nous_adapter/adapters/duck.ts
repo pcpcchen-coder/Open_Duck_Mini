@@ -1,7 +1,8 @@
 import type { DuckLink, LinkSnapshot } from "../hub/duck-link-hub.ts";
-import { toolResult, type AdapterCatalog, type ExecutionContext, type HealthReport, type IntegrationAdapter, type IntegrationToolId, type ToolDefinition, type ToolResult } from "../shared/aios-contracts.ts";
+import { toolResult, type IntegrationToolId, type ToolResult } from "../shared/aios-integrations.ts";
+import type { AdapterCatalog, ExecutionContext, HealthReport, IntegrationAdapter, ToolDefinition } from "../shared/aios-contracts.ts";
 import type { AckMessage, PresenceState } from "../shared/duck-link.ts";
-import { compactState, DUCK_TIMING, isMock, lookReadback, missionReadback, runDuckCommand, stateReadback, type CommandSpec, type DuckTiming } from "./duck-exec.ts";
+import { compactState, DUCK_TIMING, isMock, lookReadback, missionReadback, runDuckCommand, sendDuckPresence, stateReadback, type CommandSpec, type DuckTiming } from "./duck-exec.ts";
 import { DUCK_TEXT } from "./duck-text.ts";
 
 // DuckAdapter：AIOS IntegrationAdapter，service = "duck"（ADR-0001）。把 app.duck.* 工具轉成 duck-link 指令。
@@ -37,13 +38,20 @@ export const DUCK_TOOL = {
   waitHere: "app.duck.wait_here",
 } as const satisfies Record<string, IntegrationToolId>;
 
+/**
+ * 第一階段交給模型的工具（使用者 2026-11-26 的決定：先開鴨子現在有硬體、或到貨就能用的）。
+ * 其餘工具的定義都在，但 enabled 為 false：AIOS 的 Registry 把它們當成 disabled，不會出現在模型的工具表。
+ * 硬體到了要開哪一個，就把它的 ID 加進這裡（並重新產生 AIOS 的模型工具基準檔）。
+ */
+export const DUCK_STAGE1_TOOLS: ReadonlySet<string> = new Set(["app.duck.status", "app.duck.stop", "app.duck.look", "app.duck.gesture", "app.duck.express", "app.duck.track"]);
+
 const ROUTES = ["api_key", "live"] as const;
 const NAME = /^[a-z0-9_]{1,48}$/;
 const STARTED = "回傳 confirmed 只代表鴨子已接受並開始，不代表已經做完";
 const STARTED_EN = "A confirmed result only means the duck accepted and started, not that it finished";
 const NEEDS = "鴨子要開機並連上 Nous。";
 
-export const DUCK_TOOLS: readonly ToolDefinition[] = [
+const ALL_TOOLS: readonly ToolDefinition[] = [
   {
     id: DUCK_TOOL.status,
     description: "查詢鴨子（會走路的機器人）的連線、模式、頭部角度、任務、位置與各項能力是否可用。能力標示 unsupported 的功能目前不能用；標示 mock 的是模擬。",
@@ -95,7 +103,7 @@ export const DUCK_TOOLS: readonly ToolDefinition[] = [
       type: "object",
       properties: {
         neck_pitch: { type: "number", description: "頸部俯仰 rad", minimum: -1.6, maximum: 1.6 },
-        head_pitch: { type: "number", description: "頭部俯仰 rad（負＝抬頭，依上游 runtime 的慣例）", minimum: -1.6, maximum: 1.6 },
+        head_pitch: { type: "number", description: "頭部俯仰 rad（正＝抬頭，依鴨子端 duckd 的慣例；尚未在實機確認方向）", minimum: -1.6, maximum: 1.6 },
         head_yaw: { type: "number", description: "頭部左右轉 rad（正＝往左）", minimum: -1.6, maximum: 1.6 },
         head_roll: { type: "number", description: "頭部歪頭 rad", minimum: -1.6, maximum: 1.6 },
         duration_s: { type: "number", description: "幾秒內轉到（鴨子可能因限速而更慢）", minimum: 0.1, maximum: 10 },
@@ -278,11 +286,16 @@ export const DUCK_TOOLS: readonly ToolDefinition[] = [
   },
 ];
 
+/** 全部 17 個工具的定義；enabled 依 DUCK_STAGE1_TOOLS。還沒啟用的工具在給人看的總表上隱藏（hidden），不讓人以為現在能用。 */
+export const DUCK_TOOLS: readonly ToolDefinition[] = ALL_TOOLS.map((tool) => (DUCK_STAGE1_TOOLS.has(tool.id) ? { ...tool, enabled: true } : { ...tool, enabled: false, catalog: { ...tool.catalog, hidden: true } }));
+
 /** 對面是真的鴨子還是模擬，要看連進來的那一端（hello.mock），所以是 "config"。 */
 export const DUCK_CATALOG: AdapterCatalog = { id: "duck", service: "duck", label: "鴨子", mock: "config", tools: DUCK_TOOLS };
 
 export interface DuckAdapterOptions {
   timing?: Partial<DuckTiming>;
+  /** 開發用（duckctl、測試）：17 個工具全部啟用，不看 DUCK_STAGE1_TOOLS。AIOS 裡不要設。 */
+  enableAllTools?: boolean;
 }
 
 const given = (args: Record<string, unknown>, keys: readonly string[]): Record<string, unknown> => Object.fromEntries(keys.filter((k) => args[k] !== undefined).map((k) => [k, args[k]]));
@@ -293,11 +306,14 @@ export class DuckAdapter implements IntegrationAdapter {
   readonly version = 1;
   private readonly timing: DuckTiming;
 
+  private readonly definitions: readonly ToolDefinition[];
+
   constructor(
     private readonly link: DuckLink,
     options: DuckAdapterOptions = {},
   ) {
     this.timing = { ...DUCK_TIMING, ...options.timing };
+    this.definitions = options.enableAllTools ? DUCK_TOOLS.map((tool) => ({ ...tool, enabled: true })) : DUCK_TOOLS;
   }
 
   /** 連進來的鴨子自稱是模擬（hello.mock 或 state.mock）時為 true；結果與狀態一律標示。 */
@@ -306,7 +322,7 @@ export class DuckAdapter implements IntegrationAdapter {
   }
 
   tools(): readonly ToolDefinition[] {
-    return DUCK_TOOLS;
+    return this.definitions;
   }
 
   async health(): Promise<HealthReport> {
@@ -496,17 +512,7 @@ export class DuckAdapter implements IntegrationAdapter {
 
   /** presence：語音工作階段的真實狀態。由 DuckTerminal 的 PresenceDriver 呼叫，不是模型工具。 */
   presence(state: PresenceState, speechLevel?: number, signal?: AbortSignal): Promise<ToolResult> {
-    return runDuckCommand(
-      this.link,
-      {
-        action: "presence",
-        params: { state, ...(speechLevel !== undefined ? { speech_level: speechLevel } : {}) },
-        ttlMs: 2_000,
-        ...(signal ? { signal } : {}),
-        readback: stateReadback((s) => s.presence === state, { confirmed: DUCK_TEXT.presenceConfirmed, unconfirmed: DUCK_TEXT.presenceUnconfirmed }),
-      },
-      this.timing,
-    );
+    return sendDuckPresence(this.link, state, speechLevel, signal, this.timing);
   }
 
   /** resume：解除暫停。只給在場的人用（開發 CLI）；不是模型工具。 */

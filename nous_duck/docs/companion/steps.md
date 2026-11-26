@@ -1,6 +1,6 @@
 # 鴨子夥伴功能：分步進度
 
-最後更新：2026-11-26 07:00（整合線）。A～D 四條線已**合併進整合分支** `claude/duck-companion-overnight` 並推送；下一批「桌上互動」見本頁最後一節。先看 [晨間報告](morning-report-2026-11-26.md)。
+最後更新：2026-11-26 12:00（整合線）。夜間四條線已合併進整合分支（PR #32）；「桌上互動」這一批的現況在本頁最後一節。
 
 怎麼讀：
 
@@ -101,9 +101,11 @@
 
 | Step | 內容 | 負責 | 狀態 | 驗證層級 |
 |---|---|---|---|---|
-| T1 | 實機頭部：duckd 接手頭頸 4 顆，`look`、`gesture`、`presence` 真的動（I2） | A 線 | 未開始 | |
-| T2 | 語音命令轉頭：說話 → Nous → `app.duck.look`／`gesture` → 鴨子 | B 線 | 未開始 | |
-| T3 | 語音互動時的動作：真實語音事件 → `presence` | B 線 | 未開始 | |
-| T4 | XVF3800 接上 Pi：收音、DOA 讀取、送 `sound` 方位 | A 線 | 未開始（等麥克風接上） | |
-| T5 | 聽聲辨位轉頭：`track sound`，頭轉向說話的人 | A 線 | 未開始 | |
-| T6 | 鴨子自己的喇叭與麥克風進行對話（語音路徑） | B 線 | 未開始 | |
+| T1 | 實機頭部：duckd 接手頭頸 4 顆，`look`、`gesture`、`presence` 真的動（I2） | A 線 | **等你**：舵機沒有電（11:42、11:46 掃描 14 顆都不回應）。檢查腳本 `robot/duckd/tools/head_check.sh` 備好 | 沒有實機；B 線正式 hub＋`duckctl` 經真實通道對 Pi 上的 duckd（模擬身體）通過 |
+| T2 | 語音命令轉頭：說話 → Nous → `app.duck.look`／`gesture` → 鴨子 | B 線 | 程式完成，**等你試**：[pcpcchen-coder/AIOS#156](https://github.com/pcpcchen-coder/AIOS/pull/156)（`NOUS_DUCK` 預設關閉，未合併） | AIOS fixture 測試 122 項；對 duckd 模擬身體的本機檢查。沒有真實語音、沒有實機 |
+| T3 | 語音互動時的動作：真實語音事件 → `presence` | B 線 | 粗略版完成（同一個 AIOS PR）；沒有 `speaking` 狀態 | 同上 |
+| T4 | XVF3800 接上 Pi：DOA 讀取、送 `sound` 方位 | A 線 | 程式與部署完成；實機**等你**（麥克風還沒接上） | 單元測試（模擬裝置 20 項） |
+| T5 | 聽聲辨位轉頭：`track sound` | A 線 | 程式完成；實機等 T1、T4 | 單元測試；真實通道上對模擬身體、模擬聲源 |
+| T6 | 鴨子自己的喇叭與麥克風進行對話（Pi 上無螢幕跑 Nous 頁面） | B 線 | 準備完成；連 Nous 與出聲**等你**（也等麥克風） | Pi 4 上不連 Nous、不出聲的量測 |
+
+2026-11-26 下午：PR #38（A 線）、#39（B 線）已合併進整合分支。使用者決定 **XVF3800 放頭頂**，`robot/audio/config/doa.json` 的 `mount` 改為 `head`（Pi 上已部署的 `~/duck/doa/config/doa.json` 要在下次部署時更新）。上表是兩條線自己回報的狀態；實機仍等舵機電源與麥克風接上。

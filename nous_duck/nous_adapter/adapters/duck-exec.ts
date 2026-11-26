@@ -1,7 +1,7 @@
 import type { CommandOutcome, DuckLink, LinkSnapshot, Observation } from "../hub/duck-link-hub.ts";
-import { toolResult, type ToolResult, type ToolResultReason } from "../shared/aios-contracts.ts";
+import { toolResult, type ToolResult, type ToolResultReason } from "../shared/aios-integrations.ts";
 import { capabilitiesFor } from "../shared/capabilities.ts";
-import { HEAD_JOINTS, type AckMessage, type AckReason, type DuckAction, type StateMessage } from "../shared/duck-link.ts";
+import { HEAD_JOINTS, type AckMessage, type AckReason, type DuckAction, type PresenceState, type StateMessage } from "../shared/duck-link.ts";
 import { DUCK_REJECT_TEXT, DUCK_TEXT } from "./duck-text.ts";
 
 // 一則 duck-link 指令 → AIOS ToolResult 的共用流程（DuckAdapter 的工具與 DuckTerminal 的 presence 都走這裡）。
@@ -257,4 +257,22 @@ export async function missionReadback(ctx: ReadbackContext, text: { confirmed: s
     return { status: "failed", message: DUCK_TEXT.missionFailedEarly, data: { mission_reason: seen.event.reason ?? "unknown" } };
   }
   return { status: "confirmed", message: text.confirmed };
+}
+
+/**
+ * presence：語音工作階段的真實狀態 → 鴨子（回讀 state.presence）。不是模型工具；由 PresenceDriver 呼叫。
+ * 放在這裡而不是 Adapter 上：只要 duck-link 開著就能用，不需要 duck adapter 有註冊。
+ */
+export function sendDuckPresence(link: DuckLink, state: PresenceState, speechLevel?: number, signal?: AbortSignal, timing: DuckTiming = DUCK_TIMING): Promise<ToolResult> {
+  return runDuckCommand(
+    link,
+    {
+      action: "presence",
+      params: { state, ...(speechLevel !== undefined ? { speech_level: speechLevel } : {}) },
+      ttlMs: 2_000,
+      ...(signal ? { signal } : {}),
+      readback: stateReadback((s) => s.presence === state, { confirmed: DUCK_TEXT.presenceConfirmed, unconfirmed: DUCK_TEXT.presenceUnconfirmed }),
+    },
+    timing,
+  );
 }

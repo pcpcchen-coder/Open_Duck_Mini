@@ -1,4 +1,4 @@
-import type { ToolResult } from "../shared/aios-contracts.ts";
+import type { ToolResult } from "../shared/aios-integrations.ts";
 import type { PresenceState } from "../shared/duck-link.ts";
 
 // presence：把「Nous 語音工作階段真的發生的事」轉成 duck-link 的 presence 指令（鴨子本機決定怎麼演）。
