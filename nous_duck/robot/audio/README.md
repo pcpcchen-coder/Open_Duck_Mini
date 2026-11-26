@@ -102,12 +102,18 @@ Nous 的語音 ─► play_voice ─► 閘門 ─► 變聲 ─┐
 
 ## 聲源方向（DOA，T4）
 
-狀態（2026-11-26，A 線接手這一塊）：**程式與測試完成，還沒有接過真的麥克風**。驗證層級：單元測試（模擬裝置，20 項）＋ Pi 上用模擬角度經真實通道讓 duckd（模擬身體）轉頭。USB ID、韌體版本、指令在 Pi（Linux）上能不能用、角度方向，都要等麥克風接上才知道。
+狀態（2026-11-26 傍晚）：**實機讀得到**（Pi 4＋頭頂的 XVF3800，`2886:001a`、`bcdDevice` 2.06）。正前方校正、角度方向、聽聲轉頭在一個房間裡由使用者目視確認過；有電視聲時的表現與能量門檻 2e5 **還沒確認**。紀錄：[`docs/validation/duckd-head-hardware-2026-11-26.md`](../../docs/validation/duckd-head-hardware-2026-11-26.md)。
+
+實機量到、和原本假設不同的三件事：
+
+- `DOA_VALUE` 的角度與語音旗標在聲音停後會停留 2–3 秒，不適合拿來追蹤。現在預設用語音能量（`speech_source: energy`）：自動選擇波束的能量大於 `min_speech_energy` 才算有語音。
+- 頭一轉動，舵機聲就被判成語音，而且比人聲還大。能量門檻擋不掉，靠 duckd 在頭停穩 1.0 秒內丟掉方位。
+- 麥克風平放在頭頂、USB 接頭朝後時，原始角度是順時針為正：`counterclockwise` 要設 `false`。
 
 | 路徑 | 內容 |
 |---|---|
 | `duck_audio/doa.py` | XVF3800 經 USB 控制介面讀角度與語音旗標、環狀分群、正前方校準、只在有語音時把方位送給 duckd（UDP `127.0.0.1:8793`）；每秒送一次存活訊息 |
-| `config/doa.json` | `mount`（`head`／`body`／`desk`）、`front_angle_deg`、`counterclockwise`、`calibrated` |
+| `config/doa.json` | `mount`（`head`／`body`／`desk`）、`front_angle_deg`、`counterclockwise`、`speech_source`、`min_speech_energy`、`calibrated`。**校正值不進 repo**：`front_angle_deg` 是每次安裝的量測值，只留在 Pi 的 `~/duck/doa/config/doa.json`（部署不會覆蓋） |
 | `requirements-doa.txt` | pyusb 1.3.1（Pi 上沿用 runtime-venv 的） |
 | [`../deploy/pi4/setup_doa.sh`](../deploy/pi4/setup_doa.sh) | 複製到 `~/duck/doa/`、udev 規則（VID 2886 給 plugdev）、服務 `duck-doa`（不 enable、不啟動） |
 
@@ -133,7 +139,7 @@ ssh duck-pi4 'cd ~/duck/doa && ~/duck/duckd-venv/bin/python -m duck_audio.doa --
 ssh duck-pi4 'cd ~/duck/doa && ~/duck/duckd-venv/bin/python -m duck_audio.doa --calibrate 5 --write-config --config ~/duck/doa/config/doa.json'
 ```
 
-看即時讀值（在不同方向說話，確認左邊是正的；不對就把 `counterclockwise` 改成 `false`）：
+看即時讀值（在不同方向說話，確認左邊是正的；不對就把 `counterclockwise` 反過來。`duck-doa` 在跑時兩個程式會互相要求重試，讀值變慢）：
 
 ```bash
 ssh duck-pi4 'cd ~/duck/doa && ~/duck/duckd-venv/bin/python -m duck_audio.doa --watch 20 --config ~/duck/doa/config/doa.json'

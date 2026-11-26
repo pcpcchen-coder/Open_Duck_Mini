@@ -1,6 +1,8 @@
 {
   "mount": "head",
   "front_angle_deg": 0.0,
-  "counterclockwise": true,
+  "counterclockwise": false,
+  "speech_source": "energy",
+  "min_speech_energy": 200000.0,
   "calibrated": false
 }

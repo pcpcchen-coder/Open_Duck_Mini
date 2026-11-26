@@ -22,7 +22,8 @@ class SoundTrackConfig:
     min_count: int = 2
     max_spread: float = math.radians(25.0)
     min_confidence: float = 0.3
-    settle_s: float = 0.5
+    #: 2026-11-26 實機：頭一動，舵機聲就被 XVF3800 當成語音；DOA 服務的 0.5 s 視窗在頭停下後還會送出轉動中的方位，所以要等超過它。
+    settle_s: float = 1.0
     recenter_s: float = 8.0
     yaw_limit: float = 0.5  # 頭部 yaw 可用範圍（±rad）；core 會填仲裁器的實際範圍
 

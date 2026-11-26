@@ -80,7 +80,8 @@ class Duckd:
         self._track_seen = -math.inf
         lo, hi = arbiter.limits.head_range["head_yaw"]
         base = sound_track or SoundTrackConfig()
-        self.sound = SoundTracker(SoundTrackConfig(**{**base.__dict__, "yaw_limit": min(base.yaw_limit, -lo, hi)}))
+        self._sound_yaw_limit = min(base.yaw_limit, -lo, hi)
+        self.sound = SoundTracker(SoundTrackConfig(**{**base.__dict__, "yaw_limit": self._sound_yaw_limit}))
         self.reading = BodyReading()
         self._home: dict[str, float] | None = None
         self._releasing_until: float | None = None
@@ -416,6 +417,9 @@ class Duckd:
         self._track_seen = now
         self.presence_motion = False  # 追蹤期間 presence 不搶頭；presence 狀態改變會再打開
         if target == "sound":
+            # 實際可用範圍要看接手後的視窗（例如 ±15°），不是只看靜態上限
+            lo, hi = self.arbiter.head_bounds("head_yaw")
+            self.sound.cfg = replace(self.sound.cfg, yaw_limit=max(0.0, min(self._sound_yaw_limit, -lo, hi)))
             self.sound.reset(now, self.arbiter.head_cmd.get("head_yaw", 0.0))
         wants_body = bool(params.get("body", False))
         # 轉身需要走路；走路還不支援，所以只動頭並回報被改掉

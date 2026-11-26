@@ -69,9 +69,9 @@ def test_bearings_heard_while_head_moves_are_ignored():
     tr.reset(0.0)
     t, out = feed(tr, 0.0, -40, n=4, moving=True)  # 頭在動：可能是舵機的聲音
     assert all(o == (0.0, None) for o in out) and tr.ignored_self_noise == 4
-    t, out = feed(tr, t, -40, n=4)  # 剛停下 0.5 s 內也不算
+    t, out = feed(tr, t, -40, n=4)  # 剛停下 settle_s（1.0 s）內也不算
     assert out[3] == (0.0, None)
-    t, out = feed(tr, t + 0.3, -40, n=3)
+    t, out = feed(tr, t + 0.9, -40, n=3)
     assert ("turn" in [w for _, w in out]) and tr.target == -0.5  # 夾在頭部範圍
 
 

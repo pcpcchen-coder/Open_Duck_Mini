@@ -35,8 +35,8 @@
     }
   },
   "verification": {
-    "level": "none",
-    "hardware_profile": null,
-    "record": null
+    "level": "real",
+    "hardware_profile": "stock_head_direct_hold",
+    "record": "docs/validation/duckd-head-hardware-2026-11-26.md"
   }
 }

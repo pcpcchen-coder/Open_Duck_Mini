@@ -148,7 +148,7 @@ ssh duck-pi4 'sudo systemctl stop duckd'
 | 只在偵測到語音時才有方位 | DOA 服務只在 `speech_detected` 為真時送 |
 | 平滑 | 0.8 s 內至少 2 筆、彼此不超過 25° 才採用，取環狀平均 |
 | 死區 | 新方位和目前目標差不到 8° 不動 |
-| 舵機自噪音 | 頭在動、或停下不到 0.5 s 時收到的方位全部丟掉 |
+| 舵機自噪音 | 頭在動、或停下不到 1.0 s 時收到的方位全部丟掉（2026-11-26 實機：頭一動，舵機聲就被 XVF3800 判成語音，能量比人聲還大；原本的 0.5 s 會來回擺） |
 | 超出頭部範圍 | 轉到極限（±0.5 rad），`tracking_acquired` 事件的 `data.at_limit` 是 `true`。坐著不轉身：`body: true` 會被改成 false |
 | 回正 | 8 s 沒有聽到聲音，頭回正（送 `tracking_lost`，`reason: quiet`）；追蹤本身不結束 |
 | 來源不見 | 5 s 沒有收到 DOA 服務的存活訊息（麥克風拔掉、服務停了）：結束追蹤，`capabilities.tracking_sound` 變 `unsupported` |
