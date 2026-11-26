@@ -11,9 +11,11 @@
 
 存取範圍（ADR-0019 §2.4）：
 - 只接受**區網內**的來源位址（loopback、私有網段、link-local）；其他一律 403。
-- 寫入要帶標頭 `X-Duck-Settings: 1` 與 JSON：別的網站沒辦法叫瀏覽器跨站送出這種請求。
+- 寫入只接受 JSON，要帶標頭 `X-Duck-Settings: 1`，而且 `Origin`（瀏覽器會帶）要是這個頁面自己：
+  別的網站沒辦法叫瀏覽器跨站送出這種請求。
 - `Host` 標頭要是 IP、`localhost`、`*.local` 或這台機器的名字（擋 DNS rebinding）。
-- 預設不需要 token（比照舵機控制台 2026-11-25 的決定）；`--require-token` 可以開。
+- **不用密碼、不用登入**（使用者 2026-11-26 決定：「設定網頁要對區網開放，不用密碼」）。`--require-token` 是選用的，預設關。
+- 不做任何對外網的穿透或轉送；頁面與 API 不回傳任何金鑰、權杖或 Wi-Fi 密碼。
 """
 from __future__ import annotations
 
@@ -66,6 +68,11 @@ def host_allowed(host_header: str, extra: tuple[str, ...] = ()) -> bool:
     return host == "localhost" or host.endswith(".local") or host in (me, me.split(".", 1)[0]) or host in extra
 
 
+def same_origin(origin: str, host_header: str) -> bool:
+    """`Origin` 標頭要和這個頁面自己的位址一樣（http://<Host>）。別的網頁、`null`（沙箱或檔案）都不算。"""
+    return origin.strip().lower() == "http://" + host_header.strip().lower()
+
+
 class SettingsApp:
     def __init__(self, store: Store, *, token: str | None = None, html: bytes | None = None, service_runner=None,
                  duckd_sockets=None, allow_hosts: tuple[str, ...] = (), display_name: str | None = None):
@@ -111,17 +118,17 @@ class SettingsApp:
             "directory": str(self.store.directory),
         }
 
-    def command(self, action: str, body: dict) -> dict:
+    def command(self, action: str, body: dict, client: str = "") -> dict:
         if action == "save":
             r = self.store.apply(body.get("changes"), "web", base_revision=_rev(body.get("base_revision")),
-                                 confirm_measurements=body.get("confirm_measurements") is True)
+                                 confirm_measurements=body.get("confirm_measurements") is True, client=client)
         elif action == "reset":
             keys = body.get("keys")
             if not isinstance(keys, list) or not keys or not all(isinstance(k, str) for k in keys):
                 raise SaveError({"_": "keys 要是設定名稱的清單"})
-            r = self.store.reset(keys, "web", base_revision=_rev(body.get("base_revision")))
+            r = self.store.reset(keys, "web", base_revision=_rev(body.get("base_revision")), client=client)
         elif action == "restore_previous":
-            r = self.store.restore_previous("web")
+            r = self.store.restore_previous("web", client=client)
         elif action == "preview_expression":
             return self._preview(body.get("name"))
         else:
@@ -211,6 +218,10 @@ def make_handler(app: SettingsApp):
                 return
             if not self._gate(api=True):
                 return
+            origin = self.headers.get("Origin")
+            if origin is not None and not same_origin(origin, self.headers.get("Host", "")):
+                self._json(HTTPStatus.FORBIDDEN, {"ok": False, "error": "不接受別的網頁送來的請求"})
+                return
             if self.headers.get("X-Duck-Settings") != "1" or "application/json" not in self.headers.get("Content-Type", ""):
                 self._json(HTTPStatus.FORBIDDEN, {"ok": False, "error": "只接受設定頁自己送出的請求"})
                 return
@@ -230,7 +241,7 @@ def make_handler(app: SettingsApp):
                 return
             action = path[len("/api/"):]
             try:
-                result = app.command(action, body)
+                result = app.command(action, body, self.client_address[0])
             except KeyError:
                 self._json(HTTPStatus.NOT_FOUND, {"ok": False, "error": f"沒有這個動作：{action}"})
                 return

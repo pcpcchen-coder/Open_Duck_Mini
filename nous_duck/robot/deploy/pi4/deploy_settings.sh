@@ -19,7 +19,9 @@
 # 不做的事：不啟動、不停止、不重啟 duckd／duck-doa／duck-console；不碰舵機、I2C、GPIO；不重開機。
 # duckd 與 duck-doa 要重新部署（deploy_duckd.sh、setup_doa.sh）並重啟後才會讀這份設定。
 #
-# 存取：預設不需要 token，只接受區網內的來源位址（比照舵機控制台 2026-11-25 的決定）。要 token：SETTINGS_REQUIRE_TOKEN=1。
+# 存取：對區網開放、不用密碼（使用者 2026-11-26 決定，ADR-0019 §2.4.1）；伺服器只接受區網內的來源位址。
+# 這支腳本不開防火牆、不設連接埠轉發、不做任何對外網的穿透。選用的 token：SETTINGS_REQUIRE_TOKEN=1（預設不用）。
+# 既有的 ~/duck/doa/config/doa.json（含正前方校正值）只會被讀來搬進設定，**不會被改或刪**。
 set -euo pipefail
 
 MODE=install
@@ -146,6 +148,7 @@ if [ -n "$AUTH_ARG" ]; then
   TOKEN="$(ssh "$HOST" 'cat ~/.config/nous-duck/settings_token')"
   echo "設定頁已啟動（網址含 token，不要貼到公開的地方）：$URL#t=$TOKEN"
 else
-  echo "設定頁已啟動（不需要 token；只接受區網內的裝置）：$URL"
+  echo "設定頁已啟動（不用密碼；只接受區網內的裝置）：$URL"
+  echo "手機認不得 .local 名稱時，改用 Pi 的 IP（ssh $HOST hostname -I）：http://<IP>:$PORT/"
 fi
 [ "$MODE" = enable ] && echo "已設成開機自動啟動。" || echo "沒有設成開機自動啟動：Pi 重開機後要再啟動一次（或改用 --enable）。"

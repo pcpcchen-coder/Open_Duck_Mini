@@ -2,7 +2,7 @@
 
 狀態：**第一版**（2026-11-26，E 線）。驗證層級：單元測試、對模擬服務的端到端（模擬麥克風、模擬身體，都是 mock）、無頭瀏覽器（桌面與手機寬度）。**還沒有部署到 Pi，也沒有在實機上用它調過任何東西**；紀錄見 [`docs/validation/settings-2026-11-26.md`](../../docs/validation/settings-2026-11-26.md)。設計見 [ADR-0019](../../docs/adr/ADR-0019-duck-settings-page.md)。
 
-鴨子沒有螢幕，所以設定用網頁改：手機或電腦連到鴨子（同一個區網），開 `http://duck-pi4.local:8081/`。
+鴨子沒有螢幕，所以設定用網頁改：手機或電腦連到鴨子（同一個區網），開 `http://duck-pi4.local:8081/`；手機認不得 `.local` 名稱時改用 Pi 的 IP：`http://<Pi 的 IP>:8081/`（IP 用 `ssh duck-pi4 hostname -I` 看）。不用密碼。
 
 ## 職責
 
@@ -75,7 +75,7 @@
 | `duck_settings/server.py` | HTTP 伺服器與存取限制 |
 | `duck_settings/web/index.html` | 頁面（單一檔案，樣式與程式內嵌，不從網路載入任何東西；沒有建置步驟） |
 | `duck_settings/cli.py` | 本機命令列：`list`／`get`／`set`／`reset`／`import-doa` |
-| `tests/` | 單元測試、HTTP、對模擬聲源方位服務的端到端（34 項） |
+| `tests/` | 單元測試、HTTP、對模擬聲源方位服務的端到端（36 項） |
 | `tests/web/check_settings.cjs` | 無頭瀏覽器檢查與截圖（自己啟動設定頁＋模擬的 duckd 與聲源方位服務） |
 | [`../deploy/pi4/deploy_settings.sh`](../deploy/pi4/deploy_settings.sh) | 部署到 Pi、systemd 服務 `duck-settings` |
 
@@ -152,8 +152,10 @@ ssh duck-pi4 '~/duck/settings/duck-settings set privacy.sound_direction true'
 
 | 規則 | 做法 |
 |---|---|
-| 誰連得到 | 只接受區網內的來源位址（loopback、私有網段、link-local）；預設不需要 token（比照舵機控制台 2026-11-25 的決定）。要 token：`SETTINGS_REQUIRE_TOKEN=1 bash deploy_settings.sh` |
-| 跨站請求 | 寫入要帶標頭 `X-Duck-Settings: 1` 與 JSON；`Host` 要是 IP、`*.local`、`localhost` 或主機名稱 |
+| 誰連得到 | **對區網開放，不用密碼**（使用者 2026-11-26 決定，[ADR-0019 §2.4.1](../../docs/adr/ADR-0019-duck-settings-page.md#241-使用者決定對區網開放不用密碼2026-11-26)）。只接受區網內的來源位址（loopback、私有網段、link-local）；不做對外網的穿透或轉送。同一個 Wi-Fi 上的裝置都能改這一頁 |
+| 跨站請求 | 寫入只接受 JSON、要帶標頭 `X-Duck-Settings: 1`、`Origin` 要是這個頁面自己；`Host` 要是 IP、`*.local`、`localhost` 或主機名稱（擋 DNS rebinding） |
+| 秘密 | 頁面與 API 不顯示任何金鑰、權杖、Wi-Fi 密碼 |
+| 變更紀錄 | 每次變更記在 Pi 本機的 `~/duck/settings/changes.jsonl`：時間、來源、來源 IP、哪個 key、前後的值 |
 | 範圍 | 超出範圍就拒絕並說明，不夾限；一批裡有一項不合格就整批不寫 |
 | 未實作的項目 | 顯示但停用；任何來源都寫不進去 |
 | 隱私 | 設定頁只能收緊；放寬要本機指令。「讀取聲源方向」關掉後服務不再讀麥克風 |

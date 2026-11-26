@@ -9,7 +9,7 @@
   {
    "name": "模擬的 duckd 與聲源方位服務都回報了實際在用的設定",
    "ok": true,
-   "detail": "2026-11-26 19:32:48,289 INFO root duckd 啟動（body=mock，hub=ws://127.0.0.1:9/duck-link，本機控制 /tmp/ducks-yzU17u/duckd.sock）\n"
+   "detail": "2026-11-26 19:45:34,940 INFO root duckd 啟動（body=mock，hub=ws://127.0.0.1:9/duck-link，本機控制 /tmp/ducks-7nOdLN/duckd.sock）\n"
   },
   {
    "name": "七個分區加系統狀態都在",

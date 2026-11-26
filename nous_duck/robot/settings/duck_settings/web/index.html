@@ -286,7 +286,7 @@ function sysBody() {
   const ch = state.changes || [];
   frag.append(h("div", { class: "card" }, h("div", { class: "label" }, "最近的變更"), !ch.length ? h("div", { class: "desc" }, "還沒有變更紀錄。") :
     h("table", {}, h("tbody", {}, ch.map((c) => h("tr", {}, h("th", {}, new Date(c.at * 1000).toLocaleString("zh-TW", { hour12: false })),
-      h("td", {}, ({ web: "設定頁", local_cli: "本機指令", duck_link: "Nous" })[c.source] || c.source, c.note ? "（" + c.note + "）" : "", "：",
+      h("td", {}, ({ web: "設定頁", local_cli: "本機指令", duck_link: "Nous" })[c.source] || c.source, c.from ? " " + c.from : "", c.note ? "（" + c.note + "）" : "", "：",
         Object.entries(c.changes).map(([k, v]) => k + " " + JSON.stringify(v.from) + " → " + JSON.stringify(v.to)).join("；"))))))));
   return frag;
 }

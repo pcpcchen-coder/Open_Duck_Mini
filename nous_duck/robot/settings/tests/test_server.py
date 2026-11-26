@@ -89,7 +89,44 @@ def test_posts_need_the_page_header_json_and_a_sane_host(served, store):
     assert c.call("/api/save", b"[1]")[0] == 400 and c.call("/api/save", b"{oops")[0] == 400
     assert c.call("/api/save", b"x" * 70000)[0] == 413
     assert store.load().values["hearing.recenter_s"] == 8.0
-    assert c.call("/api/save", body, headers={"Host": "duck-pi4.local:8081"})[0] == 200
+    # Origin：瀏覽器跨站送出時會帶別人的 Origin；沙箱或本機檔案是 null
+    for origin in ("http://evil.example.com", "null", "https://127.0.0.1", "http://duck-pi4.local:9999"):
+        assert c.call("/api/save", body, headers={"Origin": origin})[0] == 403, origin
+    assert store.load().values["hearing.recenter_s"] == 8.0
+    host = c.base.split("//", 1)[1]
+    assert c.call("/api/save", body, headers={"Origin": "http://" + host})[0] == 200
+    assert c.call("/api/save", {"changes": {"hearing.recenter_s": 10}}, headers={"Host": "duck-pi4.local:8081", "Origin": "http://duck-pi4.local:8081"})[0] == 200
+
+
+def test_change_log_records_time_source_address_key_and_values(served, store):
+    c, _ = served()
+    c.call("/api/save", {"changes": {"hearing.recenter_s": 9, "features.gestures": False}})
+    store.apply({"hearing.recenter_s": 11}, "local_cli")
+    line = (store.directory / "changes.jsonl").read_text().splitlines()[0]
+    entry = json.loads(line)
+    assert entry["source"] == "web" and entry["from"] == "127.0.0.1" and entry["at"] > 1.7e9
+    assert entry["changes"] == {"hearing.recenter_s": {"from": 8.0, "to": 9.0}, "features.gestures": {"from": True, "to": False}}
+    shown = c.call("/api/state")[1]["changes"]
+    assert [(e["source"], e["from"]) for e in shown] == [("local_cli", ""), ("web", "127.0.0.1")]
+    # 被拒絕的請求不會留下「改了」的紀錄
+    c.call("/api/save", {"changes": {"head.speed_deg_s": 999}})
+    assert len((store.directory / "changes.jsonl").read_text().splitlines()) == 2
+
+
+def test_no_credentials_are_ever_served(served, store, tmp_path):
+    """頁面與 API 不顯示金鑰、權杖、Wi-Fi 密碼；開了 token 模式也不會把 token 送回來。"""
+    c, _ = served(token="s3cret-token-value")
+    c.call("/api/save", {"changes": {"hearing.recenter_s": 9}})
+    blobs = [c.call(p, raw=True)[1].decode("utf-8") for p in ("/", "/api/state", "/api/expressions")]
+    import re
+
+    for blob in blobs:
+        assert "s3cret-token-value" not in blob
+        blob = re.sub(r"data:image/png;base64,[A-Za-z0-9+/=]+", "", blob)  # 預覽圖的 base64 會碰巧拼出任何字
+        for word in ("password", "passwd", "psk", "ssid", "api_key", "apikey", "secret", "private_key"):
+            assert word not in blob.lower(), word
+    keys = " ".join(s["key"] for s in json.loads(blobs[1])["settings"])
+    assert "token" not in keys and "wifi" not in keys
 
 
 def test_only_lan_addresses_and_known_hosts():

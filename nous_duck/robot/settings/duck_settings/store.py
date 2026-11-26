@@ -59,7 +59,7 @@ class Store:
 
     # ---------------------------------------------------------------- 寫入
     def apply(self, changes: dict[str, Any], source: str, *, base_revision: dict[str, int] | None = None,
-              confirm_measurements: bool = False, note: str = "") -> SaveResult:
+              confirm_measurements: bool = False, note: str = "", client: str = "") -> SaveResult:
         """驗證後寫入。有任何一項不合格就**整批不寫**，回報每一項的原因。"""
         if source not in SOURCES:
             raise SaveError({"_": f"不認得的來源 {source!r}"})
@@ -107,10 +107,10 @@ class Store:
             for key, value in touched.items():
                 if view.values[key] != value:
                     result.changed[key] = {"from": view.values[key], "to": value}
-            self._write(view, touched, result, source, note)
+            self._write(view, touched, result, source, note, client)
             return result
 
-    def reset(self, keys: list[str], source: str, base_revision: dict[str, int] | None = None) -> SaveResult:
+    def reset(self, keys: list[str], source: str, base_revision: dict[str, int] | None = None, client: str = "") -> SaveResult:
         """把指定的項目回復成預設值。量測值不能用這個回復；會放寬隱私的項目（來源不允許時）略過並回報。"""
         with self._lock:
             view = self.load()
@@ -130,11 +130,11 @@ class Store:
                 changes[key] = s.default
         if not changes:
             return SaveResult(skipped=skipped, revision=view.revision)
-        result = self.apply(changes, source, base_revision=base_revision, note="reset")
+        result = self.apply(changes, source, base_revision=base_revision, note="reset", client=client)
         result.skipped.update(skipped)
         return result
 
-    def restore_previous(self, source: str) -> SaveResult:
+    def restore_previous(self, source: str, client: str = "") -> SaveResult:
         """還原成上一版的使用者偏好（`history/` 裡最新的一份）。量測值不動。"""
         prev = self.previous()
         if prev is None:
@@ -159,7 +159,7 @@ class Store:
                 changes[key] = value
         if not changes:
             return SaveResult(skipped=skipped, revision=view.revision)
-        result = self.apply(changes, source, note=f"restore revision {prev.get('revision')}")
+        result = self.apply(changes, source, note=f"restore revision {prev.get('revision')}", client=client)
         result.skipped.update(skipped)
         return result
 
@@ -186,7 +186,7 @@ class Store:
         return out[::-1]
 
     # ---------------------------------------------------------------- 內部
-    def _write(self, view: View, touched: dict[str, Any], result: SaveResult, source: str, note: str) -> None:
+    def _write(self, view: View, touched: dict[str, Any], result: SaveResult, source: str, note: str, client: str = "") -> None:
         now = self.clock()
         result.revision = dict(view.revision)
         try:
@@ -207,7 +207,7 @@ class Store:
                 })
                 result.revision[kind] = rev
             if result.changed:
-                self._log({"at": round(now, 3), "source": source, "note": note, "revision": result.revision,
+                self._log({"at": round(now, 3), "source": source, "from": client[:64], "note": note, "revision": result.revision,
                            "changes": result.changed})
         except OSError as exc:
             raise SaveError({"_": f"寫不進設定檔：{exc}"}, code="io") from exc
@@ -224,7 +224,9 @@ class Store:
             old.unlink(missing_ok=True)
 
     def _log(self, entry: dict) -> None:
-        """變更紀錄：時間、來源、改了哪些項目（ADR-0006 §3）。不含任何影像或聲音內容。"""
+        """變更紀錄：時間、來源、來源位址（設定頁是對方的區網 IP）、哪一項從什麼改成什麼（ADR-0006 §3、ADR-0019 §2.4）。
+
+        只留在鴨子本機，不外傳；不含任何影像或聲音內容。"""
         path = self.directory / CHANGES_FILE
         try:
             lines = path.read_text(encoding="utf-8").splitlines()
