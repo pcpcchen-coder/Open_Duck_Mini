@@ -1,6 +1,6 @@
 # ⑤ MuJoCo 模擬（sim）
 
-狀態：**規劃中**（尚無程式）。
+狀態：**大部分規劃中**。已有 [`look_at_sim/`](look_at_sim/)：V3「說話時看著對方」的模擬（2026-11-16，[驗證紀錄](../docs/validation/look-at-sim-2026-11-16.md)）。
 
 ## 職責
 
@@ -25,9 +25,21 @@ R-001（2026-11-12）後新增：
 - 模擬腳本與場景設定（放本目錄，不改上游模型檔；需要修改時複製到本目錄並註明來源 commit）。
 - 量測結果寫進 `../docs/validation/`，標明「模擬」層級。
 
-## 依賴（預計）
+## 已有的模擬
 
-MuJoCo（Python 綁定）、onnxruntime；版本待鎖定。上游 `v2_rl_walk_mujoco.py` 可作為參考。
+| 路徑 | 內容 | 狀態 |
+|---|---|---|
+| [`look_at_sim/`](look_at_sim/) | `robot/behaviors/look_at.py` 的模擬：上游 `robot.xml` **固定機身**（只動頭頸）、依幾何投影產生的**合成人臉偵測**（fixture）、轉身用運動學近似；7 個情境（站著的大人與小孩、太近、走過、側邊叫、兩人換說話者、離開） | 可用；**不驗證平衡**（沒跑步態策略） |
+
+```bash
+pip install -r nous_duck/sim/requirements-dev.txt
+python -m pytest nous_duck/sim/tests -v
+cd nous_duck/sim && python -m look_at_sim   # 輸出結果表
+```
+
+## 依賴
+
+`requirements.txt` 鎖定 mujoco 4.0.1、numpy 2.5.4（與 `hardware/dock/cad` 相同）。之後跑步態策略還需要 onnxruntime（待鎖定）；上游 `v2_rl_walk_mujoco.py` 可作為參考。
 
 ## 限制
 

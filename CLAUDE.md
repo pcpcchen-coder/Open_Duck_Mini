@@ -25,7 +25,7 @@
 |---|---|---|
 | `nous_duck/assembly_viewer/` | ① 離線單一 HTML 3D 組裝檢視器（第一個交付） | Python pipeline＋TypeScript/three.js |
 | `nous_duck/protocol/` | ② duck-link：鴨子與 Nous 之間唯一的介面（版本化 JSON Schema） | JSON Schema |
-| `nous_duck/robot/` | ③ 機上程式（身體板 Pi Zero 2 W：連線、行為、安全；感知板 Pi 4：定位導航、感知、音訊） | Python |
+| `nous_duck/robot/` | ③ 機上程式（目前單板試用：全部跑在一片 Pi 4 上，步態＋安全與感知分成獨立服務；不行再拆回 Pi Zero 2 W＋Pi 4，見 ADR-0008） | Python |
 | `nous_duck/nous_adapter/` | ④ 之後要搬回 AIOS 的 `app.duck.*` adapter 與終端 | TypeScript |
 | `nous_duck/sim/` | ⑤ MuJoCo 模擬 | Python |
 | `nous_duck/hardware/` | ⑥ 硬體改裝（MG995 頭部原型、表情模組、接線、感測頭、感知板、充電座） | 文件、CAD、STL |
@@ -35,7 +35,7 @@
 系統分工（詳見 [ADR-0001](nous_duck/docs/adr/ADR-0001-duck-role-in-nous.md)）：
 
 - **Nous（Mac mini）** 負責語音、視覺、記憶與決策。
-- **鴨子** 負責步態、動作與安全（身體板 Pi Zero 2 W），以及定位導航、收音播放、喚醒詞、人臉偵測（感知板 Pi 4，見 ADR-0005）。安全判斷（跌倒、過熱、低電壓、通訊中斷、禁區）一律在鴨子本機完成，不依賴 Nous 或網路。
+- **鴨子** 負責步態、動作與安全，以及定位導航、收音播放、喚醒詞、人臉偵測。目前全部在一片 Pi 4 上試用（ADR-0008）；文件裡的「身體板」「感知板」在試用期間指這片 Pi 4 上的兩組服務，達不到 ADR-0008 §2.5 的門檻再拆回 Pi Zero 2 W＋Pi 4（ADR-0005）。安全判斷（跌倒、過熱、低電壓、通訊中斷、禁區）一律在鴨子本機完成，不依賴 Nous 或網路。
 - 兩邊**只**透過 `nous_duck/protocol/` 的版本化 JSON Schema 溝通。不共用程式碼、不直接呼叫對方內部函式。改協定先改 schema 並升版，再改兩端。
 
 ## 3. AIOS 整合規則
