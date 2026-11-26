@@ -18,6 +18,7 @@ import logging
 import math
 import threading
 from collections import OrderedDict, deque
+from dataclasses import replace
 from pathlib import Path
 
 from . import SOFTWARE
@@ -27,6 +28,7 @@ from .gestures import GestureLibrary, GesturePlayer
 from .limits import HEAD_JOINTS
 from .presence import EXPRESSION, PresenceState, head_target
 from .protocol import PROTOCOL_VERSION, Protocol
+from .track import SoundTrackConfig, SoundTracker
 
 log = logging.getLogger("duckd.core")
 
@@ -53,6 +55,7 @@ class Duckd:
         hardware_profile: str = "stock_head_direct_hold",
         allow_unverified_gestures: bool = False,
         head_reason: str = "direct head control; full range not verified on hardware",
+        sound_track: SoundTrackConfig | None = None,
     ):
         self.protocol = protocol
         self.body = body
@@ -64,6 +67,7 @@ class Duckd:
         self.hardware_profile = hardware_profile
         self.allow_unverified_gestures = allow_unverified_gestures
         self.head_reason = head_reason
+        self.tracking_reason = {"sound": "XVF3800 DOA, head yaw only; accuracy not characterised"}
         self.lock = threading.RLock()
         self.connected = False
         self.peer: dict | None = None
@@ -74,6 +78,9 @@ class Duckd:
         self._track_until = math.inf
         self._track_acquired = False
         self._track_seen = -math.inf
+        lo, hi = arbiter.limits.head_range["head_yaw"]
+        base = sound_track or SoundTrackConfig()
+        self.sound = SoundTracker(SoundTrackConfig(**{**base.__dict__, "yaw_limit": min(base.yaw_limit, -lo, hi)}))
         self.reading = BodyReading()
         self._home: dict[str, float] | None = None
         self._releasing_until: float | None = None
@@ -132,13 +139,17 @@ class Duckd:
         put("microphone", "unsupported", "no microphone")
         put("camera", "unsupported", "no camera")
         for kind in ("face", "sound"):
-            obs = self.percept.get(kind, 5.0) if self.percept else None
-            if obs is None:
+            src = self.percept.source(kind, 5.0) if self.percept else None
+            if src is None:
                 put(f"tracking_{kind}", "unsupported", "no perception source is feeding duckd")
-            elif obs.mock:
+            elif not src.ok:
+                put(f"tracking_{kind}", "unsupported", f"source reports a fault: {src.detail}")
+            elif src.mock:
                 put(f"tracking_{kind}", "mock", "perception source is synthetic")
+            elif not r.engaged:
+                put(f"tracking_{kind}", "unsupported", "head is not engaged")
             else:
-                put(f"tracking_{kind}", "degraded", "not verified on hardware")
+                put(f"tracking_{kind}", "degraded", self.tracking_reason.get(kind, "not verified on hardware"))
         put("navigation", "unsupported", "navigation is not integrated into duckd yet")
         put("dock", "unsupported", "no dock")
         put("imu", "unsupported", "BNO055 not calibrated; not read by duckd")
@@ -392,7 +403,8 @@ class Duckd:
             return busy
         if not self.arbiter.head_enabled:
             return Decision(False, "unsupported", "head is not engaged")
-        if self.percept is None or self.percept.get(target, 5.0) is None:
+        src = self.percept.source(target, 5.0) if self.percept else None
+        if src is None or not src.ok:
             return Decision(False, "unsupported", f"tracking_{target}: no perception source is feeding duckd")
         gate = self.arbiter.check_motion(now)
         if gate:
@@ -402,6 +414,9 @@ class Duckd:
         self._track_until = now + float(params.get("timeout_s", 600.0))
         self._track_acquired = False
         self._track_seen = now
+        self.presence_motion = False  # 追蹤期間 presence 不搶頭；presence 狀態改變會再打開
+        if target == "sound":
+            self.sound.reset(now, self.arbiter.head_cmd.get("head_yaw", 0.0))
         wants_body = bool(params.get("body", False))
         # 轉身需要走路；走路還不支援，所以只動頭並回報被改掉
         return Decision(True, applied={"target": target, "body": False}, clamped=wants_body)
@@ -501,6 +516,8 @@ class Duckd:
         if now >= self._track_until:
             self._end_tracking()
             return None
+        if self.tracking == "sound":
+            return self._track_sound(now)
         obs = self.percept.get(self.tracking, TRACK_FRESH_S) if self.percept else None
         if obs is None:
             if now - self._track_seen > TRACK_LOST_S:
@@ -513,12 +530,37 @@ class Duckd:
             self._track_acquired = True
             self._event("tracking_acquired", data={"target": self.tracking, "mock": obs.mock})
         head = self.reading.head or self.arbiter.head_cmd
-        if self.tracking == "face":  # 方位相對鏡頭光軸：在目前頭部角度上修正
-            return {
-                "head_yaw": head["head_yaw"] + TRACK_GAIN * obs.yaw,
-                "head_pitch": head["head_pitch"] + TRACK_GAIN * obs.pitch,
-            }
-        return {"head_yaw": obs.yaw}  # sound：方位相對身體正前方
+        # face：方位相對鏡頭光軸，在目前頭部角度上修正
+        return {
+            "head_yaw": head["head_yaw"] + TRACK_GAIN * obs.yaw,
+            "head_pitch": head["head_pitch"] + TRACK_GAIN * obs.pitch,
+        }
+
+    def _track_sound(self, now: float) -> dict[str, float] | None:
+        """聽聲轉頭：安靜是正常的，不算追丟；來源整個不見（麥克風拔掉、程式停了）才算。"""
+        src = self.percept.source("sound", 5.0) if self.percept else None
+        if src is None or not src.ok:
+            self._end_tracking(lost=True)
+            return None
+        obs = self.percept.get("sound", TRACK_FRESH_S)
+        moving = not self.arbiter.head_settled(tol=0.002)
+        if obs is not None and obs.frame == "head":
+            # 麥克風裝在頭上：方位相對頭部，加上目前的頭部 yaw 才是相對身體。
+            # 頭在動時的觀測反正會被丟掉，所以這裡用的 yaw 是靜止時的回讀。
+            head = self.reading.head or self.arbiter.head_cmd
+            body_yaw = (obs.yaw + head["head_yaw"] + math.pi) % (2 * math.pi) - math.pi
+            obs = replace(obs, yaw=body_yaw)
+        yaw, what = self.sound.update(obs, now, moving)
+        if what == "turn":
+            # 協定的 state 沒有欄位放「轉到極限」，先用事件帶（見 protocol/proposals）
+            self._event("tracking_acquired", data={
+                "target": "sound", "mock": bool(obs.mock), "bearing_rad": round(self.sound.bearing, 3),
+                "head_yaw_rad": round(yaw, 3), "at_limit": self.sound.at_limit,
+            })
+            self._state_dirty = True
+        elif what == "recenter":
+            self._event("tracking_lost", reason="quiet", data={"target": "sound", "recentered": True})
+        return {"head_yaw": yaw, "head_pitch": 0.0, "head_roll": 0.0, "neck_pitch": 0.0}
 
     def tick(self, now: float) -> list[dict]:
         with self.lock:
