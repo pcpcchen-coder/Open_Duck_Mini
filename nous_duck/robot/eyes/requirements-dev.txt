@@ -1,0 +1,5 @@
+# 測試與預覽依賴（鎖定版本）
+-r requirements.txt
+pytest==9.2.0
+# 只有預覽圖（duck_eyes.preview）需要；機上渲染不需要
+pillow==13.0.0

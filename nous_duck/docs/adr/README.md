@@ -6,7 +6,7 @@
 |---|---|---|---|
 | [ADR-0001](ADR-0001-duck-role-in-nous.md) | 鴨子在 Nous 中的角色＝身體 adapter 加終端（§7 依 R-001 修訂） | 草案 | 2026-11-12 |
 | [ADR-0002](ADR-0002-indoor-localization-and-navigation.md) | 室內定位與導航（AprilTag＋視覺慣性里程計，不用步數；沒開燈時紅外線補光） | 草案 | 2026-11-12 |
-| [ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md) | 行動終端、喚醒詞與找人 | 草案 | 2026-11-12 |
+| [ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md) | 行動終端、喚醒詞與找人（喚醒詞預設「Hey 鴨子」、可以改） | 部分採用 | 2026-11-12 |
 | [ADR-0004](ADR-0004-docking-and-charging.md) | 充電座與自動回充（背後觸點） | 部分採用 | 2026-11-12 |
 | [ADR-0005](ADR-0005-compute-and-sensor-upgrade.md) | 運算與感測硬體升級（AR0144 裝頭上、標準版 XVF3800 麥克風裝頭上、1.28 吋眼睛螢幕；雙板部分被 ADR-0008 取代） | 部分採用 | 2026-11-12 |
 | [ADR-0006](ADR-0006-privacy-settings.md) | 可開關的隱私設定（預設值已同意；鏡頭提示改用眼睛螢幕，2026-11-17） | 部分採用 | 2026-11-12 |
@@ -16,6 +16,7 @@
 | [ADR-0010](ADR-0010-duck-voice.md) | 鴨子的語音（Nous 的聲音加變聲、本機音效、回音消除、喇叭） | 部分採用 | 2026-11-15（2026-11-26 依 ADR-0008 與標準版 XVF3800 修訂） |
 | [ADR-0011](ADR-0011-duck-memory.md) | 鴨子的記憶系統（沿用 Nous 記憶層，不另做 Hermes 式記憶；鴨子只補身體、空間、任務記憶；可以在鴨子旁邊說「記住」） | 採用 | 2026-11-26 |
 | [ADR-0012](ADR-0012-low-battery-return-interaction.md) | 低電量時的回家互動與「直接回家」的條件（L0～L4 電量等級；L1、L2 由 Nous 商量，L3 起鴨子本機直接回家） | 草案 | 2026-11-26 |
+| [ADR-0013](ADR-0013-camera-always-on-and-home-monitoring.md) | 鏡頭常開與家庭監控（C：只回報文字事件）、夜間紅外線、渲染程式故障保護 | 部分採用 | 2026-11-18 |
 
 編號說明：本序列只屬於本 repo 的 `nous_duck/docs/adr/`，與 AIOS repo 的 `docs/adr/`（ADR-0001 本機家人辨識等）是不同的序列。
 
