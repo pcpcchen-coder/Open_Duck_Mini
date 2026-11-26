@@ -213,3 +213,43 @@ jobs:
       - name: 執行測試
         working-directory: nous_duck/nous_adapter
         run: npm test
+
+  duck-settings:
+    name: 鴨子設定頁（單元測試、對模擬服務端到端、無頭瀏覽器）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: 安裝依賴（設定頁本身只用標準函式庫；numpy 給表情預覽，duckd 的依賴給模擬的 duckd）
+        run: pip install -r nous_duck/robot/settings/requirements-dev.txt -r nous_duck/robot/duckd/requirements-dev.txt
+      - name: 單元測試（schema、範圍、安全項目不可寫、只收緊、上一版）與 HTTP、對模擬聲源方位服務的端到端
+        working-directory: nous_duck/robot/settings
+        run: python -m pytest tests -v
+      - name: duckd 讀設定（模擬身體）
+        working-directory: nous_duck/robot/duckd
+        run: python -m pytest tests/test_settings_in.py -v
+      - name: 聲源方位服務讀設定（模擬麥克風）
+        working-directory: nous_duck/robot/audio
+        run: python -m pytest tests/test_doa.py tests/test_doa_settings.py -v
+      - name: 安裝 Playwright 與 Chromium
+        working-directory: nous_duck/robot/settings/tests/web
+        run: |
+          npm install --no-save playwright@1.63.0
+          npx playwright install --with-deps chromium
+      - name: 無頭瀏覽器檢查（桌面與手機寬度；設定頁＋模擬的 duckd 與聲源方位服務）
+        env:
+          NODE_PATH: ${{ github.workspace }}/nous_duck/robot/settings/tests/web/node_modules
+          PYTHON: python
+        run: node nous_duck/robot/settings/tests/web/check_settings.cjs
+      - name: 上傳截圖與結果
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: duck-settings-screens
+          path: nous_duck/robot/settings/dist/screens/
+          if-no-files-found: ignore
