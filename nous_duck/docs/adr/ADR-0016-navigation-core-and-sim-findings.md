@@ -2,7 +2,7 @@
 
 - 狀態：**草案（Proposed）**。依據只有模擬與單元測試（[驗證紀錄](../validation/sim-nav-2026-11-25.md)），沒有實機
 - 日期：2026-11-26
-- 相關：[ADR-0002](ADR-0002-indoor-localization-and-navigation.md)（定位與導航）、[ADR-0004](ADR-0004-docking-and-charging.md)（回充）、[ADR-0009](ADR-0009-duck-link-transport-and-command-bridge.md)（指令橋接與 safety）、[ADR-0011](ADR-0011-gesture-library.md)（動作庫）、[`robot/navigation/`](../../robot/navigation/README.md)、[`sim/`](../../sim/README.md)
+- 相關：[ADR-0002](ADR-0002-indoor-localization-and-navigation.md)（定位與導航）、[ADR-0004](ADR-0004-docking-and-charging.md)（回充）、[ADR-0009](ADR-0009-duck-link-transport-and-command-bridge.md)（指令橋接與 safety）、[ADR-0015](ADR-0015-gesture-library.md)（動作庫）、[`robot/navigation/`](../../robot/navigation/README.md)、[`sim/`](../../sim/README.md)
 
 ## 1. 背景
 
@@ -53,7 +53,7 @@ ADR-0002 §5.4 把「ROS 2 或自寫最小版」留到 spike 之後決定；ADR-
 | 頭部依上游範圍夾限 | 走路時 head_yaw ≥ 0.8 或 ≤ −0.5、head_pitch 大角度、neck_pitch ≥ 0.3 會讓步態停下；neck_pitch ≥ 0.9、head_yaw ≤ −1.0 會跌倒（站著也會） | 走路時頭部範圍要比站著時小很多；實機驗證前先用保守值（走路時 head_yaw ±0.3、其餘 0） |
 | `walk` 的 `duration_s` 上限 3 s | 起步到 90% 速度要 1.5～1.9 s | 3 s 的 `walk` 大約只有一半時間在穩態，Nous 端估距離時要知道 |
 
-### 3.2 對 ADR-0011（動作庫）
+### 3.2 對 ADR-0015（動作庫）
 
 具名動作若在走路時做頭部動作，要先過 §3.1 的頭部限制；站著時 neck_pitch 大角度同樣要避開。
 

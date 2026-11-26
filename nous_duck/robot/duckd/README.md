@@ -40,7 +40,7 @@ duckd 不做語音、視覺、決策（那是 Nous 的事，[ADR-0001](../../doc
 | `robot/nous_link/` | `duckd/protocol.py`、`duckd/core.py`、`duckd/link.py` |
 | `robot/safety/` | `duckd/arbiter.py` |
 | `robot/config/` | `duckd/limits.py`（上限）；偏移仍讀上游的 `~/duck_config.json` |
-| `robot/behaviors/library/`（ADR-0011） | `duckd/library/` |
+| `robot/behaviors/library/`（ADR-0015） | `duckd/library/` |
 
 ## 在 Mac 上用模擬身體跑（不碰硬體）
 
@@ -118,7 +118,7 @@ ssh duck-pi4 'sudo systemctl stop duckd'
 | `stop` | 永遠接受（沒有租約、鎖定中也接受） |
 | 緊急停止 | 鎖住，拒絕所有動作。來源：本機 `duckd-ctl estop`、`SIGUSR1`、後端自動（過熱、低電壓）。**duck-link 沒有解除的指令**，只能在 Pi 上 `duckd-ctl clear-estop`；解除後要 `release` 再 `engage` 才會再出力 |
 | 過熱、低電壓、讀取失敗 | 頭部舵機 ≥ 55 °C、電壓 < 6.6 V、匯流排連續讀取失敗：停下並拒絕新動作（`overheat`／`low_battery`／`hardware_fault`）。≥ 65 °C 或 < 6.0 V 由舵機控制台的核心自動緊急停止（只關頭部扭力） |
-| 動作庫 | 定義檔超出範圍、插值後超過角速度上限、沒有回到中立：**整個動作拒絕載入**，不偷偷夾限（ADR-0011 §2.4）。只有實機驗證過、硬體設定相符的動作才列給 Nous |
+| 動作庫 | 定義檔超出範圍、插值後超過角速度上限、沒有回到中立：**整個動作拒絕載入**，不偷偷夾限（ADR-0015 §2.4）。只有實機驗證過、硬體設定相符的動作才列給 Nous |
 | 協定以外的操作 | 接手／釋放硬體、扭力、解除緊急停止都只有本機入口；`tests/test_core.py` 檢查指令處理的程式裡沒有這些呼叫 |
 
 ## duck-link 各 action 的現況
@@ -140,7 +140,7 @@ ssh duck-pi4 'sudo systemctl stop duckd'
 - **實機走路**：`gait_host.py` 只做到「不改上游、載入鎖定 commit 的腳本、把手把換成仲裁器」的載入測試（假硬體）。主程式還沒有把 `walk` 接過去，duckd 與步態 host 之間的本機通道（ADR-0009 §2.3 的 UNIX datagram）也還沒做。頭部直控與步態 host 不能同時用匯流排，切換流程還沒設計。
 - GC9A01 的 SPI 驅動（等螢幕到貨）。眼睛渲染在 Pi 4 上兩眼一幀約 124 ms（見驗證紀錄），上實體螢幕前要先加速。
 - 天線、音效 cue、動作定義檔的 `vel`／`antennas`／`cues` 軌。
-- 頭部角速度、角加速度上限的模擬量測（ADR-0011 §2.3 要求；目前直接用 30°/s 的保守值）。
+- 頭部角速度、角加速度上限的模擬量測（ADR-0015 §2.3 要求；目前直接用 30°/s 的保守值）。
 - 跌倒偵測、手把接管的規則寫在仲裁器裡並有單元測試，但主程式沒有 IMU 與手把輸入可餵（BNO055 還沒校準）。
 - `state.link.rtt_ms` 一直是 `null`：往返時間由 Nous 端用心跳回聲量，鴨子端量不到。
 - 協定上的缺口寫在 [`protocol/proposals/a-duckd-gaps.md`](../../protocol/proposals/a-duckd-gaps.md)。

@@ -103,6 +103,7 @@ export interface PiState {
 export interface ConsoleState {
   ok: boolean;
   version: string;
+  auth: boolean;
   mock: boolean;
   connected: boolean;
   estop: string | null;

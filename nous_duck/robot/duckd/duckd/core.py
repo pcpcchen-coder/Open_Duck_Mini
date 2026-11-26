@@ -355,7 +355,7 @@ class Duckd:
         if gate:
             return gate
         if self.player.active:
-            # ADR-0011 §2.4：一次只做一個。協定的 reason 還沒有 busy，先用 invalid＋detail（見 protocol/proposals）
+            # ADR-0015 §2.4：一次只做一個。協定的 reason 還沒有 busy，先用 invalid＋detail（見 protocol/proposals）
             return Decision(False, "invalid", f"busy: gesture {self.player.gesture.id} in progress")
         self.player.start(g, rid, now)
         self._end_tracking()

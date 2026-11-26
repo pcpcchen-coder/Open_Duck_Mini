@@ -5,7 +5,7 @@
 
 ## 1. `reason` 加 `busy`
 
-- **現況**：動作（gesture）進行中又收到另一個動作，ADR-0011 §2.4 要回「忙」。`reason` 列舉裡只有 `busy_mission`，語意不對。
+- **現況**：動作（gesture）進行中又收到另一個動作，ADR-0015 §2.4 要回「忙」。`reason` 列舉裡只有 `busy_mission`，語意不對。
 - **目前繞法**：`status: rejected`、`reason: invalid`、`detail` 以 `busy: ` 開頭（例如 `busy: gesture shake in progress`）。
 - **建議**：`reason` 加 `busy`。Nous 端可以據此決定「等一下再試」而不是當成參數錯誤。
 
@@ -17,13 +17,13 @@
 
 ## 3. 動作被中斷的事件
 
-- **現況**：ADR-0011 §2.5 草案有 `gesture_interrupted`，v0 的事件列舉只有 `gesture_done`。
+- **現況**：ADR-0015 §2.5 草案有 `gesture_interrupted`，v0 的事件列舉只有 `gesture_done`。
 - **目前繞法**：一律送 `gesture_done`；`data.completed` 是 `true`／`false`，被中斷時 `reason` 是 `stop`、`interrupted`（被 `look` 或釋放蓋過）、`link_lost`、`estop` 之一。`data.clamped` 表示播放時有沒有被仲裁器夾限。
 - **建議**：維持一個事件也可以，但請把 `data.completed`、`data.clamped` 與 `reason` 的值寫進 schema 說明；或另加 `gesture_interrupted`。
 
 ## 4. `hello` 的動作清單沒有說明文字
 
-- **現況**：ADR-0011 §2.5 說鴨子回報動作的 `id`、`description`、`duration_s`；v0 的 `hello.gestures` 只是名稱陣列。
+- **現況**：ADR-0015 §2.5 說鴨子回報動作的 `id`、`description`、`duration_s`；v0 的 `hello.gestures` 只是名稱陣列。
 - **目前繞法**：只送名稱。`gesture` 的 `ack.applied` 會帶 `duration_s`。
 - **建議**：之後加一個可選的 `gesture_info`（名稱 → `{duration_s, description}`），讓 Nous 的工具說明可以動態產生。
 

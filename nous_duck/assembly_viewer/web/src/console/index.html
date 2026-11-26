@@ -11,7 +11,7 @@
 <header class="topbar console-top">
   <div class="brand">
     <h1>Nous Duck 舵機控制台</h1>
-    <p><span id="conn-chip" class="chip">連線中…</span> <span id="mode-chip" class="chip" hidden>模擬匯流排</span></p>
+    <p><span id="conn-chip" class="chip">連線中…</span> <span id="mode-chip" class="chip" hidden>模擬匯流排</span> <span id="auth-chip" class="chip" hidden title="伺服器沒有開 token 檢查：同一個網路裡的任何人都能操作">不需 token（區網內都能操作）</span></p>
   </div>
   <div class="top-actions">
     <button type="button" id="btn-connect" class="btn">連線匯流排</button>
@@ -116,7 +116,7 @@
 <dialog id="token-dialog">
   <form method="dialog" id="token-form">
     <h2>輸入控制台 token</h2>
-    <p class="muted">token 在 Pi 的 <code>~/.config/nous-duck/console_token</code>；部署腳本會印出含 token 的網址。</p>
+    <p class="muted">伺服器開了 token 檢查（<code>--require-token</code>）。token 在 Pi 的 <code>~/.config/nous-duck/console_token</code>。</p>
     <input id="token-input" type="password" autocomplete="off" aria-label="token">
     <button type="submit" class="btn primary">確定</button>
   </form>

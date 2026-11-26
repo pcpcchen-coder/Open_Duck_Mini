@@ -2,10 +2,11 @@
 
 規劃見 `nous_duck/docs/stereo_vision_plan.md` §3.3 P2、§7 V3。
 
-在**感知板（Pi 4）**執行：輸入人臉偵測結果（只有位置與大小，沒有影像、沒有身分），輸出上游
-runtime 7 維指令裡的頭部 4 維（neck_pitch、head_pitch、head_yaw、head_roll）與轉身角速度
-（ang_vel）。輸出只是**請求**：身體板的 safety 仍要再夾限，走路中、隱私設定不允許、或沒有
-對話時，由上層不呼叫或停用這個控制器。
+在**感知服務**裡執行（ADR-0008：目前和步態＋安全服務在同一片 Pi 4，但分成不同服務）：輸入
+人臉偵測結果（只有位置與大小，沒有影像、沒有身分），輸出上游 runtime 7 維指令裡的頭部 4 維
+（neck_pitch、head_pitch、head_yaw、head_roll）與轉身角速度（ang_vel）。輸出只是**請求**：
+步態＋安全服務的 safety 仍要再夾限；走路中、隱私設定不允許、或沒有對話時，由上層不呼叫或停用
+這個控制器。
 
 座標與正負號（用上游 `robot.xml` 在 MuJoCo 中確認，見 `docs/validation/look-at-sim-2026-11-16.md`）：
 

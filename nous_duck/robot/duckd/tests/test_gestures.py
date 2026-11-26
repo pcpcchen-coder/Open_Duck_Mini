@@ -1,4 +1,4 @@
-"""動作庫（ADR-0011）：載入時檢查、播放、完成事件。"""
+"""動作庫（ADR-0015）：載入時檢查、播放、完成事件。"""
 import copy
 import json
 import math
@@ -19,7 +19,7 @@ def test_library_loads_the_four_initial_gestures_within_limits():
     for g in lib.gestures.values():
         assert g.peak_speed() <= Limits().head_max_speed * 1.001  # 30°/s
         assert g.duration_s <= 10
-        assert "neck_pitch" not in g.head  # ADR-0011 §2.3：neck_pitch 固定 0
+        assert "neck_pitch" not in g.head  # ADR-0015 §2.3：neck_pitch 固定 0
         for keys in g.head.values():
             assert max(abs(v) for _, v in keys) <= math.radians(15)  # 夜間規則：±15° 內
             assert keys[0][1] == 0 and keys[-1][1] == 0
