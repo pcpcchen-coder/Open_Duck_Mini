@@ -15,6 +15,7 @@
 | [ADR-0009](ADR-0009-duck-link-transport-and-command-bridge.md) | duck-link 傳輸（SSH 通道＋WebSocket）與鴨子端指令橋接（緊急停止、暫停時讀電壓） | 部分採用 | 2026-11-13 |
 | [ADR-0010](ADR-0010-duck-voice.md) | 鴨子的語音（Nous 的聲音加變聲、本機音效、回音消除、喇叭） | 部分採用 | 2026-11-15（2026-11-26 依 ADR-0008 與標準版 XVF3800 修訂） |
 | [ADR-0011](ADR-0011-duck-memory.md) | 鴨子的記憶系統（沿用 Nous 記憶層，不另做 Hermes 式記憶；鴨子只補身體、空間、任務記憶；可以在鴨子旁邊說「記住」） | 採用 | 2026-11-26 |
+| [ADR-0012](ADR-0012-low-battery-return-interaction.md) | 低電量時的回家互動與「直接回家」的條件（L0～L4 電量等級；L1、L2 由 Nous 商量，L3 起鴨子本機直接回家） | 草案 | 2026-11-26 |
 | [ADR-0013](ADR-0013-camera-always-on-and-home-monitoring.md) | 鏡頭常開與家庭監控（C：只回報文字事件）、夜間紅外線、渲染程式故障保護 | 部分採用 | 2026-11-18 |
 | [ADR-0018](ADR-0018-docked-interaction.md) | 在充電座上的動作：充電時照樣對話與互動（腿保持站姿、坐在座上頸部不能後仰、天線只往前擺、眼睛照眼睛設計、觸點監控、邊充邊用）；開發時編為 ADR-0009，因 v2 已有而改號 | 草案 | 2026-11-26 |
 

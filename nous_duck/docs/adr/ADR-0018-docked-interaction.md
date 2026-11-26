@@ -3,7 +3,7 @@
 - 狀態：**草案（Proposed）**（2026-11-26 使用者要求「鴨子在家充電時，還是可以對話與互動（頭的動作與眼睛）」；§2 的做法與 §8 的待決事項還沒確認）
 - 日期：2026-11-26
 - 編號：開發時先編為 ADR-0009，但 v2 已有 [ADR-0009](ADR-0009-duck-link-transport-and-command-bridge.md)（duck-link 傳輸），其他開發分支也已用到 ADR-0017，所以改為 ADR-0018。
-- 相關：[ADR-0004](ADR-0004-docking-and-charging.md)（充電座、背後觸點；本 ADR 補充它 §3 的「確認接觸後」）、[ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md)（鴨子是 Nous 終端）、[ADR-0006](ADR-0006-privacy-settings.md)（眼睛螢幕的鏡頭提示、夜間與完全隱私模式）、[ADR-0013](ADR-0013-camera-always-on-and-home-monitoring.md)（鏡頭常開、在充電座上當家庭監控）、[眼睛設計](../eye_expressions.md)（情境 22～24、29）、[ADR-0009](ADR-0009-duck-link-transport-and-command-bridge.md)（duck-link 傳輸與指令橋接）、[ADR-0001](ADR-0001-duck-role-in-nous.md)（安全在鴨子本機、`app.duck.*` 工具）、[ADR-0008](ADR-0008-single-board-pi4.md)（單板 Pi 4、5 V 電源）、[雙目視覺規劃](../stereo_vision_plan.md)（V3 說話時看著對方）
+- 相關：[ADR-0004](ADR-0004-docking-and-charging.md)（充電座、背後觸點；本 ADR 補充它 §3 的「確認接觸後」）、[ADR-0003](ADR-0003-mobile-terminal-wake-and-find.md)（鴨子是 Nous 終端）、[ADR-0006](ADR-0006-privacy-settings.md)（眼睛螢幕的鏡頭提示、夜間與完全隱私模式）、[ADR-0013](ADR-0013-camera-always-on-and-home-monitoring.md)（鏡頭常開、在充電座上當家庭監控）、[眼睛設計](../eye_expressions.md)（情境 22～24、29）、[ADR-0009](ADR-0009-duck-link-transport-and-command-bridge.md)（duck-link 傳輸與指令橋接）、[ADR-0012](ADR-0012-low-battery-return-interaction.md)（低電量回家；`docked` 後重設電量等級、被抱回座上也以 `docked` 確認）、[ADR-0001](ADR-0001-duck-role-in-nous.md)（安全在鴨子本機、`app.duck.*` 工具）、[ADR-0008](ADR-0008-single-board-pi4.md)（單板 Pi 4、5 V 電源）、[雙目視覺規劃](../stereo_vision_plan.md)（V3 說話時看著對方）
 - 驗證：[坐在充電座上的頭頸動作範圍](../validation/docked-motion-2026-11-26.md)（幾何與靜力層級，**未實機**）
 
 ## 1. 背景
@@ -126,7 +126,7 @@ ADR-0004 §3 只寫到「確認接觸後：停止步態、保持站立」「在�
 
 ### 2.8 電：邊充邊用
 
-- 坐在充電座上時，Pi 4、舵機保持、喇叭、麥克風、常開的鏡頭與家庭監控偵測、兩片眼睛螢幕、夜間的紅外線補光都在用電。充電輸入是 5 V／3 A（15 W）USB-C，經鴨子上的充電板升壓到 2S，**淨充電功率＝輸入×充電板效率−鴨子的消耗**，可能很小；如果消耗比輸入大，「充電中」也會越來越沒電。
+- 坐在充電座上時，Pi 4、舵機保持、喇叭、麥克風、常開的鏡頭與家庭監控偵測、兩片眼睛螢幕、夜間的紅外線補光都在用電。充電輸入是 5 V／3 A（15 W）USB-C，經鴨子上的充電板升壓到 2S，**淨充電功率＝輸入×充電板效率−鴨子的消耗**，可能很小。[ADR-0012](ADR-0012-low-battery-return-interaction.md) 的名目估計是站著約 10 W（含鏡頭常開與偵測）；坐在座上如果也接近這個數字，15 W 扣掉充電板效率後只剩幾瓦，甚至是負的（都是估計，要量）；如果消耗比輸入大，「充電中」也會越來越沒電。
 - 原則：`docked_idle` 要把消耗壓低（感知服務降頻、螢幕調暗；鏡頭照 ADR-0013 常開），對話中允許多用一點，但**淨充電要是正的**；量到負的就回報，不假裝在充電。
 - 邊充邊放電時，一般的 CC／CV 充電板可能一直判斷不到「充飽」（負載電流讓充電電流降不到截止值），電池長時間停在 4.2 V／顆，會加速老化。可能的做法（§8 待決）：(a) 加電源路徑（load sharing）電路，坐在座上時鴨子直接用座的電，電池另外充；(b) 充飽後鴨子關掉自己的充電輸入，用到約 90% 再打開（要有遲滯）。
 - 「充電中」「充飽」都以量到的電壓與電流為準（ADR-0004 §3、AIOS `ToolResult` 的 `confirmed` 語意）。
