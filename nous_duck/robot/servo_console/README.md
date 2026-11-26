@@ -34,7 +34,7 @@
 | 瀏覽器斷線 | 超過 2 秒沒有任何請求：停止移動、**維持出力**（避免懸空時摔下來） |
 | 釋放／服務重啟 | 只釋放序列埠、I2C、GPIO，**不改扭力狀態** |
 | 硬體衝突 | 連線前檢查 `/dev/ttyACM0`、`/dev/i2c-1`、`/dev/gpiochip*` 有沒有被其他程式開著（例如上游走路程式），有就拒絕 |
-| 存取 | API 需要 token（標頭 `X-Duck-Token`）；token 在 Pi 的 `~/.config/nous-duck/console_token`（600），網址用 `#t=<token>` 帶進頁面 |
+| 存取 | **預設不需要 token**（使用者在家裡區網使用，2026-11-25 決定）：同一個網路裡任何人只要知道網址，都能讓舵機動、改偏移設定，頁面上方會標「不需 token」。要開：伺服器加 `--require-token`（部署時 `CONSOLE_REQUIRE_TOKEN=1`），API 就要標頭 `X-Duck-Token`；token 在 Pi 的 `~/.config/nous-duck/console_token`（600），網址用 `#t=<token>` 帶進頁面 |
 
 kp 寫的是 STS3215 的 P 係數暫存器（位址 21，在 EEPROM 區）。上游 `turn_on` 每次啟動也會寫；控制台只在按下時寫，不會在迴圈裡反覆寫。
 
@@ -46,11 +46,15 @@ kp 寫的是 STS3215 的 P 係數暫存器（位址 21，在 EEPROM 區）。上
 bash nous_duck/robot/deploy/pi4/deploy_console.sh
 ```
 
-腳本會建置頁面、複製到 Pi 的 `~/duck/console/`、安裝並啟動 systemd 服務 `duck-console`（開機自動啟動），最後印出含 token 的網址 `http://duck-pi4.local:8080/#t=…`。之後要再看網址：
+腳本會建置頁面、複製到 Pi 的 `~/duck/console/`、安裝並啟動 systemd 服務 `duck-console`（開機自動啟動），最後印出網址 `http://duck-pi4.local:8080/`。
+
+要開 token 檢查：
 
 ```bash
-ssh duck-pi4 'cat ~/.config/nous-duck/console_token'
+CONSOLE_REQUIRE_TOKEN=1 bash nous_duck/robot/deploy/pi4/deploy_console.sh
 ```
+
+這時腳本印出的網址會帶 `#t=<token>`；之後要再看 token：`ssh duck-pi4 'cat ~/.config/nous-duck/console_token'`。
 
 服務啟動時**不碰硬體**，要在頁面按「連線匯流排」。要跑上游的腳本（`check_motors.py`、走路等）前，先按「釋放硬體」，或：
 
@@ -85,10 +89,10 @@ cd nous_duck/assembly_viewer/web && npm ci && npm run build:console
 ```
 
 ```bash
-cd nous_duck/robot/servo_console && python3 -m servo_console --mock --bind 127.0.0.1 --port 8765 --html ../../assembly_viewer/dist/duck_console.html --joints ../../assembly_viewer/dist/console_joints.json --token-file /tmp/duck_console_token --config /tmp/duck_config.json --poses /tmp/duck_poses.json
+cd nous_duck/robot/servo_console && python3 -m servo_console --mock --bind 127.0.0.1 --port 8765 --html ../../assembly_viewer/dist/duck_console.html --joints ../../assembly_viewer/dist/console_joints.json --config /tmp/duck_config.json --poses /tmp/duck_poses.json
 ```
 
-開 `http://127.0.0.1:8765/#t=<token 檔的內容>`。頁面會標「模擬匯流排」，IMU 也是模擬資料。
+開 `http://127.0.0.1:8765/`。頁面會標「模擬匯流排」，IMU 也是模擬資料。
 
 ## API
 

@@ -42,7 +42,7 @@ python -m duck_eyes.preview --out <資料夾> --bench
 
 ### 預覽圖
 
-由 `python -m duck_eyes.preview` 產生（中文標籤用系統的文泉驛正黑字型；狀態環一律畫「鏡頭開著」，因為鏡頭預設常開，ADR-0007）：
+由 `python -m duck_eyes.preview` 產生（中文標籤用系統的文泉驛正黑字型；狀態環一律畫「鏡頭開著」，因為鏡頭預設常開，ADR-0013）：
 
 - 表情總覽：![](media/eyes-expressions-2026-11-18.png)
 - 狀態環：![](media/eyes-status-ring-2026-11-18.png)

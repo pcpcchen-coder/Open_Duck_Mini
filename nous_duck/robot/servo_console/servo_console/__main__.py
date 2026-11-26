@@ -5,7 +5,7 @@
 
 在電腦上用模擬匯流排（不碰硬體）：
     python -m servo_console --mock --html ../../assembly_viewer/dist/duck_console.html \
-        --joints ../../assembly_viewer/dist/console_joints.json --token-file /tmp/duck_token
+        --joints ../../assembly_viewer/dist/console_joints.json
 """
 from __future__ import annotations
 
@@ -49,6 +49,7 @@ def main() -> None:
     p.add_argument("--serial", default="/dev/ttyACM0")
     p.add_argument("--config", type=Path, default=HOME / "duck_config.json", help="上游 duck_config.json（讀寫偏移）")
     p.add_argument("--poses", type=Path, default=HOME / "duck" / "console_poses.json")
+    p.add_argument("--require-token", action="store_true", help="API 要 token（預設不用：區網內任何人都能操作）")
     p.add_argument("--token-file", type=Path, default=HOME / ".config" / "nous-duck" / "console_token")
     p.add_argument("--assets", type=Path, default=HOME / "duck" / "Open_Duck_Mini_Runtime" / "mini_bdx_runtime" / "assets")
     p.add_argument("--mock", action="store_true", help="模擬匯流排與感測器（不碰硬體）")
@@ -72,14 +73,15 @@ def main() -> None:
         controller,
         Sensors(mock=args.mock),
         SoundPlayer(args.assets, mock=args.mock),
-        load_token(args.token_file),
+        load_token(args.token_file) if args.require_token else None,
         read_html(args.html),
     )
     if args.connect:
         app.command("connect", {})
     app.start()
     httpd = serve(app, args.bind, args.port)
-    logging.info("舵機控制台 http://%s:%d/ （%s；token 在 %s）", args.bind, args.port, "模擬匯流排" if args.mock else args.serial, args.token_file)
+    auth = f"token 在 {args.token_file}" if args.require_token else "不需要 token"
+    logging.info("舵機控制台 http://%s:%d/ （%s；%s）", args.bind, args.port, "模擬匯流排" if args.mock else args.serial, auth)
 
     def shutdown(*_):
         app.stop()

@@ -2,13 +2,13 @@
 
 - 狀態：**草案（Proposed）**；已有程式與單元測試（`robot/duckd/`），實機驗證層級見 [驗證紀錄](../validation/duckd-2026-11-25.md)
 - 日期：2026-11-25
-- 相關：[ADR-0001](ADR-0001-duck-role-in-nous.md)、[ADR-0008](ADR-0008-single-board-pi4.md)、[ADR-0009](ADR-0009-duck-link-transport-and-command-bridge.md)（傳輸與指令橋接）、[ADR-0011](ADR-0011-gesture-library.md)（動作庫）、[`robot/duckd/`](../../robot/duckd/README.md)、[夥伴功能總體設計](../companion/README.md)
+- 相關：[ADR-0001](ADR-0001-duck-role-in-nous.md)、[ADR-0008](ADR-0008-single-board-pi4.md)、[ADR-0009](ADR-0009-duck-link-transport-and-command-bridge.md)（傳輸與指令橋接）、[ADR-0015](ADR-0015-gesture-library.md)（動作庫）、[`robot/duckd/`](../../robot/duckd/README.md)、[夥伴功能總體設計](../companion/README.md)
 
 ## 1. 背景
 
-ADR-0009 的鴨子端設計是「三個程序、一個仲裁器」，仲裁器住在上游步態主迴圈的程序裡；ADR-0011 的動作庫也假設頭部指令經步態策略送出（暫停時頭不會動）。
+ADR-0009 的鴨子端設計是「三個程序、一個仲裁器」，仲裁器住在上游步態主迴圈的程序裡；ADR-0015 的動作庫也假設頭部指令經步態策略送出（暫停時頭不會動）。
 
-2026-11-25 的實際狀況：足底開關沒接、IMU 沒校準，**上游步態還不能在實機跑**；但頭頸 4 顆舵機可以動，而且使用者要先有「說話時做動作」。所以需要一條不依賴步態主迴圈的路，讓 duck-link 的 `look`、`gesture`、`presence` 現在就能讓頭動。這是 ADR-0011 §5 第 8 點留下的待決事項。
+2026-11-25 的實際狀況：足底開關沒接、IMU 沒校準，**上游步態還不能在實機跑**；但頭頸 4 顆舵機可以動，而且使用者要先有「說話時做動作」。所以需要一條不依賴步態主迴圈的路，讓 duck-link 的 `look`、`gesture`、`presence` 現在就能讓頭動。這是 ADR-0015 §5 第 8 點留下的待決事項。
 
 ## 2. 決定
 
@@ -47,7 +47,7 @@ schema 寫「動作指令在 `ttl_ms` 到期且沒有續期時停止」，ADR-00
 
 ### 2.5 誰可以蓋過誰（頭部）
 
-釋放中 ＞ 動作（gesture）＞ 追蹤（track）＞ `presence` 的頭部編排。明確的 `look` 會中斷進行中的動作與追蹤，並暫停 `presence` 的頭部編排，直到 `presence` 的**狀態改變**（同一狀態的 `speech_level` 更新不算）。動作進行中再收到另一個動作：拒絕（ADR-0011 §2.4 第 4 點）。
+釋放中 ＞ 動作（gesture）＞ 追蹤（track）＞ `presence` 的頭部編排。明確的 `look` 會中斷進行中的動作與追蹤，並暫停 `presence` 的頭部編排，直到 `presence` 的**狀態改變**（同一狀態的 `speech_level` 更新不算）。動作進行中再收到另一個動作：拒絕（ADR-0015 §2.4 第 4 點）。
 
 ### 2.6 本機控制介面
 
@@ -55,7 +55,7 @@ schema 寫「動作指令在 `ttl_ms` 到期且沒有續期時停止」，ADR-00
 
 ### 2.7 待機時不自己做小動作
 
-總體設計 §4 的表寫 `idle` 時「偶爾小幅看別處」。這是 ADR-0011 §5 第 10 點的待決事項，第一版**不做**：`idle` 只回正。要不要做、多常做，由使用者決定。
+總體設計 §4 的表寫 `idle` 時「偶爾小幅看別處」。這是 ADR-0015 §5 第 10 點的待決事項，第一版**不做**：`idle` 只回正。要不要做、多常做，由使用者決定。
 
 ## 3. 理由
 
@@ -65,7 +65,7 @@ schema 寫「動作指令在 `ttl_ms` 到期且沒有續期時停止」，ADR-00
 
 ## 4. 後果
 
-- ADR-0011 的動作庫在頭部直控模式下也能播；定義檔的 `allowed_modes: ["standing"]` 目前被當成「頭部可動」。動作的實機驗證要註明是在哪個模式（`hardware_profile`，目前是 `stock_head_direct_hold`）做的；**站著（步態策略在跑）時動頭會不會影響平衡，這個模式沒有驗證到**。
+- ADR-0015 的動作庫在頭部直控模式下也能播；定義檔的 `allowed_modes: ["standing"]` 目前被當成「頭部可動」。動作的實機驗證要註明是在哪個模式（`hardware_profile`，目前是 `stock_head_direct_hold`）做的；**站著（步態策略在跑）時動頭會不會影響平衡，這個模式沒有驗證到**。
 - 協定的缺口另寫提案（[`protocol/proposals/a-duckd-gaps.md`](../../protocol/proposals/a-duckd-gaps.md)）：`busy` 原因代碼、`mode` 沒有「未接手」、`gesture_interrupted`。
 - `robot/nous_link/`、`robot/safety/`、`robot/config/` 的內容實際放在 `robot/duckd/`（對應表在 duckd 的 README）。
 
