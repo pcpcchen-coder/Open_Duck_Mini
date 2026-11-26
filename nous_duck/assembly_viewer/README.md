@@ -1,6 +1,6 @@
 # ① 3D 組裝檢視器（assembly_viewer）
 
-狀態：**pipeline 已完成**（2026-11-13）；BOM、組裝步驟、前端規劃中。
+狀態：**第一版可用**（2026-11-15）：pipeline、組裝步驟、前端已完成，輸出單一 HTML；BOM 規劃中。驗證層級：單元測試、無頭瀏覽器；沒有實機驗證（[驗證紀錄](../docs/validation/viewer-web-2026-11-15.md)）。
 
 ## 職責
 
@@ -17,43 +17,45 @@
 mini_bdx/robots/open_duck_mini_v2/  ─►  解析運動樹、算世界座標、     ─►  載入場景 JSON 與網格
   robot.xml、*.stl                       對應舵機 ID、量化壓縮網格         組裝／爆炸／透視模式
 print/*.stl（CAD 沒有的件）          ─►  scene.json + meshes.bin           BOM 清單、步驟面板
-data/（bom.yaml、steps.yaml、名稱）  ─►  驗證 BOM 與步驟引用            ─►  dist/duck_viewer.html（單一檔）
+data/（cad_parts.yaml、steps.yaml）  ─►  驗證步驟引用（steps.json）      ─►  dist/duck_viewer.html（單一檔）
 ```
 
 | 子目錄 | 內容 | 狀態 |
 |---|---|---|
-| [`pipeline/`](pipeline/README.md) | Python：讀 `robot.xml` 與 STL，產生場景 JSON 與壓縮網格 | 已完成（[驗證紀錄](../docs/validation/viewer-pipeline-2026-11-13.md)） |
-| [`data/`](data/README.md) | `cad_parts.yaml`（已完成）；`bom.yaml`、`steps.yaml`（規劃中） | 部分完成 |
-| [`web/`](web/README.md) | TypeScript＋three.js 前端，打包成單一 HTML | 規劃中 |
-| [`tests/`](tests/README.md) | pipeline 單元測試（已完成）、Playwright 截圖驗證（規劃中） | 部分完成 |
+| [`pipeline/`](pipeline/README.md) | Python：讀 `robot.xml` 與 STL，產生場景 JSON、壓縮網格與展開後的組裝步驟 | 已完成（[驗證紀錄](../docs/validation/viewer-pipeline-2026-11-13.md)） |
+| [`data/`](data/README.md) | `cad_parts.yaml`、`steps.yaml`（已完成）；`bom.yaml`（規劃中） | 部分完成 |
+| [`web/`](web/README.md) | TypeScript＋three.js 前端，打包成單一 HTML | 第一版已完成（[驗證紀錄](../docs/validation/viewer-web-2026-11-15.md)） |
+| [`tests/`](tests/README.md) | pipeline 與步驟資料單元測試、前端輸出檢查、Playwright 無頭瀏覽器檢查 | 已完成 |
 | `dist/` | 建置輸出（gitignore，不進版控） | — |
+| [`release/`](release/README.md) | 進版控的成品 `duck_viewer.html`，直接下載就能用；CI 檢查它和原始碼一致 | 已提供 |
 
 ## 輸入
 
 - 上游 `mini_bdx/robots/open_duck_mini_v2/robot.xml` 與同目錄 STL（唯讀）。
 - 上游 `print/*.stl`：CAD 沒有擺放位置的 7 件（眼燈、喇叭相關）。
-- 上游 `docs/` 的接線圖與組裝說明（`assembly_guide.md`、`open_duck_mini_v2_wiring_diagram.png`）。
-- `data/` 的 BOM 與步驟定義。
+- 上游 `docs/assembly_guide.md`（組裝順序，整理進 `data/steps.yaml`；頁面只放連結，不內嵌照片）。
+- `data/` 的零件目錄與步驟定義。
 
 ## 輸出
 
-- `dist/duck_viewer.html`：單一檔、所有資源（JS、網格、圖片）內嵌、不連網。
+- `dist/duck_viewer.html`：單一檔、所有資源（程式、樣式、網格、資料）內嵌、不連網，約 4.3 MB。
+- 進版控的同一份成品：[`release/duck_viewer.html`](release/duck_viewer.html)（下載就能用，不用自己建置）。
 
 ## 依賴
 
 - Python 3.10+：numpy、PyYAML，鎖定在 [`pipeline/requirements.txt`](pipeline/requirements.txt)。舵機對應改用幾何條件（舵盤在轉軸上），不需要 scipy 的匈牙利演算法；測試另外用 MuJoCo 交叉驗證，見 [`pipeline/requirements-dev.txt`](pipeline/requirements-dev.txt)。
-- Node.js（預計）：TypeScript、three.js（鎖版本）、打包工具（待選，需能輸出單一 HTML）。
+- Node.js 22：`three@0.186.1`；建置用 `esbuild@0.28.2`、`typescript@6.0.3`（鎖在 [`web/package-lock.json`](web/package-lock.json)）。
 - 測試：pytest、Playwright（雲端容器內建 Chromium，WebGL 2.0 經 SwiftShader）。
 
 ## 設計參考與誠實標示
 
-- ChatGPT 做過一版（作法見 [`../docs/handoff/handoff_summary.md` §6](../docs/handoff/handoff_summary.md#6-第一個軟體交付離線-3d-組裝檢視器)，原始程式碼在對話紀錄裡），**只當參考**，本 repo 會重新實作並驗證。
+- ChatGPT 做過一版（作法見 [`../docs/handoff/handoff_summary.md` §6](../docs/handoff/handoff_summary.md#6-第一個軟體交付離線-3d-組裝檢視器)），**只當參考**，本 repo 重新實作。2026-11-15 逐件比對：它的 138 個 CAD 零件擺放與舵機 ID 和本 repo 完全一致（含右腿 180°），但步驟文字沒有提醒右腿 180°（[比對紀錄](../docs/validation/viewer-web-2026-11-15.md#1-chatgpt-版的零件擺放核對)）。
 - CAD 沒有的零件（足底開關、喇叭、LED、5V 穩壓器、線材、螺絲）與 CAD 沒有擺放位置的 7 件列印件，在畫面上必須標「示意」，並說明位置僅供參考。
 - 舵機 ID 對應必須和上游 `docs/configure_motors.md` 一致（右腿 10–14、左腿 20–24、頸頭 30–33），並有測試鎖住。
 
 ## 建議的實作批次
 
 1. ✅ **pipeline**（2026-11-13）：運動樹解析、世界座標、14 組舵機對應、網格量化、爆炸向量；45 項測試，含 MuJoCo 交叉驗證。
-2. **data**：BOM 與 14 步組裝步驟（以上游 BOM 與組裝說明為準）。
-3. **web**：three.js 三種模式、BOM 連動、步驟面板、單一 HTML 打包。
-4. **tests**：Playwright 截圖驗證與檔案大小檢查。
+2. ✅ **組裝步驟＋前端＋測試**（2026-11-15）：`steps.yaml` 15 步（每個零件剛好裝一次，由 pipeline 檢查）；three.js 組裝／爆炸／透視、步驟面板、零件清單與搜尋、單一 HTML 打包；pipeline 測試增至 63 項，加上輸出檢查與 Playwright 斷網檢查。
+3. **BOM**：`bom.yaml`（以上游 BOM 為準），CAD 沒有的零件（足底開關、螺絲、線材等）加示意形狀並標「示意」，與零件清單連動。
+4. **照片與英文介面**：上游組裝照片（需要能取得 GitHub 附件的環境）、英文切換。

@@ -62,7 +62,7 @@
 - **BOM 爆炸檢視**：每個元件都能看，包含所有電子元件與馬達。
 - **逐步組裝指引**。
 
-ChatGPT 做過一版（`Open_Duck_Mini_v2_Assembly_Viewer.html`），但**檔案拿不到**（只存在 ChatGPT 的沙箱 `/mnt/data`）。對話紀錄裡保留了它的產生程式碼，已抽成 10 個檔案放在 [`chatgpt_viewer_src/`](chatgpt_viewer_src/README.md)。這些程式可以當設計參考，但不能直接當成已驗證的實作：
+ChatGPT 做過一版（`Open_Duck_Mini_v2_Assembly_Viewer.html`）。當初以為檔案拿不到（只存在 ChatGPT 的沙箱 `/mnt/data`）；**2026-11-14 使用者上傳了成品，已原封不動存放在 [`chatgpt_viewer_html/`](chatgpt_viewer_html/README.md) 備用**（只確認可離線開啟，內容未驗證）。對話紀錄裡也保留了它的產生程式碼，已抽成 10 個檔案放在 [`chatgpt_viewer_src/`](chatgpt_viewer_src/README.md)。這些程式可以當設計參考，但不能直接當成已驗證的實作：
 
 | 面向 | ChatGPT 版的作法（參考） |
 |---|---|
@@ -74,7 +74,7 @@ ChatGPT 做過一版（`Open_Duck_Mini_v2_Assembly_Viewer.html`），但**檔案
 | BOM | 75 類（51 件列印件、14 顆主舵機、2 顆天線舵機、Pi Zero 2 W、驅動板、IMU、電池、BMS、充電板、接頭與線束） |
 | 已知限制 | ChatGPT 自己說明：部分電子板、線束、緊固件是示意；它的測試瀏覽器沒能驗證本機 HTML 的 WebGL 畫面 |
 
-本 repo 的實作計畫見 [`../../assembly_viewer/README.md`](../../assembly_viewer/README.md)。
+本 repo 的實作見 [`../../assembly_viewer/README.md`](../../assembly_viewer/README.md)：2026-11-15 第一版可用（單一 HTML、15 步、斷網無頭瀏覽器檢查通過，BOM 規劃中）。同日逐件比對過 ChatGPT 版：零件擺放與舵機 ID 和本 repo 完全一致，右腿 180° 也畫對，但步驟文字沒有提醒這件事（[驗證紀錄](../validation/viewer-web-2026-11-15.md)）。
 
 ## 7. 環境調查結論（摘要）
 

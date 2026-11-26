@@ -2,6 +2,8 @@
 
 狀態：**草案**（2026-11-12；同日依 [R-001 行動夥伴需求](requirements/R-001-mobile-companion.md) 修訂，見 [§9](#9-2026-11-12-修訂行動夥伴)）。本文件描述目標架構；除了特別標明的上游既有程式，其餘都是**規劃中**，還沒有實作。決策理由見 [ADR-0001](adr/ADR-0001-duck-role-in-nous.md)。
 
+> **2026-11-22 更新**：鴨子改成 **Pi 4 單板**，不用 Pi Zero 2 W（[ADR-0008](adr/ADR-0008-single-board-pi4.md)）。下文的「Pi Zero 2 W」請讀成 Pi 4；「身體板」與「感知板」改讀成同一片 Pi 4 上的兩組服務（步態＋安全、感知＋導航＋音訊），用 systemd 隔離（ADR-0008 §2.4）。其餘分工不變。
+
 參考來源（唯讀查閱，2026-11-12）：
 
 - AIOS `main`：`prototype/ambient-shell/server/integrations/contracts.ts`、`prototype/ambient-shell/shared/integrations.ts`、`terminals/rpi4/README.md`、`docs/Current_Implementation_Status.md`、`docs/BILINGUAL.md`。
@@ -119,7 +121,7 @@ IMU 偵測跌倒 → safety 立即停止步態（本機，不等 Nous）
 
 ## 6. 傳輸（待決）
 
-2026-11-13：[ADR-0007](adr/ADR-0007-duck-link-transport-and-command-bridge.md)（草案）建議採方案 A，並定義鴨子端如何把 duck-link 接進上游 runtime。ADR-0007 採用前，本節維持待決。
+2026-11-13：[ADR-0009](adr/ADR-0009-duck-link-transport-and-command-bridge.md) 建議採方案 A，並定義鴨子端如何把 duck-link 接進上游 runtime。2026-11-26 使用者已決定 ADR-0009 的 runtime commit、緊急停止與電壓讀取方式；傳輸方案本身尚未採用，本節維持待決。
 
 候選方案與考量，決定前不實作：
 
@@ -149,11 +151,11 @@ AIOS 的 rpi4 終端文件明確要求核心只聽 `127.0.0.1`、不要為了連
 
 ## 8. 待決事項
 
-1. 傳輸方案（§6；建議見 ADR-0007，草案）。
+1. 傳輸方案（§6；建議見 ADR-0009）。
 2. 心跳、TTL、跌倒判定的門檻（需要模擬與實機數據）。
 3. 表情套件（喇叭、眼燈、投影）是否製作；決定後才定 `app.duck.express` 與 DuckTerminal 的輸出能力。
 4. ~~鴨子要不要接麥克風或鏡頭成為完整的 Nous 終端~~：已由 R-001 決定要接，見 §9 與 ADR-0003。
-5. 鎖定的 Open_Duck_Mini_Runtime commit，以及包裝指令來源的方式是否可行（需要實際讀 runtime 並在模擬中驗證）。ADR-0007 §2.4 已依 `376de65` 的原始碼提出作法，尚未在模擬中驗證。
+5. ~~鎖定的 Open_Duck_Mini_Runtime commit~~：鎖 `376de65`（ADR-0008 §2.2；2026-11-26 使用者確認）。包裝指令來源的方式：ADR-0009 §2.4 已依原始碼提出作法，尚未在模擬中驗證。
 
 ## 9. 2026-11-12 修訂：行動夥伴
 

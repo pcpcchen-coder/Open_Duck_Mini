@@ -6,21 +6,21 @@ Build a full-size (100%) [Open Duck Mini v2](../README.md) and connect it to [No
 
 This directory holds all of this fork's own development. Upstream files are never modified (see the root [`CLAUDE.md`](../CLAUDE.md), Traditional Chinese only).
 
-## Current status (2026-11-13)
+## Current status (2026-11-19)
 
 | Item | Status |
 |---|---|
 | Printing | All 51 original parts printed ([progress](docs/build_log/print_status.md)) |
 | Procurement | Sourcing hardware ([checklist and suppliers](docs/build_log/README.md)) |
 | Assembly | Not started |
-| Software | The assembly viewer's data pipeline is done: it computes the placement of 138 parts from the upstream CAD and maps all 14 servo IDs; unit tests and a MuJoCo cross-check pass ([validation record](docs/validation/viewer-pipeline-2026-11-13.md), Traditional Chinese only). The front end and all other modules are still "Planned" |
-| Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0006 (including switchable privacy settings) are drafts or partly accepted; phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
+| Software | The first version of the assembly viewer is usable ([download the HTML](assembly_viewer/release/duck_viewer.html)): a single HTML file that opens offline and shows 138 parts, the 14 servo IDs, and the 15 assembly steps from the upstream CAD, with exploded and X-ray views ([pipeline record](docs/validation/viewer-pipeline-2026-11-13.md), [front-end record](docs/validation/viewer-web-2026-11-15.md), Traditional Chinese only; validated by unit tests and a headless browser). The head controller for V3 "look at the person who is talking" is done and passes unit tests and a MuJoCo simulation ([record](docs/validation/look-at-sim-2026-11-16.md), Traditional Chinese only; not on hardware). The BOM and all other modules are still "Planned" |
+| Design | Mobile-companion requirement [R-001](docs/requirements/R-001-mobile-companion.md) (navigation, mobile conversation, wake-and-find, auto-docking) and ADR-0002 to 0006 (including switchable privacy settings) are drafts or partly accepted; the "follow me / wait here" requirement [R-002](docs/requirements/R-002-follow-me.md) and [ADR-0007](docs/adr/ADR-0007-follow-me-and-wait-here.md) are drafts (design only; implementation comes later); phases are in the [roadmap](docs/roadmap.md) (Traditional Chinese only) |
 | Hardware validation | None |
 
 ## Division of work
 
 - **Nous (Mac mini)**: voice, vision, memory, decisions.
-- **Duck (Pi Zero 2 W body board plus a Pi 4 perception board)**: gait, motion, safety (safety decisions happen only on the duck). After R-001 it also adds indoor localization and navigation, audio capture and playback, a wake word, finding people, and automatic docking.
+- **Duck (for now a single Pi 4 on trial, with gait plus safety and perception as separate services; if that falls short, split back into a Pi Zero 2 W plus a Pi 4, see [ADR-0008](docs/adr/ADR-0008-single-board-pi4.md), Traditional Chinese only)**: gait, motion, safety (safety decisions happen only on the duck). After R-001 it also adds indoor localization and navigation, audio capture and playback, a wake word, finding people, and automatic docking.
 - The two sides communicate only through the versioned JSON Schemas in [`protocol/`](protocol/README.en.md).
 
 See the [architecture](docs/architecture.md) and [ADR-0001](docs/adr/ADR-0001-duck-role-in-nous.md) (both Traditional Chinese only).
@@ -30,19 +30,20 @@ See the [architecture](docs/architecture.md) and [ADR-0001](docs/adr/ADR-0001-du
 | Path | Contents | Status |
 |---|---|---|
 | [`docs/handoff/`](docs/handoff/README.md) | Handoff summary, environment survey, ChatGPT conversation log, upstream BOM | Done |
-| [`docs/requirements/`](docs/requirements/README.md) | Requirement records | R-001 |
+| [`docs/requirements/`](docs/requirements/README.md) | Requirement records | R-001, R-002 |
 | [`docs/architecture.md`](docs/architecture.md) | Division of work and data flow between the duck and Nous | Draft |
 | [`docs/roadmap.md`](docs/roadmap.md) | Phases and gates, decisions waiting for the owner | Draft |
-| [`docs/adr/`](docs/adr/README.md) | Architecture decision records | ADR-0001 to 0006 |
+| [`docs/stereo_vision_plan.md`](docs/stereo_vision_plan.md) | Stereo vision plan: what the duck can do with the AR0144 camera, limits, and order of work (Traditional Chinese only) | Planned (draft) |
+| [`docs/adr/`](docs/adr/README.md) | Architecture decision records | ADR-0001 to 0007 |
 | [`docs/build_log/`](docs/build_log/README.md) | Printing, procurement, assembly, and calibration progress | Printing complete, procurement underway |
-| [`docs/validation/`](docs/validation/README.md) | Hardware and test records | No records yet |
-| [`assembly_viewer/`](assembly_viewer/README.md) | ① Offline single-HTML 3D assembly viewer (first deliverable) | Pipeline done; BOM, steps, and front end planned |
+| [`docs/validation/`](docs/validation/README.md) | Hardware and test records | 10 records (3 include hardware runs on the Pi 4 and servos; the duck is not assembled or walking yet) |
+| [`assembly_viewer/`](assembly_viewer/README.md) | ① Offline single-HTML 3D assembly viewer (first deliverable) | First version usable (pipeline, steps, front end); BOM planned |
 | [`protocol/`](protocol/README.en.md) | ② duck-link protocol (JSON Schema) | Planned |
-| [`robot/`](robot/README.md) | ③ On-board software (Pi Zero 2 W, Python) | Planned |
+| [`robot/`](robot/README.md) | ③ On-board software (single Pi 4 on trial, Python) | Mostly planned; `servo_console/` and `behaviors/look_at.py` (simulation only) exist |
 | [`nous_adapter/`](nous_adapter/README.en.md) | ④ `app.duck.*` adapter and terminal to move into AIOS (TypeScript) | Planned |
-| [`sim/`](sim/README.md) | ⑤ MuJoCo simulation | Planned |
+| [`sim/`](sim/README.md) | ⑤ MuJoCo simulation | Mostly planned; `look_at_sim/` exists |
 | [`hardware/`](hardware/README.md) | ⑥ Modifications: MG995 head prototype, expression modules, wiring, sensor head, perception board, charging dock | Planned; the [charging dock](hardware/dock/README.md) is design v0 (STL files generated; not printed, not tested on hardware; docs in Traditional Chinese) |
-| [`tools/`](tools/README.md) | Development tools (upstream-untouched check, ChatGPT share-page converter) | Usable |
+| [`tools/`](tools/README.md) | Development tools (upstream-untouched check, ChatGPT share-page converter, ChatGPT viewer comparison) | Usable |
 
 Documents other than this README and the `protocol/` and `nous_adapter/` READMEs are in Traditional Chinese only.
 

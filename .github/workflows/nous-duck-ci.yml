@@ -36,8 +36,73 @@ jobs:
       - name: 建置 scene.json 與 meshes.bin
         working-directory: nous_duck/assembly_viewer/pipeline
         run: python -m viewer_pipeline
-      - name: 執行測試（含 MuJoCo 交叉驗證）
+      - name: 執行測試（含 MuJoCo 交叉驗證與組裝步驟檢查）
         run: python -m pytest nous_duck/assembly_viewer/tests/pipeline -v
+
+  viewer-web:
+    name: 組裝檢視器前端（建置、輸出檢查、無頭瀏覽器）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: nous_duck/assembly_viewer/web/package-lock.json
+      - name: 產生 pipeline 輸出（scene.json、meshes.bin、steps.json）
+        working-directory: nous_duck/assembly_viewer/pipeline
+        run: |
+          pip install -r requirements.txt
+          python -m viewer_pipeline
+      - name: 安裝前端依賴
+        working-directory: nous_duck/assembly_viewer/web
+        run: npm ci
+      - name: 型別檢查
+        working-directory: nous_duck/assembly_viewer/web
+        run: npm run typecheck
+      - name: 打包單一 HTML 並檢查輸出
+        working-directory: nous_duck/assembly_viewer/web
+        run: |
+          npm run build
+          npm run check
+      - name: 檢查 release/duck_viewer.html 和原始碼一致
+        working-directory: nous_duck/assembly_viewer/web
+        run: npm run check:release
+      - name: 打包舵機控制台頁面
+        working-directory: nous_duck/assembly_viewer/web
+        run: npm run build:console
+      - name: 安裝 Playwright 與 Chromium
+        working-directory: nous_duck/assembly_viewer/web
+        run: |
+          npm install --no-save playwright@1.63.0
+          npx playwright install --with-deps chromium
+      - name: 無頭瀏覽器檢查（斷網開啟、15 步、搜尋與點選、手機寬度）
+        env:
+          NODE_PATH: ${{ github.workspace }}/nous_duck/assembly_viewer/web/node_modules
+        run: node nous_duck/assembly_viewer/tests/web/check_viewer.cjs
+      - name: 上傳截圖與結果
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: viewer-web-screens
+          path: nous_duck/assembly_viewer/dist/screens/
+          if-no-files-found: ignore
+
+  servo-console:
+    name: 舵機控制台單元測試（模擬匯流排）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: 安裝依賴
+        run: pip install -r nous_duck/robot/servo_console/requirements-dev.txt
+      - name: 執行測試
+        run: python -m pytest nous_duck/robot/servo_console/tests -v
 
   dock-cad:
     name: 充電座 CAD 測試
@@ -51,3 +116,20 @@ jobs:
         run: pip install -r nous_duck/hardware/dock/cad/requirements-dev.txt
       - name: 執行測試（列印性、與鴨子的干涉與觸點對位、STL 與程式一致、AprilTag）
         run: python -m pytest nous_duck/hardware/dock/cad/tests -v
+
+  look-at:
+    name: 說話時看著對方（控制器單元測試、MuJoCo 模擬）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: 安裝依賴
+        run: |
+          pip install -r nous_duck/robot/requirements-dev.txt
+          pip install -r nous_duck/sim/requirements-dev.txt
+      - name: 控制器單元測試
+        run: python -m pytest nous_duck/robot/tests -v
+      - name: 模擬（固定機身、合成人臉偵測）
+        run: python -m pytest nous_duck/sim/tests -v
