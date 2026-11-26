@@ -48,6 +48,8 @@ def handle(core, link, request: dict) -> dict:
                 "gestures_rejected": core.library.rejected,
                 "can_express": core.eyes is not None,
                 "settings": getattr(core, "settings_status", None),
+                "wake": dict(getattr(core, "wake_stats", {})),
+                "voice_relay": core.voice.stats() if getattr(core, "voice", None) else None,
             }
     if cmd == "express":
         # 本機預覽表情（設定頁的「在鴨子上預覽」）：最多 10 秒，之後回到 presence 決定的表情。

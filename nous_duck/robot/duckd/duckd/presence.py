@@ -32,6 +32,9 @@ ERROR_SHAKE_RAD = 0.12
 THINK_SWAY_S = 4.0
 THINK_SWAY_RAD = 0.10
 
+#: 這些狀態代表對話正在進行：頭維持朝向叫醒它的人（有方位時）
+CONVERSATION_STATES = ("wake", "listening", "thinking", "speaking")
+
 ZERO = {"neck_pitch": 0.0, "head_pitch": 0.0, "head_yaw": 0.0, "head_roll": 0.0}
 
 
@@ -41,10 +44,14 @@ class PresenceState:
     since: float = 0.0
     speech_level: float = 0.0
     speech_at: float = -math.inf
+    #: 喚醒當下聲源相對身體的方位（rad，往左為正）；0＝不知道或正前方。對話結束就清掉。
+    face_yaw: float = 0.0
 
     def set(self, state: str, speech_level: float | None, now: float) -> None:
         if state != self.state:
             self.state, self.since = state, now
+        if state not in CONVERSATION_STATES:
+            self.face_yaw = 0.0
         if speech_level is not None:
             self.speech_level, self.speech_at = float(speech_level), now
         elif state != "speaking":
@@ -60,17 +67,21 @@ def head_target(p: PresenceState, now: float, *, amplitude: float = 1.0, motion:
     """這個 presence 狀態在此刻的頭部目標（rad；head_pitch 正值＝抬頭、head_yaw 正值＝往左）。
 
     `amplitude`（0～1，只能調小）、`motion`、`speaking_bob` 來自鴨子設定（ADR-0019）；關掉的部分頭回正。
+    對話進行中會加上 `face_yaw`（喚醒當下的聲源方位；仲裁器照樣夾限與限速）。
     """
     t = max(0.0, now - p.since)
     out = dict(ZERO)
-    if p.state == "speaking":
+    s = p.state
+    # 朝向叫醒它的人：不是小動作，不跟著幅度縮小；頭部動作整個關掉時不轉
+    face = p.face_yaw if (motion and s in CONVERSATION_STATES) else 0.0
+    if s == "speaking":
         if not speaking_bob:
+            out["head_yaw"] = face
             return out
     elif not motion:
         return out
-    s = p.state
     if s == "wake":
-        out["head_pitch"] = 0.10  # 抬頭（沒有聲源方向可轉：麥克風陣列還沒裝）
+        out["head_pitch"] = 0.10  # 抬頭
     elif s == "listening":
         out["head_roll"] = 0.12  # 微微歪頭
     elif s == "thinking":
@@ -84,4 +95,6 @@ def head_target(p: PresenceState, now: float, *, amplitude: float = 1.0, motion:
     elif s == "sleeping":
         out["head_pitch"] = -0.25  # 低頭
     scale = min(1.0, max(0.0, amplitude))
-    return {n: v * scale for n, v in out.items()}
+    out = {n: v * scale for n, v in out.items()}
+    out["head_yaw"] += face
+    return out

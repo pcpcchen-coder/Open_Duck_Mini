@@ -107,5 +107,6 @@
 | T4 | XVF3800 接上 Pi：DOA 讀取、送 `sound` 方位 | A 線 | 完成：`2886:001a`（韌體 2.06）讀得到；正前方已校正（值只留在 Pi）；角度是順時針為正 | **實機**：讀取與校正是回讀；角度方向有人眼確認。[紀錄](../validation/duckd-head-hardware-2026-11-26.md) |
 | T5 | 聽聲辨位轉頭：`track sound` | A 線 | 電視關時通過；有電視聲時**未確認**（回讀顯示頭被帶走 4 次，使用者說沒有）；能量門檻 2e5 未實機驗 | **實機**：安靜不動、轉向說話的人、回正、正前方不擺有人眼確認；其餘回讀。[紀錄](../validation/duckd-head-hardware-2026-11-26.md) |
 | T6 | 鴨子自己的喇叭與麥克風進行對話（Pi 上無螢幕跑 Nous 頁面） | B 線 | 準備完成；連 Nous 與出聲**等你**（也等麥克風） | Pi 4 上不連 Nous、不出聲的量測 |
+| T7 | 鴨子的喚醒詞叫醒 Nous：喚醒服務 → duckd → duck-link `wake_word`；presence 送回喚醒服務 | A 線（duckd 這一段） | duckd 這一段完成；頭部出力時的反應、真人喚醒、對真的 Nous **等你** | 單元測試；對假 hub 端到端；Pi 實機不出力（手動觸發）。[紀錄](../validation/duckd-wake-relay-2026-11-27.md) |
 
 2026-11-26 下午：PR #38（A 線）、#39（B 線）已合併進整合分支。使用者決定 **XVF3800 放頭頂**，`robot/audio/config/doa.json` 的 `mount` 改為 `head`（Pi 上已部署的 `~/duck/doa/config/doa.json` 要在下次部署時更新）。上表是兩條線自己回報的狀態；實機仍等舵機電源與麥克風接上。

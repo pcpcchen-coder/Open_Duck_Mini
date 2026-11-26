@@ -27,7 +27,8 @@ duckd 不做語音、視覺、決策（那是 Nous 的事，[ADR-0001](../../doc
 | `duckd/gestures.py`、`duckd/library/*.json` | 動作庫：定義檔、載入時檢查、播放（`nod`、`shake`、`tilt`、`look_around`） | A4 |
 | `duckd/presence.py` | `presence` → 眼睛表情＋頭部目標 | A5 |
 | `duckd/eyes_out.py` | `duck_eyes` 渲染＋虛擬面板（PNG） | A6 |
-| `duckd/percept.py` | 感知的本機輸入（UDP `127.0.0.1:8793`）：人臉／聲音方位、來源存活訊息 | T5 |
+| `duckd/percept.py` | 感知的本機輸入（UDP `127.0.0.1:8793`）：人臉／聲音方位、來源存活訊息、喚醒服務送來的 `wake_word` | T5 |
+| `duckd/voice_out.py` | 把目前的 presence 用 UDP 送給喚醒服務（`127.0.0.1:8794`） | 喚醒 |
 | `duckd/track.py` | 聽聲辨位轉頭的目標決定：死區、平滑、舵機自噪音迴避、逾時回正 | T5 |
 | [`tools/head_check.sh`](tools/head_check.sh) | 實機頭部檢查：前置檢查 → 接手 → 端到端與租約量測 → 釋放 | T1 |
 | `duckd/gait_host.py`、`duckd/gait_fakes.py` | 步態 host：以 importlib 載入上游步態腳本、把手把換成仲裁器；假硬體介面（mock） | A7 |
@@ -165,6 +166,29 @@ ssh duck-pi4 'sudo systemctl stop duckd'
 | `desk`（預設） | 放在桌上、不在鴨子身上 | 當成相對身體。只有麥克風緊靠鴨子、說話的人比較遠時才近似正確 |
 
 `front_angle_deg` 是「麥克風回報的哪個角度對應鴨子正前方」，用 `--calibrate` 量（步驟在 [`robot/audio` 的 README](../audio/README.md#聲源方向doat4)）。沒校準時 `calibrated: false`，服務的存活訊息會帶 `front angle not calibrated`。`counterclockwise` 是角度增加的方向，**要在實機上確認**（站到鴨子左邊說話，方位應該是正的）。
+
+## 喚醒詞：轉給 Nous、把對話狀態送回喚醒服務
+
+喚醒詞由 [`duck-voice`](../audio/README.md)（D 線）在本機偵測；duckd 只負責轉手，不碰音訊。
+
+```text
+duck-voice ──UDP 8793 {"v":1,"kind":"wake_word","keyword_id":…,"doa_deg":null,"t_ms":…,"mock":…}──► duckd ──事件 wake_word──► Nous
+duck-voice ◄──UDP 8794 {"v":1,"kind":"presence","state":…}── duckd ◄──指令 presence── Nous
+```
+
+- 每一則喚醒送一個 `wake_word` 事件，`data` 是 `keyword_id`、`doa_deg`（往鴨子的左邊為正；不知道是 `null`）、`doa_frame`、`doa_source`、`mock`。方位用 2 秒內最新的聲音方位補（`duck-doa` 沒在跑就是 `null`）。
+- 連不上 Nous（沒連線或租約過期）時**丟掉、不補送**；`duckd-ctl status` 的 `wake` 有計數。
+- 本機反應：目前是 `idle`／`sleeping`／`error` 時先把 presence 設成 `wake`（抬頭；有方位而且「聽聲轉頭」開著就轉向聲源）。Nous 的 presence 一來就由它接手；8 秒沒人接手自己回 `idle`。對話期間頭維持朝向聲源。
+- presence 每次改變就送給喚醒服務，另外每 5 秒重送；喚醒服務在不是 `idle` 時不偵測喚醒詞。`--voice-port 0` 可以關掉。
+- 不需要頭部接手就能轉送事件（頭沒接手時只是不動）。
+
+驗證層級：單元測試、對假 hub 的端到端、Pi 上不出力的實測（手動觸發）。**頭部出力時的反應、真的說話觸發、對真的 Nous 都還沒做**；頭在動時舵機聲會不會誤觸發喚醒詞也沒量。見[驗證紀錄](../../docs/validation/duckd-wake-relay-2026-11-27.md)。
+
+在 Pi 上手動檢查（不會讓舵機出力；`duck-voice` 要先停著，因為假 hub 要占 8794）：
+
+```bash
+ssh duck-pi4 'cd ~/duck/duckd && ~/duck/duckd-venv/bin/python -m duckd.mock_hub --port 8795 --wake'   # 另一邊用 --url ws://127.0.0.1:8795/duck-link 啟動 duckd
+```
 
 ## 還沒做
 

@@ -102,3 +102,20 @@ def test_presence_without_head_still_accepted_for_eyes():
     h.tick()
     assert h.last_state()["presence"] == "listening" and h.body.setpoints == []
     assert math.isfinite(h.t)
+
+
+def test_face_yaw_is_kept_through_the_conversation_and_cleared_when_it_ends():
+    p = pr.PresenceState()
+    p.set("wake", None, 0.0)
+    p.face_yaw = 0.2
+    assert pr.head_target(p, 0.5) == pytest.approx({"neck_pitch": 0.0, "head_pitch": 0.10, "head_yaw": 0.2, "head_roll": 0.0})
+    # 幅度只縮小動作，不縮朝向；頭部動作整個關掉就不轉
+    assert pr.head_target(p, 0.5, amplitude=0.5)["head_yaw"] == pytest.approx(0.2)
+    assert pr.head_target(p, 0.5, amplitude=0.5)["head_pitch"] == pytest.approx(0.05)
+    assert pr.head_target(p, 0.5, motion=False) == pr.ZERO
+    p.set("listening", None, 1.0)
+    assert pr.head_target(p, 1.5)["head_yaw"] == pytest.approx(0.2)
+    p.set("speaking", 1.0, 2.0)
+    assert pr.head_target(p, 2.1, speaking_bob=False)["head_yaw"] == pytest.approx(0.2)
+    p.set("idle", None, 3.0)
+    assert p.face_yaw == 0.0 and pr.head_target(p, 3.5) == pr.ZERO

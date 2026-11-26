@@ -166,7 +166,7 @@ Nous 核心 ──duck-link presence（wake／listening／thinking／speaking／
 | 段 | 誰的 | 狀態（2026-11-26） |
 |---|---|---|
 | 本機喚醒詞（「Hello 鴨子」「Hey 鴨子」） | D 線 `robot/audio/` | 進行中（D 線） |
-| 喚醒 → duck-link 的 `wake_word` 事件 | D 線通知 duckd、duckd（A 線）送事件 | **還沒接**：D 線的服務有把狀態丟給 duckd 的選項，duckd 那一端還沒做。這一段沒通之前，鴨子的喚醒到不了 Nous |
+| 喚醒 → duck-link 的 `wake_word` 事件 | D 線通知 duckd、duckd（A 線）送事件 | **還沒接**：D 線的服務有把狀態丟給 duckd 的選項，duckd 那一端還沒做。這一段沒通之前，鴨子的喚醒到不了 Nous **2026-11-27 更新（A 線）**：duckd 這一段已接上（分支 `claude/duckd-wake-relay`），Pi 上用手動觸發、不出力測過；沒有真人喚醒、沒有對真的 Nous。見[紀錄](../../docs/validation/duckd-wake-relay-2026-11-27.md) |
 | 核心收到 `wake_word` → 請頁面開始對話；頁面回報聽／想／說 → `presence` | B 線，在 AIOS | 程式完成，PR 待審（[pcpcchen-coder/AIOS#158](https://github.com/pcpcchen-coder/AIOS/pull/158)）。伺服器端有 fixture 測試；**頁面端沒有在瀏覽器裡跑過** |
 | Pi 上無螢幕跑 Chromium 開 Nous 頁面 | B 線 `robot/deploy/pi4/terminal/` | 腳本有了（`run_nous_terminal.sh`）；只量過「不連 Nous、不出聲、沒有麥克風」的情況 |
 | 頭與眼睛跟著 `presence` | A 線 duckd | 實機頭部已有人眼確認（T1）；`speaking` 以前沒有來源，這次才有 |
@@ -190,10 +190,10 @@ Nous 核心 ──duck-link presence（wake／listening／thinking／speaking／
 | 喚醒到開始收音的延遲 | 事件 → 核心 → SSE → 頁面開始 → WebRTC 連線，沒有量過。這段時間說的話頁面聽不到 |
 | 喇叭 | Chromium 播到 ALSA 預設輸出。第一版先直接播（**不經變聲與閘門**）；要變聲得多一段 loopback，之後再做。這和 ADR-0010「鴨子的音色＝Nous 的聲音加變聲」有落差，要你知道 |
 | 回音消除 | 第一版只靠 Chromium 的軟體回音消除，**沒有實測夠不夠**。喇叭（CD002，48 kHz）和麥克風（XVF3800，16 kHz）是兩張時脈不同的卡，D 線沒有可靠的純設定作法把播出的聲音餵給 XVF3800 當參考。D 線實測：用程式把同一段聲音同時送給 XVF3800 時，處理後聲道的回授從 −19 dBFS 降到 −52～−58 dBFS，所以之後值得做（例如把喇叭改接 XVF3800 的輸出） |
-| 鴨子自己的聲音觸發喚醒 | D 線的喚醒服務在 `127.0.0.1:8794` 收 UDP 的 `presence`；不是 `idle` 時不偵測（30 秒沒更新就當結束）。沒有人送的話，退路是叫醒後固定 8 秒不偵測。**誰來送還沒定**：B 線建議由 duckd 轉送（它本來就從 duck-link 收到 `presence`，終端腳本不知道通話階段），要 A 線決定。D 線實測：喇叭播的合成語音經空氣回到麥克風，15 句裡喚醒引擎只回報 1 句，風險低但不是零 |
+| 鴨子自己的聲音觸發喚醒 | D 線的喚醒服務在 `127.0.0.1:8794` 收 UDP 的 `presence`；不是 `idle` 時不偵測（30 秒沒更新就當結束）。沒有人送的話，退路是叫醒後固定 8 秒不偵測。**誰來送還沒定**：B 線建議由 duckd 轉送（它本來就從 duck-link 收到 `presence`，終端腳本不知道通話階段），要 A 線決定。D 線實測：喇叭播的合成語音經空氣回到麥克風，15 句裡喚醒引擎只回報 1 句，風險低但不是零 **2026-11-27 更新（A 線）**：由 duckd 轉送（每次 presence 改變就送、每 5 秒重送），Pi 上用真的喚醒服務手動觸發確認對話中不會再送出喚醒。見[紀錄](../../docs/validation/duckd-wake-relay-2026-11-27.md) |
 | 即時語音的同意與麥克風權限 | 存在那個 Chromium 設定檔裡，鴨子沒有螢幕可以按。要從 Mac 用 DevTools 連過去按一次（`run_nous_terminal.sh --debug-port`），步驟在 [`voice-test.md` §7](voice-test.md#7-路線-2鴨子當語音終端說hey-鴨子開始對話) |
 | Pi 4（2 GB）的負載 | D 線實測（頁面閒置、麥克風開著、沒有通話）：喚醒偵測約佔一顆核心的 16～17%，Chromium 約 6%、PSS 約 440 MB，可用記憶體最低 1301 MB，52 °C。**通話中的負載還沒有數字**：探測腳本在通話模式會加 `--disable-audio-output`，那會讓 Chromium 列不到任何輸入裝置，所以要等真的通話才量得到 |
-| 喚醒事件怎麼到 duck-link | D 線的喚醒服務偵測到後，用 UDP 送到 duckd 的感知埠 `127.0.0.1:8793`（`kind: "wake_word"`，帶 `keyword_id`）。**duckd 現在會忽略這個 kind**；要 A 線補上「收到就發 duck-link 的 `wake_word` 事件」。這一段接上之前，鴨子叫不醒頁面 |
+| 喚醒事件怎麼到 duck-link | D 線的喚醒服務偵測到後，用 UDP 送到 duckd 的感知埠 `127.0.0.1:8793`（`kind: "wake_word"`，帶 `keyword_id`）。**duckd 現在會忽略這個 kind**；要 A 線補上「收到就發 duck-link 的 `wake_word` 事件」。這一段接上之前，鴨子叫不醒頁面 **2026-11-27 更新（A 線）**：已補上；連不上 Nous 時 duckd 丟掉喚醒、不補送。見[紀錄](../../docs/validation/duckd-wake-relay-2026-11-27.md) |
 | 隱私開關 | 通話時麥克風的聲音由瀏覽器直接送到雲端，不經鴨子的音訊服務。設定頁的「常駐喚醒聆聽」關掉時頁面不會被叫醒，但已經開始的通話要靠結束通話來停 |
 
 ### 8.5 原生音訊通道 `/duck-voice` 的去向

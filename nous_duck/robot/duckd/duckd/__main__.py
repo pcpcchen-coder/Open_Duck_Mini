@@ -65,6 +65,11 @@ def build(args) -> tuple[Duckd, LinkRunner]:
         from .percept import PerceptInput
 
         percept = PerceptInput(time.monotonic, ("127.0.0.1", args.percept_port))
+    voice = None
+    if getattr(args, "voice_port", 0):
+        from .voice_out import PresenceRelay
+
+        voice = PresenceRelay(("127.0.0.1", args.voice_port))
     head_reason = "direct head control; full range not verified on hardware"
     if args.head_window_deg is not None:
         head_reason = f"direct head control limited to +/-{args.head_window_deg:g} deg, {args.head_speed_deg:g} deg/s"
@@ -75,6 +80,7 @@ def build(args) -> tuple[Duckd, LinkRunner]:
         GestureLibrary(limits),
         eyes=eyes,
         percept=percept,
+        voice=voice,
         duck_id=args.duck_id,
         hardware_profile=args.hardware_profile,
         allow_unverified_gestures=args.allow_unverified_gestures,
@@ -102,6 +108,7 @@ def main() -> int:
     p.add_argument("--no-eyes", action="store_true")
     p.add_argument("--percept-port", type=int, default=8793, help="感知輸入的 UDP 埠（只綁 127.0.0.1）")
     p.add_argument("--no-percept", action="store_true")
+    p.add_argument("--voice-port", type=int, default=8794, help="把 presence 用 UDP 送到 127.0.0.1 的這個埠（喚醒服務 duck-voice）；0＝不送")
     p.add_argument("--allow-unverified-gestures", action="store_true", help="開發用：把還沒實機驗證的動作也列給 Nous")
     p.add_argument("--hardware-profile", default="stock_head_direct_hold")
     p.add_argument("--duck-id", default="duck1")
@@ -164,6 +171,8 @@ def main() -> int:
         core.eyes.stop()
     if core.percept:
         core.percept.stop()
+    if core.voice:
+        core.voice.close()
     ctl.stop()
     logging.info("duckd 結束")
     return 0

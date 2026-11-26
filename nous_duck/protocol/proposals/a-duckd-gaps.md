@@ -48,3 +48,13 @@
 - **現況**：`state.tracking` 只有 `none`／`face`／`sound`。聽聲轉頭時「聲源在頭轉不到的地方、已經轉到極限」沒有欄位可放。
 - **目前繞法**：每次轉向送 `tracking_acquired`，`data` 是 `{"target":"sound","mock":…,"bearing_rad":…,"head_yaw_rad":…,"at_limit":true|false}`；安靜 8 s 回正時送 `tracking_lost`、`reason: quiet`、`data.recentered: true`（追蹤沒有結束，只是回正）。
 - **建議**：`state` 加可選的 `tracking_detail`（`bearing_rad`、`at_limit`、`source_ok`），並把「回正」和「追丟」分成兩個事件。
+
+## 9. `wake_word` 事件的 `data`（2026-11-27）
+
+- **現況**：schema 沒有規定 `event.data` 的形狀。duckd 轉送本機喚醒時送的是
+  `{"keyword_id":"HELLO_YAZI","doa_deg":11.5,"doa_frame":"body","doa_source":"duck_doa","mock":false}`。
+  `doa_deg` 往鴨子的左邊為正、0＝正前方，不知道是 `null`；`doa_frame` 是 `body` 或 `head`（頭沒接手、麥克風又在頭上時只能給相對頭部的值）；
+  `doa_source` 是 `duck_doa` 或 `wake_service`；方位來源是合成的會多一個 `doa_mock: true`。
+- **建議**：把這幾欄寫進 schema（`wake_word` 的 `data` 至少要有 `keyword_id` 與 `mock`），並寫明方位的正負與座標。
+- **另外**：連不上 Nous 時 duckd 直接丟掉喚醒、不補送。協定沒有說事件能不能晚送；建議寫明「`wake_word` 不補送」，或讓事件帶發生時間由 Nous 決定要不要理。
+
