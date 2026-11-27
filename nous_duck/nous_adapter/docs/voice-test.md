@@ -214,16 +214,19 @@ ssh duck-pi4 '~/duck/duckd/duckd-ctl engage'
 3. 在鴨子的瀏覽器設定檔上按同意（每個設定檔一次）。先照 §2.1、§2.2 啟動 Nous 與通道，然後：
 
    ```bash
-   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --debug-port 9333 --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic --speaker plughw:CARD=CD002,DEV=0'
+   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --auto-accept-mic --debug-port 9333 --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic --speaker plughw:CARD=CD002AUDIO,DEV=0'
    ```
 
    ```bash
    ssh -N -L 9333:127.0.0.1:9333 duck-pi4
    ```
 
-   在 Mac 的 Chrome 開 `chrome://inspect`，把 `localhost:9333` 加進 Discover network targets，點那個頁面的 inspect，就能看到並操作鴨子上的 Nous 頁面：開始一次即時語音、在同意說明按同意、在麥克風權限按允許，然後結束對話。之後這個設定檔會記得。
+   在 Mac 的 Chrome 開 `chrome://inspect`，把 `localhost:9333` 加進 Discover network targets，點那個頁面的 inspect，就能看到並操作鴨子上的 Nous 頁面：點電子腦開始一次即時語音、在同意說明按同意（左邊的「啟用語音」），然後說「再見」結束對話。之後這個設定檔會記得。用完把 `--debug-port` 拿掉重開（7.3 的指令），並關掉 Mac 上的 `ssh -L`：除錯埠開著時，Pi 上任何行程都能操控這個瀏覽器。
 
-   這一步的每個細節（DevTools 能不能這樣操作那個頁面、權限提示在無螢幕模式下會不會出現）**都沒有驗證過**；卡住的話把畫面與訊息記下來。
+   2026-11-27 實際照做時遇到的事（見[驗證紀錄](../../docs/validation/duck-first-voice-call-2026-11-27.md)）：
+   - **即時語音要另外登入。** Nous 開發實例的聊天登入不等於即時語音登入；頁面最下面寫「即時語音：不可用」時，在 Mac 開 `http://localhost:8791/` → 設定 → 即時語音 →「用 ChatGPT 方案登入」。沒登入時點電子腦跳出的是另一種同意（瀏覽器語音辨識，送 Google），要按「不要」。
+   - **麥克風權限提示在無螢幕的 Chromium 看不到**，DevTools 也按不到（它在瀏覽器外框）。所以指令加了 `--auto-accept-mic`：只對這個 Chromium 自動允許，麥克風仍是真的。2026-11-27 使用者同意這樣做。
+   - **DevTools 畫面上的中文是方塊**（Pi 沒裝中文字型），不影響語音；同意框的按鈕是左「啟用語音」、右「不要」。
 
 ### 7.3 每次實測
 
@@ -232,7 +235,7 @@ ssh duck-pi4 '~/duck/duckd/duckd-ctl engage'
 3. Pi：啟動終端頁面。
 
    ```bash
-   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic --speaker plughw:CARD=CD002,DEV=0'
+   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --auto-accept-mic --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic --speaker plughw:CARD=CD002AUDIO,DEV=0'
    ```
 
 4. Pi：啟動 duckd 並 `engage`（§2.3）。Nous 的 log 出現 `鴨子：鴨子已連線`。
@@ -271,5 +274,7 @@ ssh duck-pi4 '~/duck/duckd/duckd-ctl engage'
 3. Mac：通道 Ctrl-C；`npm start` Ctrl-C。
 
 ### 7.8 這一節的驗證層級
+
+2026-11-27：使用者在場，照 7.2～7.3 在實機上完成第一次對話：手動開始的即時語音、與說「Hey 鴨子」開始的對話都成功，聲音從鴨子的喇叭出來。見[驗證紀錄](../../docs/validation/duck-first-voice-call-2026-11-27.md)。以下是 2026-11-26 寫的原文。
 
 到 2026-11-26 為止：AIOS 那一側的伺服器端有 fixture 測試（假鴨子、假的語音路徑）；頁面端只有型別檢查與建置，**沒有在瀏覽器裡跑過**。Pi 上的 Chromium 只量過不連 Nous、不出聲、沒有麥克風的情況。**上面的步驟沒有任何一步有人照著跑過。**
