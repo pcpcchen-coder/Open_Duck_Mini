@@ -7,7 +7,7 @@
 from .animator import EyeAnimator, Frame
 from .expressions import EXPRESSIONS, SOUND_CUES, Inputs
 from .policy import NOUS_ALLOWED, nous_can_request, resting_expression
-from .render import compose, render_expression_layer
+from .render import EyeRenderer, compose, render_expression_layer
 from .status import DeviceState, ring_spec
 
 __all__ = [
@@ -17,6 +17,7 @@ __all__ = [
     "EyeAnimator",
     "Frame",
     "Inputs",
+    "EyeRenderer",
     "compose",
     "render_expression_layer",
     "ring_spec",
@@ -27,11 +28,32 @@ __all__ = [
 ]
 
 
-def render_frame(frame: Frame, device: DeviceState, t: float):
-    """把一幀畫成兩張 240×240 uint8 影像（畫面左眼、畫面右眼）。"""
+_RENDERER = EyeRenderer(cache_size=8)
+_POOL = None  # 第二隻眼睛用的執行緒（numpy 運算時會放開 GIL，兩眼可以同時畫）
+
+
+def _pool():
+    global _POOL
+    if _POOL is None:
+        from concurrent.futures import ThreadPoolExecutor
+
+        _POOL = ThreadPoolExecutor(max_workers=1, thread_name_prefix="duck-eyes")
+    return _POOL
+
+
+def render_frame(frame: Frame, device: DeviceState, t: float, renderer: EyeRenderer | None = None, parallel: bool = True):
+    """把一幀畫成兩張 240×240 uint8 影像（畫面左眼、畫面右眼）。
+
+    同樣的參數畫出同樣的畫面；`renderer` 記住最近畫過的表情層，參數沒變就直接沿用（不影響結果）。
+    parallel=True 時右眼在另一個執行緒畫（結果相同，只是比較快）。
+    """
+    r = renderer or _RENDERER
     ring = ring_spec(device, t)
-    out = []
-    for idx, (p, side) in enumerate(((frame.left, -1.0), (frame.right, 1.0))):
-        ov = [o for i, o in frame.overlays if i == idx]
-        out.append(compose(render_expression_layer(p, ov, side), ring, night=device.night))
-    return out[0], out[1]
+    ov_l = [o for i, o in frame.overlays if i == 0]
+    ov_r = [o for i, o in frame.overlays if i == 1]
+    if parallel:
+        fut = _pool().submit(r.render, frame.right, ov_r, 1.0, ring, device.night)
+        left = r.render(frame.left, ov_l, -1.0, ring, night=device.night)
+        return left, fut.result()
+    left = r.render(frame.left, ov_l, -1.0, ring, night=device.night)
+    return left, r.render(frame.right, ov_r, 1.0, ring, night=device.night)
