@@ -226,9 +226,11 @@ def _build() -> tuple[Setting, ...]:
                 choices=(("YAZI_EN", "Hello 鴨子／Hey 鴨子（兩句都可以）"), ("HELLO_YAZI", "只有 Hello 鴨子"), ("HEY_YAZI", "只有 Hey 鴨子"),
                          ("HEY_DUCK", "Hey Duck"), ("HELLO_DUCK", "Hello Duck"),
                          ("HEY_NOUS", "Hey Nous（和 Nous 其他終端相同）"), ("HELLO_NOUS", "Hello Nous（和 Nous 其他終端相同）"))))
-    add(Setting("audio.wake_sensitivity", "audio", "喚醒門檻倍數", "number", 1.0,
-                "把喚醒詞的門檻乘上這個倍數。調高比較不會誤喚醒、但比較難叫醒；調低相反。", consumer=VOICE, min=0.5, max=3.0, step=0.1,
-                basis="門檻本身沿用 AIOS 的值，在鴨子的麥克風上沒有用真人聲音校準"))
+    add(Setting("audio.wake_sensitivity", "audio", "喚醒門檻倍數", "number", 0.7,
+                "把喚醒詞的門檻乘上這個倍數。調高比較不會誤喚醒、但比較難叫醒；調低比較好叫醒、但比較容易誤喚醒。改了之後幾秒內生效。",
+                consumer=VOICE, min=0.5, max=3.0, step=0.1,
+                basis="使用者 2026-11-27 決定從 1.0 放寬到 0.7（放寬後沒有再測）。1.0 時的實測：1 m 11／20、3 m 5／10、"
+                      "平常講話約 5.7 分鐘 0 次誤觸發（docs/validation/wake-word-human-2026-11-27.md）"))
     add(Setting("audio.wake_holdoff_s", "audio", "叫醒後多久內不再聽喚醒詞", "number", 8.0,
                 "叫醒一次之後，這段時間內不再偵測喚醒詞（對話由語音終端接手）。有對話狀態回報時，對話期間本來就不偵測。",
                 consumer=VOICE, min=2.0, max=60.0, step=1.0, unit=" 秒", advanced=True))
