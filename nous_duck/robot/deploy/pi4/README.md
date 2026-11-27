@@ -129,6 +129,18 @@ ssh -t duck-pi4 'cd ~/duck/Open_Duck_Mini_Runtime/scripts && ~/duck/runtime-venv
 
 驗證紀錄：[pi4-runtime-2026-11-22.md](../../../docs/validation/pi4-runtime-2026-11-22.md)（實機）。
 
+## 鴨子的語音終端（路線 2，開機常駐）
+
+[`deploy_terminal_service.sh`](deploy_terminal_service.sh) 把語音終端（Pi 上的 Chromium 開 Nous 頁面 `?terminal=duck`）裝成 systemd 服務 `duck-terminal`，**enable 並立刻啟動**（使用者 2026-11-27 決定開機常駐）。先用 `setup_terminal.sh` 裝好 Chromium、用 `deploy_voice.sh` 裝好共用麥克風設定。服務用共用麥克風 `duck_mic`、自動找喇叭、自動允許麥克風權限，不開除錯埠；Mac 上的 Nous 或通道沒開時每 30 秒重試。第一次要在這個 Chromium 設定檔上按即時語音的同意，步驟見 [`voice-test.md` §7.2](../../../nous_adapter/docs/voice-test.md)。
+
+```bash
+bash nous_duck/robot/deploy/pi4/deploy_terminal_service.sh
+```
+
+Mac 那一半（Nous 開發實例與通道）用 [`tools/mac_launch_agents.sh`](../../../tools/mac_launch_agents.sh) 常駐，兩半都在跑時鴨子才叫得醒。
+
+狀態：`--status`；移除：`--uninstall`。驗證紀錄：[duck-first-voice-call-2026-11-27.md](../../../docs/validation/duck-first-voice-call-2026-11-27.md)。
+
 ## 舵機控制台（網頁）
 
 [`deploy_settings.sh`](deploy_settings.sh) 把[鴨子設定頁](../../settings/README.md)（[ADR-0019](../../../docs/adr/ADR-0019-duck-settings-page.md)）裝成 systemd 服務 `duck-settings`（埠 8081）。預設**不 enable、不啟動**；`--start` 啟動、`--enable` 開機自動啟動。服務看不到硬體裝置（`PrivateDevices=true`），不會啟動或停止其他服務。2026-11-26 在 Pi 上跑過 `--start`（[紀錄 §4](../../../docs/validation/settings-2026-11-26.md)）；`--enable` 與 `--uninstall` 還沒跑過。duckd 與 duck-doa 要重新部署並重啟後才會讀這份設定：

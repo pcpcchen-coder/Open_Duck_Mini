@@ -25,7 +25,8 @@
 #   --alsa-config F    額外載入一份 ALSA 設定檔（只對這個 Chromium 行程：設
 #                      ALSA_CONFIG_PATH=/usr/share/alsa/alsa.conf:F；不改 ~/.asoundrc、不改 /etc）。
 #   --mic NAME         Chromium 的輸入裝置（--alsa-input-device=NAME）。
-#   --speaker NAME     Chromium 的輸出裝置（--alsa-output-device=NAME）。
+#   --speaker NAME     Chromium 的輸出裝置（--alsa-output-device=NAME）。NAME 是 auto 時用 D 線的
+#                      duck_audio.speaker 自動找喇叭（~/duck/voice，deploy_voice.sh 裝的；喇叭重插後卡名可能會變）。
 #                      路線 2 要和鴨子本機的喚醒偵測共用麥克風時，用 D 線的共用裝置（dsnoop）：
 #                        --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic \
 #                        --speaker "$(cd ~/duck/voice && ~/duck/audio-venv/bin/python -m duck_audio.speaker)"
@@ -82,6 +83,12 @@ case "$DEBUG_PORT" in *[!0-9]*) echo "--debug-port 要是數字" >&2; exit 2 ;; 
 if [ -n "$ALSA_CONFIG" ] && [ ! -r "$ALSA_CONFIG" ]; then
   echo "--alsa-config 指的檔案不存在或讀不到：$ALSA_CONFIG" >&2
   exit 2
+fi
+if [ "$SPEAKER_DEVICE" = auto ]; then
+  if ! SPEAKER_DEVICE="$(cd "$HOME/duck/voice" 2>/dev/null && python3 -m duck_audio.speaker)"; then
+    echo "--speaker auto：找不到喇叭（~/duck/voice 的 duck_audio.speaker）" >&2
+    exit 5
+  fi
 fi
 for dev in "$MIC_DEVICE" "$SPEAKER_DEVICE"; do
   case "$dev" in *[!A-Za-z0-9_:=,.-]*) echo "--mic／--speaker 的裝置名稱有不允許的字元：$dev" >&2; exit 2 ;; esac

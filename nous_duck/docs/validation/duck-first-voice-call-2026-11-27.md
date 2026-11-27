@@ -51,11 +51,33 @@
 
 ## 現在的狀態
 
-- Pi：終端頁面（Chromium，headless，沒有除錯埠）在背景跑著，用 `setsid nohup` 啟動，**不是服務**，Pi 重開就沒了。關法：`ssh duck-pi4 'pkill -TERM -f "run_nous_terminal[.]sh"'`。
+- Pi：寫這份紀錄時，終端頁面是用 `setsid nohup` 手動開的；之後改成開機常駐的服務 `duck-terminal`，見最後一節。
 - Mac：開發實例與通道是整合線啟動的，B 線沒有動。
 
-## 開機常駐的做法與風險（只是提案，沒有安裝）
+## 開機常駐的做法與風險（寫這份紀錄時的提案；Pi 這一半之後已裝，見下一節）
 
 - Pi：寫一個 systemd **使用者**服務（或系統服務，`User=duck`）跑 `run_nous_terminal.sh`，`Restart=on-failure`，排在 duckd 與 `duck-voice` 之後。腳本要求 `I_AM_PRESENT_AND_OK_WITH_SOUND=yes`（設計時假設有人在場），常駐等於永遠同意出聲、永遠開麥克風（只有喚醒後才送出）。通道沒開時頁面連不到 Nous，腳本會直接結束——常駐要先解決通道常駐。不要帶 `--debug-port`。
 - Mac：通道與開發實例要常駐，得用 launchd（`~/Library/LaunchAgents`），會改使用者的系統設定；開發實例用的是 `~/AIOS-duck-link` 這個 clone 與獨立設定目錄，常駐後更新程式要手動 `git pull` 並重啟。
 - 共同風險：常駐的即時語音會用 ChatGPT 方案的額度；誤喚醒會耗額度（沒人說話要等頁面的閒置時間到才結束）。每分鐘 3 次的限速仍在。
+
+## 補記：Pi 上的終端改成開機常駐服務（2026-11-27 晚）
+
+使用者看到上面的提案後說：「把它弄成服務啊！！要開機常駐！」
+
+- 新增 `nous_duck/robot/deploy/pi4/deploy_terminal_service.sh`，裝成 systemd 服務 `duck-terminal`（`User=duck`，enable 並啟動）。`run_nous_terminal.sh` 加 `--speaker auto`（用 D 線的 `duck_audio.speaker` 找喇叭，喇叭重插後卡名變了也找得到）。
+- 服務裡設 `I_AM_PRESENT_AND_OK_WITH_SOUND=yes`：常駐等於同意隨時可能出聲、麥克風一直開著（聲音只有被叫醒、頁面開始即時語音後才送出）。不開除錯埠。
+- 通道沒開時腳本會結束，服務 `Restart=always`、每 30 秒重試。
+- 實測（Pi 實機）：安裝後 `enabled`、`active`；Chromium 開的是 `duck_mic` 與 `plughw:CARD=CD002AUDIO,DEV=0`；`systemctl restart` 一次後仍是 `active`、Chromium 行程數相同、沒有留下孤兒行程。
+- **沒有驗證**：重開 Pi 後是否自己起來並連上（沒有重開 Pi）；改成服務後還記不記得即時語音的同意（同一個設定檔，理論上會記得）；服務啟動後用喚醒詞對話（要使用者說一次）。
+- Mac 這一半當時還不是常駐；之後也改了，見下一節。
+
+## 補記：Mac 這一半也改成常駐（2026-11-28 凌晨）
+
+使用者：「Mac 也要常駐」。
+
+- 新增 `nous_duck/tools/mac_launch_agents.sh`，裝兩個使用者 LaunchAgent：`com.nousduck.nous-dev`（在 `~/AIOS-duck-link/prototype/ambient-shell` 跑 `npm start`，環境變數和整合線手動啟動時相同：`PORT=8791`、`NOUS_DUCK=on`、`NOUS_AIL=on`、`NOUS_AIL_SERVICES=duck`、獨立設定目錄、`NOUS_OAUTH_PORT=1456`；不寫 `.env`）與 `com.nousduck.duck-tunnel`（`ssh -N -R 127.0.0.1:8791:127.0.0.1:8791 duck-pi4`，`BatchMode`）。兩個都 `KeepAlive`，掛掉 30 秒後重開。
+- 安裝時先停掉整合線手動開的同一個開發實例與通道（只比對「在那個 clone 裡、聽 8791 的 node」與「轉 8791 的 ssh」），平常用的 Nous（8787）前後都是同一個行程，沒有被動到。
+- 實測（Mac＋Pi 實機）：兩個 LaunchAgent 都在跑；Nous 重新啟動後即時語音仍是「可用」（ChatGPT 方案的登入存在設定目錄，沒有掉）；Pi 的 duckd 與 `duck-terminal` 都自己連回來（log「鴨子已連線：duckd 0.1.0」「終端機已連線：duck」），Pi 經通道打 Nous 回 HTTP 200。
+- 金鑰：通道用的 SSH 金鑰在沒有 ssh-agent 的情況下也能連（先試過），所以 launchd 下不需要 agent。B 線沒有讀金鑰或憑證檔的內容。
+- **限制**：LaunchAgent 在使用者**登入 Mac 之後**才跑；Mac 開機停在登入畫面時不會跑。
+- **沒有驗證**：Mac 重開機／登出再登入後是否自己起來（沒有重開 Mac）；Pi 重開後（沒有重開 Pi）；改成常駐之後用「Hey 鴨子」對話（要使用者說一次）。
