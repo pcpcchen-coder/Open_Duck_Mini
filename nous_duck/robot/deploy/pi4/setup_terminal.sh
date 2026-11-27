@@ -7,7 +7,7 @@
 #   bash nous_duck/robot/deploy/pi4/setup_terminal.sh --uninstall [host]  # 移除這支腳本裝的套件與 ~/duck/terminal-spike
 #
 # 做的事：
-#   1. apt 安裝 chromium、xvfb（--no-install-recommends）。安裝前後各記一次套件清單，
+#   1. apt 安裝 chromium、xvfb、fonts-noto-cjk（中文字型，頁面與設定畫面的中文才不會變方塊；--no-install-recommends）。安裝前後各記一次套件清單，
 #      把「這次新裝的套件」寫到 Pi 的 ~/duck/terminal-spike/apt-installed.txt，--uninstall 就照這份清單移除。
 #   2. 把 terminal/（探測頁、run_local_probe.sh、measure.sh、run_nous_terminal.sh）複製到 Pi 的 ~/duck/terminal-spike/。
 #   3. 印出版本、佔用空間、目前有沒有麥克風。
@@ -28,7 +28,7 @@ esac
 HOST="${1:-duck-pi4}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 SRC="$HERE/terminal"
-PACKAGES="chromium xvfb"
+PACKAGES="chromium xvfb fonts-noto-cjk"
 
 report() {
   ssh "$HOST" bash -s <<'REMOTE'
