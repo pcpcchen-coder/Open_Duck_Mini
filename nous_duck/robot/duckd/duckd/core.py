@@ -145,8 +145,12 @@ class Duckd:
         put("antennas", "unsupported", "antenna servos not installed")
         if self.eyes is None:
             put("eyes", "unsupported", "GC9A01 panels not installed; renderer not running")
+        elif self.eyes.panel_kind == "gc9a01":
+            put("eyes", "degraded", "GC9A01 panels driven over SPI; no pixel readback (expression read back from renderer)")
+        elif getattr(self.eyes, "hardware_error", None):
+            put("eyes", "mock", f"virtual panel only; GC9A01 panels failed: {self.eyes.hardware_error}"[:200])
         else:
-            put("eyes", "mock", "virtual panel only (PNG preview); GC9A01 panels not installed")
+            put("eyes", "mock", "virtual panel only (PNG preview); GC9A01 panels not in use")
         put("speaker", "unsupported", "audio is not wired into duckd yet")
         put("microphone", "unsupported", "no microphone")
         put("camera", "unsupported", "no camera")

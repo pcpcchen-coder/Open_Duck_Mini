@@ -9,7 +9,7 @@
 - 收 `command`，每個回恰好一個 `ack`；每秒送 `state`；有事就送 `event`。
 - 所有會動的指令都經過**安全仲裁器**（夾限、限速、期限、租約、緊急停止）。
 - 目前能動的只有**頭頸 4 顆舵機**（ID 30–33）。走路、天線、喇叭、導航都回報 `unsupported`。
-- 眼睛：沒有實體螢幕，只把畫面寫成 PNG（虛擬面板），`capabilities.eyes` 回報 `mock`。
+- 眼睛：加 `--eyes-hw` 時送到兩片 GC9A01 實體螢幕（SPI0），`capabilities.eyes` 回報 `degraded`（面板沒有回讀，只確認資料送出）；打不開或送失敗就退回只寫 PNG（虛擬面板），回報 `mock` 並附原因。2026-11-28 在 Pi 上接過（桌上、頭沒接手），對話中約 6.5 fps，見 [驗證紀錄](../../docs/validation/eyes-duckd-2026-11-28.md)。
 
 duckd 不做語音、視覺、決策（那是 Nous 的事，[ADR-0001](../../docs/adr/ADR-0001-duck-role-in-nous.md)）。設計決定見 [ADR-0014](../../docs/adr/ADR-0014-duckd-head-direct-and-single-process.md)。
 
@@ -26,7 +26,7 @@ duckd 不做語音、視覺、決策（那是 Nous 的事，[ADR-0001](../../doc
 | `duckd/head_real.py` | 頭部實機後端：重用舵機控制台的 `Controller`、`FeetechBus`，外加只放行 ID 30–33 的白名單 | A3 |
 | `duckd/gestures.py`、`duckd/library/*.json` | 動作庫：定義檔、載入時檢查、播放（`nod`、`shake`、`tilt`、`look_around`） | A4 |
 | `duckd/presence.py` | `presence` → 眼睛表情＋頭部目標 | A5 |
-| `duckd/eyes_out.py` | `duck_eyes` 渲染＋虛擬面板（PNG） | A6 |
+| `duckd/eyes_out.py` | `duck_eyes` 渲染＋實體螢幕（`duck_eyes.gc9a01`）＋虛擬面板（PNG） | A6 |
 | `duckd/percept.py` | 感知的本機輸入（UDP `127.0.0.1:8793`）：人臉／聲音方位、來源存活訊息、喚醒服務送來的 `wake_word` | T5 |
 | `duckd/voice_out.py` | 把目前的 presence 用 UDP 送給喚醒服務（`127.0.0.1:8794`） | 喚醒 |
 | `duckd/track.py` | 聽聲辨位轉頭的目標決定：死區、平滑、舵機自噪音迴避、逾時回正 | T5 |
@@ -135,7 +135,7 @@ ssh duck-pi4 'sudo systemctl stop duckd'
 | `look` | 支援（頭部接手後） |
 | `gesture` | 支援 `nod`、`shake`、`tilt`、`look_around`；一次一個，進行中再來一個會被拒絕 |
 | `presence` | 支援：眼睛表情＋頭部小動作；`speech_level` 有持續更新才會點動 |
-| `express` | 支援（虛擬面板）；代表鴨子實際狀態的表情（例如沒電）Nous 叫不出來 |
+| `express` | 支援（實體螢幕或虛擬面板；確認的是渲染端的表情，不是螢幕回讀）；代表鴨子實際狀態的表情（例如沒電）Nous 叫不出來 |
 | `track` | 有感知來源在餵 UDP 8793 時支援（只動頭；`body: true` 會被改成 false 並回報）；沒有來源回 `unsupported`。`sound` 見下面「聽聲辨位轉頭」 |
 | `walk` | `unsupported`：步態 host 還沒接進主程式、足底開關沒接、實機走路要有人在場 |
 | `antennas`、`sound` | `unsupported`：沒有天線舵機；聲音還沒接進 duckd（D 線） |
@@ -193,7 +193,7 @@ ssh duck-pi4 'cd ~/duck/duckd && ~/duck/duckd-venv/bin/python -m duckd.mock_hub 
 ## 還沒做
 
 - **實機走路**：`gait_host.py` 只做到「不改上游、載入鎖定 commit 的腳本、把手把換成仲裁器」的載入測試（假硬體）。主程式還沒有把 `walk` 接過去，duckd 與步態 host 之間的本機通道（ADR-0009 §2.3 的 UNIX datagram）也還沒做。頭部直控與步態 host 不能同時用匯流排，切換流程還沒設計。
-- GC9A01 的 SPI 驅動（等螢幕到貨）。眼睛渲染在 Pi 4 上兩眼一幀約 124 ms（見驗證紀錄），上實體螢幕前要先加速。
+- 眼睛幀率：對話中狀態環在動，每幀要送大半個畫面，SPI 20 MHz 只有約 6.5 fps（目標 15）。要更細的局部更新、更高時脈或渲染與傳送重疊。
 - 天線、音效 cue、動作定義檔的 `vel`／`antennas`／`cues` 軌。
 - 頭部角速度、角加速度上限的模擬量測（ADR-0015 §2.3 要求；目前直接用 30°/s 的保守值）。
 - 跌倒偵測、手把接管的規則寫在仲裁器裡並有單元測試，但主程式沒有 IMU 與手把輸入可餵（BNO055 還沒校準）。

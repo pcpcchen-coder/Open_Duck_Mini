@@ -246,7 +246,11 @@ def open_eyes(hz: int = 20_000_000, pins: Pins = Pins(), rotation: int = 0, swap
     left = Panel(buses[0], gpio, pins, rotation)
     right = Panel(buses[1], gpio, pins, rotation)
     eyes = EyePanels(left, right, gpio, pins)
-    eyes.start()
+    try:
+        eyes.start()
+    except Exception:
+        eyes.close()  # 初始化失敗也要放開 SPI 與腳位
+        raise
     return eyes
 
 

@@ -79,3 +79,74 @@ def test_presence_drives_expression_and_status_ring_uses_real_state(tmp_path):
     assert eyes._device.conversation_active is False and eyes.expression == "neutral"
     left, right = eyes.render_once()
     assert left.any()
+
+
+class FakePanels:
+    """假的實體螢幕（同 duck_eyes.gc9a01.EyePanels 的 show／close／last_sent）。"""
+
+    def __init__(self, fail_on_show=False):
+        self.shown, self.closed, self.last_sent, self.fail = [], False, None, fail_on_show
+
+    def show(self, left, right):
+        if self.fail:
+            raise OSError("spi gone")
+        import time
+
+        self.shown.append((left.copy(), right.copy()))
+        self.last_sent = time.monotonic()
+        return 0
+
+    def close(self):
+        self.closed = True
+
+
+def test_hardware_panels_get_frames_and_capability_is_degraded_not_available(tmp_path):
+    hw = FakePanels()
+    eyes = EyesOutput(tmp_path / "eyes.png", hardware=hw)
+    assert eyes.panel_kind == "gc9a01"
+    eyes.show(*eyes.render_once())
+    assert len(hw.shown) == 1 and hw.shown[0][0].shape == (240, 240, 3)
+    assert (tmp_path / "eyes.png").exists()  # 預覽照寫
+    st = eyes.stats()
+    assert st["panel"] == "gc9a01" and "send_ms_median" in st and st["last_sent_age_s"] >= 0
+    cap = make_harness(eyes=eyes).sent[0]["capabilities"]["eyes"]
+    assert cap["status"] == "degraded" and "no pixel readback" in cap["reason"]  # 沒有回讀，不說 available
+    eyes.stop()
+    assert hw.closed
+
+
+def test_png_preview_is_throttled_when_hardware_present(tmp_path):
+    eyes = EyesOutput(tmp_path / "eyes.png", hardware=FakePanels())
+    l, r = eyes.render_once()
+    eyes.show(l, r)
+    (tmp_path / "eyes.png").unlink()
+    eyes.show(l, r)  # 同一秒內：不再寫 PNG
+    assert not (tmp_path / "eyes.png").exists()
+
+
+def test_send_failure_drops_to_virtual_panel_and_reports_why(tmp_path):
+    hw = FakePanels(fail_on_show=True)
+    eyes = EyesOutput(tmp_path / "eyes.png", fps=50, hardware=hw)
+    eyes.start()
+    import time
+
+    end = time.monotonic() + 3
+    while eyes.hardware is not None and time.monotonic() < end:
+        time.sleep(0.02)
+    eyes.stop()
+    assert eyes.panel_kind == "virtual_png" and hw.closed
+    assert "spi gone" in eyes.hardware_error and "spi gone" in eyes.stats()["hardware_error"]
+    cap = make_harness(eyes=eyes).sent[0]["capabilities"]["eyes"]
+    assert cap["status"] == "mock" and "failed" in cap["reason"]
+
+
+def test_expression_change_reaches_hardware_panels(tmp_path):
+    """presence（語音工作階段）改變時，下一幀送到實體螢幕的畫面跟著變。"""
+    hw = FakePanels()
+    eyes = EyesOutput(None, hardware=hw)
+    h = make_harness(eyes=eyes)
+    eyes.show(*eyes.render_once())
+    h.cmd("presence", {"state": "thinking"})
+    assert eyes.expression == "thinking"
+    eyes.show(*eyes.render_once())
+    assert not np.array_equal(hw.shown[0][0], hw.shown[1][0])

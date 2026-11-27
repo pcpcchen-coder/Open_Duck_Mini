@@ -5,6 +5,9 @@
 
 在 Pi 上（部署腳本裝成 systemd 服務 duckd；**啟動時不碰硬體**，要 `python -m duckd.ctl engage` 才連匯流排）：
     python -m duckd --body head
+
+接兩片 GC9A01 實體眼睛（Pi 要先開 SPI，duckd-venv 要有 spidev）：
+    python -m duckd --body head --eyes-hw --eyes-fps 15 --eyes-panel /run/duckd/eyes.png
 """
 from __future__ import annotations
 
@@ -57,7 +60,18 @@ def build(args) -> tuple[Duckd, LinkRunner]:
         try:
             from .eyes_out import EyesOutput
 
-            eyes = EyesOutput(args.eyes_panel, fps=args.eyes_fps)
+            hardware, hw_error = None, None
+            if args.eyes_hw:
+                try:
+                    from duck_eyes.gc9a01 import open_eyes
+
+                    hardware = open_eyes(hz=args.eyes_spi_hz, rotation=args.eyes_rotation, swap=args.eyes_swap)
+                except Exception as exc:  # noqa: BLE001 沒開 SPI、少套件、腳位被占：退回虛擬面板
+                    logging.error("實體眼睛螢幕打不開（%s）；只用虛擬面板", exc)
+                    hw_error = f"open failed: {exc}"[:150]
+            eyes = EyesOutput(args.eyes_panel, fps=args.eyes_fps, hardware=hardware)
+            if args.eyes_hw and hardware is None:
+                eyes.hardware_error = hw_error
         except ImportError as exc:
             logging.warning("眼睛渲染不能用（%s）；capabilities.eyes 會回報 unsupported", exc)
     percept = None
@@ -105,6 +119,10 @@ def main() -> int:
     p.add_argument("--settings-dir", type=Path, default=None, help="鴨子設定的資料夾（ADR-0019）。沒給就不讀設定，全部用命令列與內建預設")
     p.add_argument("--eyes-panel", type=Path, default=None, help="虛擬面板：把兩眼畫面寫成這個 PNG")
     p.add_argument("--eyes-fps", type=float, default=5.0)
+    p.add_argument("--eyes-hw", action="store_true", help="送到兩片 GC9A01 實體螢幕（SPI0：CE0＝面對鴨子的左眼、CE1＝右眼）")
+    p.add_argument("--eyes-spi-hz", type=int, default=20_000_000, help="實體螢幕 SPI 時脈（桌上實測 20 MHz 不花屏）")
+    p.add_argument("--eyes-rotation", type=int, default=0, choices=[0, 90, 180, 270], help="實機只看過 0")
+    p.add_argument("--eyes-swap", action="store_true", help="左右眼對調（CE0 當右眼）")
     p.add_argument("--no-eyes", action="store_true")
     p.add_argument("--percept-port", type=int, default=8793, help="感知輸入的 UDP 埠（只綁 127.0.0.1）")
     p.add_argument("--no-percept", action="store_true")

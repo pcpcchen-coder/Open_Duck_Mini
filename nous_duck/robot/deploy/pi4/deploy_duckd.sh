@@ -66,6 +66,9 @@ VENV="$HOME/duck/duckd-venv"
 before="$("$UV" pip freeze --python "$RT_PY" | sha256sum)"
 [ -x "$VENV/bin/python" ] || "$UV" venv --quiet --python "$("$RT_PY" -c 'import sys; print(sys._base_executable)')" "$VENV"
 "$UV" pip install --quiet --python "$VENV/bin/python" -r "$HOME/duck/duckd/requirements.txt" pytest==9.2.0
+# 眼睛實體螢幕（GC9A01，SPI0）要 spidev；只裝在 duckd-venv（Linux 才編得過，所以不放 requirements.txt）。
+# gpiod 沿用 runtime-venv 的 2.6.0。
+"$UV" pip install --quiet --python "$VENV/bin/python" spidev==3.6
 SITE="$("$VENV/bin/python" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
 RT_SITE="$("$RT_PY" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
 # 一行一個：duckd 的部署目錄；再把 runtime-venv 的 site-packages（含它的 editable 安裝）接在後面
@@ -73,7 +76,7 @@ printf '%s\nimport site; site.addsitedir(%s)\n' "$HOME/duck/duckd" "'$RT_SITE'" 
 after="$("$UV" pip freeze --python "$RT_PY" | sha256sum)"
 [ "$before" = "$after" ] || { echo "runtime-venv 的套件變了，不應該發生"; exit 1; }
 "$VENV/bin/python" - <<'PY'
-import duckd, websockets, jsonschema, numpy, pypot, servo_console, duck_eyes, mini_bdx_runtime
+import duckd, websockets, jsonschema, numpy, pypot, servo_console, duck_eyes, mini_bdx_runtime, spidev, gpiod
 print(f"   duckd {duckd.__version__}；websockets {websockets.__version__}、jsonschema {jsonschema.__version__}（duckd-venv）；"
       f"numpy {numpy.__version__}、pypot（runtime-venv，唯讀沿用）")
 PY
@@ -96,7 +99,9 @@ RuntimeDirectoryMode=0700
 # 啟動時不碰硬體：要在 Pi 上執行 ~/duck/duckd/duckd-ctl engage 才會開匯流排。
 # 頭部角速度與活動範圍從鴨子設定讀（ADR-0019；預設 30°/s、±15°，是 2026-11-25 無人看顧時的規定）。
 # 設定讀不到（還沒跑 deploy_settings.sh、檔案壞掉）時 duckd 自己退回 30°/s、±15°（duckd/settings_in.py）。
-ExecStart=$PI_HOME/duck/duckd-venv/bin/python -m duckd --body head --settings-dir $PI_HOME/duck/settings --ctl-socket /run/duckd/duckd.sock --eyes-panel /run/duckd/eyes.png --eyes-fps 1 ${DUCKD_EXTRA_ARGS:-} \$DUCKD_TEST_ARGS
+# 眼睛：送到兩片 GC9A01（要先在 config.txt 開 dtparam=spi=on）；打不開就只寫虛擬面板 /run/duckd/eyes.png，
+# capabilities.eyes 會回報原因。15 fps：桌上實測 20 MHz 約 16 fps 是上限，留一點給控制迴圈。
+ExecStart=$PI_HOME/duck/duckd-venv/bin/python -m duckd --body head --settings-dir $PI_HOME/duck/settings --ctl-socket /run/duckd/duckd.sock --eyes-hw --eyes-fps 15 --eyes-panel /run/duckd/eyes.png ${DUCKD_EXTRA_ARGS:-} \$DUCKD_TEST_ARGS
 Restart=on-failure
 RestartSec=3
 # DUCKD_TEST_ARGS：測試腳本（duckd/tools/head_check.sh）用 drop-in 臨時加參數；平常是空的
