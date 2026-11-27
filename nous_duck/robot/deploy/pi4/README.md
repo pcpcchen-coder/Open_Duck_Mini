@@ -137,6 +137,8 @@ ssh -t duck-pi4 'cd ~/duck/Open_Duck_Mini_Runtime/scripts && ~/duck/runtime-venv
 bash nous_duck/robot/deploy/pi4/deploy_terminal_service.sh
 ```
 
+Mac 那一半（Nous 開發實例與通道）用 [`tools/mac_launch_agents.sh`](../../../tools/mac_launch_agents.sh) 常駐，兩半都在跑時鴨子才叫得醒。
+
 狀態：`--status`；移除：`--uninstall`。驗證紀錄：[duck-first-voice-call-2026-11-27.md](../../../docs/validation/duck-first-voice-call-2026-11-27.md)。
 
 ## 舵機控制台（網頁）

@@ -12,6 +12,7 @@
 | [`follow_geometry.py`](follow_geometry.py) | 「跟著我來」的名目推算（人與鴨子的速度落差、多久跟丟、跟隨時看得到人的哪一段、抬頭時腳前看不到的地面）；[ADR-0007](../docs/adr/ADR-0007-follow-me-and-wait-here.md) 的數字來源（只用標準函式庫，沿用 `stereo_geometry.py` 的鏡頭幾何） | 可用（推算，非量測） |
 | [`battery_budget.py`](battery_budget.py) | 低電量回充的名目推算（回家要多少電、L1～L4 電量等級的門檻、各等級站著還能撐多久）；[ADR-0012](../docs/adr/ADR-0012-low-battery-return-interaction.md) 的數字來源（只用標準函式庫） | 可用（推算，非量測） |
 | [`servo_bench.py`](servo_bench.py) | 舵機工作台：STS3215 逐顆設定 ID 與零位（參數同上游 `configure_motor.py`）、掃描、14 軸檢查、限速回零位、放鬆、即時看位置；不用先裝 Runtime，Mac／Pi 都能跑（需要 pyserial；`selftest` 不需要） | 可用（模擬匯流排檢查通過；實機已設定 14 顆） |
+| [`mac_launch_agents.sh`](mac_launch_agents.sh) | Mac 這一半的開機常駐（路線 2）：Nous 開發實例（8791）與到鴨子的 SSH 通道裝成使用者的 launchd LaunchAgent；`--status`、`--uninstall`。不動平常用的 Nous（8787）。2026-11-28 實機裝好 |
 
 ## 用法
 
