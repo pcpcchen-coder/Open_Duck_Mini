@@ -150,3 +150,22 @@ def test_expression_change_reaches_hardware_panels(tmp_path):
     assert eyes.expression == "thinking"
     eyes.show(*eyes.render_once())
     assert not np.array_equal(hw.shown[0][0], hw.shown[1][0])
+
+
+def test_render_and_send_overlap_without_piling_up(tmp_path):
+    """傳送慢（每幀 80 ms）時：渲染和傳送重疊，幀率接近 1/80ms；渲染最多領先一兩幀，不堆積。"""
+    import time
+
+    class SlowPanels(FakePanels):
+        def show(self, left, right):
+            time.sleep(0.08)
+            return super().show(left, right)
+
+    hw = SlowPanels()
+    eyes = EyesOutput(None, fps=50, hardware=hw)
+    eyes.start()
+    time.sleep(1.0)
+    eyes.stop()
+    sent = len(hw.shown)
+    assert sent >= 9  # 不重疊的話是 1 / (80 ms＋渲染時間)
+    assert eyes.frames - sent <= 3 and hw.closed

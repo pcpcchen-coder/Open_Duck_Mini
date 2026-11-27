@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import os
+import queue
 import struct
 import threading
 import time
@@ -162,12 +163,28 @@ class EyesOutput:
         except Exception:  # noqa: BLE001
             log.exception("關閉實體螢幕失敗")
 
+    def _send_one(self, left, right) -> None:
+        try:
+            self.show(left, right)
+        except Exception as exc:  # noqa: BLE001 眼睛壞了不能拖垮身體
+            if self.hardware is not None:
+                self._drop_hardware(f"send failed: {exc}")
+            else:
+                logging.getLogger("duckd.eyes").exception("虛擬面板寫入失敗")
+                self._stop.wait(2.0)
+
     def start(self) -> None:
+        """渲染與傳送分兩個執行緒：送第 N 幀時同時畫第 N+1 幀（中間只放一幀，送不完渲染就等）。
+
+        兩邊加起來的時間變成取較慢的那一邊。numpy 渲染時放開 GIL；spidev 的 ioctl 是否放開 GIL
+        以 Pi 上實測為準（驗證紀錄）。
+        """
         if self._thread:
             return
         self._stop.clear()
+        self._queue: queue.Queue = queue.Queue(maxsize=1)
 
-        def loop() -> None:
+        def render_loop() -> None:
             period = 1.0 / self.fps
             next_t = time.monotonic()
             while True:
@@ -178,21 +195,29 @@ class EyesOutput:
                 if self._stop.wait(wait):
                     break
                 try:
-                    left, right = self.render_once()
-                except Exception:  # noqa: BLE001 眼睛壞了不能拖垮身體
+                    frame = self.render_once()
+                except Exception:  # noqa: BLE001
                     logging.getLogger("duckd.eyes").exception("眼睛渲染失敗")
                     self._stop.wait(2.0)
                     continue
-                try:
-                    self.show(left, right)
-                except Exception as exc:  # noqa: BLE001
-                    if self.hardware is not None:
-                        self._drop_hardware(f"send failed: {exc}")
-                    else:
-                        logging.getLogger("duckd.eyes").exception("虛擬面板寫入失敗")
-                        self._stop.wait(2.0)
+                while not self._stop.is_set():  # 上一幀還沒送走就等（不丟幀、不堆積）
+                    try:
+                        self._queue.put(frame, timeout=0.2)
+                        break
+                    except queue.Full:
+                        continue
 
-        self._thread = threading.Thread(target=loop, name="duckd-eyes", daemon=True)
+        def send_loop() -> None:
+            while not self._stop.is_set():
+                try:
+                    frame = self._queue.get(timeout=0.2)
+                except queue.Empty:
+                    continue
+                self._send_one(*frame)
+
+        self._sender = threading.Thread(target=send_loop, name="duckd-eyes-send", daemon=True)
+        self._sender.start()
+        self._thread = threading.Thread(target=render_loop, name="duckd-eyes", daemon=True)
         self._thread.start()
 
     def stop(self) -> None:
@@ -200,6 +225,9 @@ class EyesOutput:
         if self._thread:
             self._thread.join(timeout=2.0)
             self._thread = None
+        if getattr(self, "_sender", None):
+            self._sender.join(timeout=2.0)  # 送完手上那一幀才關螢幕
+            self._sender = None
         if self.hardware is not None:
             try:
                 self.hardware.close()  # 只放開 SPI／GPIO；BLK 沒有下拉，背光可能維持亮著（設計文件 §1.2）
@@ -216,6 +244,10 @@ class EyesOutput:
         sm = sorted(self.send_ms)
         if sm:
             out.update(send_ms_median=round(sm[len(sm) // 2], 1), send_ms_max=round(sm[-1], 1))
+        hw = self.hardware
+        if hw is not None and getattr(hw, "frames", 0):
+            out["px_per_frame"] = round(hw.pixels_sent / hw.frames)  # 兩眼合計
+            out["blits_per_frame"] = round(getattr(hw, "blits", 0) / hw.frames, 1)
         last = getattr(self.hardware, "last_sent", None)
         if last is not None:
             out["last_sent_age_s"] = round(time.monotonic() - last, 2)  # 渲染心跳（ADR-0013 §2.3）

@@ -51,3 +51,31 @@ def test_dirty_spans_ring_sends_far_less_than_bounding_rect():
     rect_px = (x1 - x0) * (y1 - y0)
     span_px = sum((s[2] - s[0]) * (s[3] - s[1]) for s in dirty_spans(a, b))
     assert span_px < 0.6 * rect_px
+
+
+def test_dirty_runs_merges_cheap_gaps_and_splits_far_ones():
+    from duck_eyes.panel import dirty_runs
+
+    a = np.zeros((32, 240, 3), np.uint8)
+    assert dirty_runs(None, a) == [(0, 0, 240, 32)]
+    assert dirty_runs(a, a.copy()) == []
+    b = a.copy()
+    b[3, 10] = b[3, 20] = 1  # 空隙 9 欄 × 16 列 = 144 ≤ 400：合併
+    b[3, 200] = 1  # 空隙 179 欄：分開
+    b[20, 50] = 1  # 第二條
+    assert dirty_runs(a, b, band=16, blit_cost_px=400) == [(10, 0, 21, 16), (200, 0, 201, 16), (50, 16, 51, 32)]
+    assert dirty_runs(a, b, band=16, blit_cost_px=0) == [(10, 0, 11, 16), (20, 0, 21, 16), (200, 0, 201, 16), (50, 16, 51, 32)]
+
+
+def test_dirty_runs_covers_every_changed_pixel():
+    from duck_eyes.panel import dirty_runs
+
+    rng = np.random.default_rng(0)
+    a = rng.integers(0, 255, (240, 240, 3), dtype=np.uint8)
+    b = a.copy()
+    idx = rng.integers(0, 240, (300, 2))
+    b[idx[:, 0], idx[:, 1]] ^= 0xFF
+    mask = np.zeros((240, 240), bool)
+    for x0, y0, x1, y1 in dirty_runs(a, b):
+        mask[y0:y1, x0:x1] = True
+    assert mask[np.any(a != b, axis=2)].all()
