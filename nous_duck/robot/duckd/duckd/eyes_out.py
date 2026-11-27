@@ -101,6 +101,13 @@ class EyesOutput:
         with self._lock:
             self._audio_level, self._gaze = audio_level, gaze
 
+    def apply_snapshot(self, snap: dict) -> None:
+        """眼睛子行程用：照父行程（duckd）送來的快照畫。表情已經由父行程決定（含 express 到期），這裡不再判斷。"""
+        with self._lock:
+            self._base, self._override = snap["expression"], None
+            self._device = snap["device"]
+            self._audio_level, self._gaze = snap.get("audio_level"), snap.get("gaze")
+
     @property
     def expression(self) -> str:
         with self._lock:
@@ -235,7 +242,7 @@ class EyesOutput:
                 logging.getLogger("duckd.eyes").exception("關閉實體螢幕失敗")
 
     def stats(self) -> dict:
-        out: dict = {"panel": self.panel_kind, "frames": self.frames}
+        out: dict = {"panel": self.panel_kind, "frames": self.frames, "expression": self.expression}
         if self.hardware_error:
             out["hardware_error"] = self.hardware_error
         ms = sorted(self.render_ms)
