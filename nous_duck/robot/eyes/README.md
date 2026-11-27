@@ -1,6 +1,6 @@
 # 眼睛渲染程式（robot/eyes）
 
-狀態：渲染程式**可用（單元測試＋預覽圖）**；GC9A01 驅動 `gc9a01.py` **實機點亮過（Pi 4，桌上，兩片，20 MHz）**，還沒裝上頭、沒和舵機一起測。duckd 還沒接上這個驅動（仍只有虛擬面板）。紀錄見 [`eyes-render-speed-2026-11-27.md`](../../docs/validation/eyes-render-speed-2026-11-27.md)。
+狀態：渲染程式**可用（單元測試＋預覽圖）**；GC9A01 驅動 `gc9a01.py` **實機點亮過（Pi 4，桌上，兩片，20 MHz）**，還沒裝上頭、沒和舵機一起測。duckd 用 `--eyes-hw` 接上這個驅動（2026-11-28，Pi 上實測，對話中約 6.5 fps，見 [`eyes-duckd-2026-11-28.md`](../../docs/validation/eyes-duckd-2026-11-28.md)）。紀錄見 [`eyes-render-speed-2026-11-27.md`](../../docs/validation/eyes-render-speed-2026-11-27.md)。
 
 在 **Raspberry Pi 4** 上執行（目前單板，[ADR-0008](../../docs/adr/ADR-0008-single-board-pi4.md)；畫眼睛屬於感知那一組服務）（[眼睛硬體設計 §3.1](../../hardware/expression_mods/gc9a01_eyes.md#31-為什麼由-pi-4-驅動)）。表情、使用情境、音效規格見 [`docs/eye_expressions.md`](../../docs/eye_expressions.md)。
 
@@ -58,7 +58,7 @@ cd <放 duck_eyes 的資料夾>
 - 「左眼」是站在鴨子面前看到的左邊（CE0，鴨子自己的右眼）。裝反了加 `--swap`；螢幕轉了角度用 `--rotation 90/180/270`（只有 0 實機看過）。
 - 預設 20 MHz。沒加 SCL 串聯電阻與 BLK 下拉；開機與程式結束後背光可能亮著，這是硬體的事。
 - 面板沒有回讀：程式只知道資料送出去了，畫面對不對要人看。
-- 不要和其他用 GPIO 5／6／26 或 SPI0 的程式同時跑（例如之後接上驅動的 duckd）。
+- 不要和其他用 GPIO 5／6／26 或 SPI0 的程式同時跑（例如開了 `--eyes-hw` 的 duckd：先 `sudo systemctl stop duckd`）。
 
 ## 驗證
 
