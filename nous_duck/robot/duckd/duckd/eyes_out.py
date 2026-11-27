@@ -2,12 +2,15 @@
 
 - 表情由 `express` 與 `presence` 決定；**狀態環只吃真實裝置狀態**（鏡頭是否串流、對話是否進行、
   是否需要幫忙），表情改不到它。
-- 螢幕還沒到貨：只有「虛擬面板」——把兩眼畫面並排寫成 PNG（給人看的預覽），**不是**實體螢幕。
-  GC9A01 的 SPI 驅動等螢幕到貨後再寫，這裡沒有假的驅動。
+- 兩種輸出，可以同時開：
+  - 實體螢幕：兩片 GC9A01（`duck_eyes.gc9a01`，SPI0）。面板沒有回讀，只能確認「資料送出去了」。
+    打不開（沒開 SPI、少套件、腳位被占）就記下原因、退回虛擬面板，不假裝有螢幕。
+  - 虛擬面板：把兩眼畫面並排寫成 PNG（給人看的預覽），**不是**實體螢幕。有實體螢幕時每秒最多寫一次。
 - 渲染在自己的執行緒，不占控制迴圈的時間。
 """
 from __future__ import annotations
 
+import logging
 import os
 import struct
 import threading
@@ -30,7 +33,8 @@ def encode_png(rgb) -> bytes:
 
 
 class EyesOutput:
-    def __init__(self, panel_path: Path | None = None, fps: float = 5.0, seed: int = 0):
+    def __init__(self, panel_path: Path | None = None, fps: float = 5.0, seed: int = 0, hardware=None):
+        """`hardware`：已初始化的實體螢幕（`duck_eyes.gc9a01.open_eyes()` 的結果，或同介面：show／close／last_sent）。"""
         ensure_sibling_packages()
         import duck_eyes  # 需要 numpy
         import numpy as np
@@ -48,12 +52,18 @@ class EyesOutput:
         self._audio_level: float | None = None
         self._gaze: tuple[float, float] | None = None
         self.render_ms: list[float] = []
+        self.send_ms: list[float] = []
+        self.hardware = hardware
+        self.hardware_error: str | None = None  # 實體螢幕打不開或送失敗的原因
+        self._png_at = -float("inf")
         self.frames = 0
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
 
-    # 面板種類：目前只有虛擬面板
-    panel_kind = "virtual_png"
+    @property
+    def panel_kind(self) -> str:
+        """`gc9a01`＝實體螢幕在用；`virtual_png`＝只有虛擬面板（或實體螢幕打不開）。"""
+        return "gc9a01" if self.hardware is not None else "virtual_png"
 
     @property
     def expressions(self) -> list[str]:
@@ -121,11 +131,36 @@ class EyesOutput:
     def write_panel(self, left, right) -> None:
         if self.panel_path is None:
             return
+        if self.hardware is not None:  # 有實體螢幕：PNG 只是預覽，每秒最多一次
+            now = time.monotonic()
+            if now - self._png_at < 1.0:
+                return
+            self._png_at = now
         img = self._np.concatenate([left, self._np.zeros((left.shape[0], 16, 3), dtype=left.dtype), right], axis=1)
         tmp = self.panel_path.with_name(self.panel_path.name + ".tmp")
         self.panel_path.parent.mkdir(parents=True, exist_ok=True)
         tmp.write_bytes(encode_png(self._np.ascontiguousarray(img)))
         os.replace(tmp, self.panel_path)
+
+    def show(self, left, right) -> None:
+        """送到實體螢幕（有的話）並寫虛擬面板。"""
+        if self.hardware is not None:
+            t0 = time.perf_counter()
+            self.hardware.show(left, right)
+            self.send_ms.append((time.perf_counter() - t0) * 1000.0)
+            if len(self.send_ms) > 200:
+                del self.send_ms[:100]
+        self.write_panel(left, right)
+
+    def _drop_hardware(self, why: str) -> None:
+        log = logging.getLogger("duckd.eyes")
+        log.error("實體眼睛螢幕不能用，退回虛擬面板：%s", why)
+        self.hardware_error = why[:150]
+        hw, self.hardware = self.hardware, None
+        try:
+            hw.close()
+        except Exception:  # noqa: BLE001
+            log.exception("關閉實體螢幕失敗")
 
     def start(self) -> None:
         if self._thread:
@@ -134,14 +169,28 @@ class EyesOutput:
 
         def loop() -> None:
             period = 1.0 / self.fps
-            while not self._stop.wait(period):
+            next_t = time.monotonic()
+            while True:
+                next_t += period
+                wait = next_t - time.monotonic()
+                if wait < 0:  # 落後就不追，從現在重新起算
+                    next_t, wait = time.monotonic(), 0.0
+                if self._stop.wait(wait):
+                    break
                 try:
-                    self.write_panel(*self.render_once())
+                    left, right = self.render_once()
                 except Exception:  # noqa: BLE001 眼睛壞了不能拖垮身體
-                    import logging
-
                     logging.getLogger("duckd.eyes").exception("眼睛渲染失敗")
                     self._stop.wait(2.0)
+                    continue
+                try:
+                    self.show(left, right)
+                except Exception as exc:  # noqa: BLE001
+                    if self.hardware is not None:
+                        self._drop_hardware(f"send failed: {exc}")
+                    else:
+                        logging.getLogger("duckd.eyes").exception("虛擬面板寫入失敗")
+                        self._stop.wait(2.0)
 
         self._thread = threading.Thread(target=loop, name="duckd-eyes", daemon=True)
         self._thread.start()
@@ -151,9 +200,23 @@ class EyesOutput:
         if self._thread:
             self._thread.join(timeout=2.0)
             self._thread = None
+        if self.hardware is not None:
+            try:
+                self.hardware.close()  # 只放開 SPI／GPIO；BLK 沒有下拉，背光可能維持亮著（設計文件 §1.2）
+            except Exception:  # noqa: BLE001
+                logging.getLogger("duckd.eyes").exception("關閉實體螢幕失敗")
 
     def stats(self) -> dict:
+        out: dict = {"panel": self.panel_kind, "frames": self.frames}
+        if self.hardware_error:
+            out["hardware_error"] = self.hardware_error
         ms = sorted(self.render_ms)
-        if not ms:
-            return {"frames": 0}
-        return {"frames": self.frames, "render_ms_median": round(ms[len(ms) // 2], 1), "render_ms_max": round(ms[-1], 1)}
+        if ms:
+            out.update(render_ms_median=round(ms[len(ms) // 2], 1), render_ms_max=round(ms[-1], 1))
+        sm = sorted(self.send_ms)
+        if sm:
+            out.update(send_ms_median=round(sm[len(sm) // 2], 1), send_ms_max=round(sm[-1], 1))
+        last = getattr(self.hardware, "last_sent", None)
+        if last is not None:
+            out["last_sent_age_s"] = round(time.monotonic() - last, 2)  # 渲染心跳（ADR-0013 §2.3）
+        return out
