@@ -28,7 +28,10 @@ sys.path.insert(0, str(ROOT))
 from duck_audio.capture import ArecordSource  # noqa: E402
 from duck_audio.kws import WakeConfig, WakeEngine, build_spotter  # noqa: E402
 from duck_audio.playback import AplaySink, DuckAudioOut, PlaybackGate, RefSink, TeeSink  # noqa: E402
-from duck_audio.voice_service import SPEAKER, EnergyVad  # noqa: E402
+from duck_audio.speaker import find_speaker  # noqa: E402
+from duck_audio.voice_service import EnergyVad  # noqa: E402
+
+SPEAKER = find_speaker()
 from duck_audio.wavio import read_wav  # noqa: E402
 
 

@@ -59,7 +59,7 @@ ssh duck-pi4 'cd ~/duck/d-line/audio && ~/duck/audio-venv/bin/python tools/bench
 **第一次真的出聲**（白天、有人在場）：
 
 ```bash
-ssh duck-pi4 'cd ~/duck/d-line/audio && ~/duck/audio-venv/bin/python -m duck_audio.play --device plughw:CARD=CD002,DEV=0 --sfx listen_on --volume 0.1'
+ssh duck-pi4 'cd ~/duck/voice && ~/duck/audio-venv/bin/python -m duck_audio.play --device speaker --sfx listen_on --volume 0.3'
 ```
 
 `--volume` 是要求的音量（0～1），會被夾到本機上限（白天 0.5）。先從 0.1 開始；硬體混音器目前是 75%。
@@ -70,10 +70,10 @@ ssh duck-pi4 'cd ~/duck/d-line/audio && ~/duck/audio-venv/bin/python -m duck_aud
 
 ```text
 XVF3800（共用裝置 duck_mic，ch0）─► 喚醒引擎（本機；音訊不離開這個行程）
-        └─ 聽到喚醒詞 ─► 播本機提示音 listen_on（喇叭 CD002）
+        └─ 聽到喚醒詞 ─► 播本機提示音 listen_on（喇叭：自動找）
                       └► UDP 127.0.0.1:8793  {"v":1,"kind":"wake_word","keyword_id":"HELLO_YAZI","doa_deg":null,"t_ms":…,"mock":false}
                                └─ duckd 轉成 duck-link 的 wake_word 事件（**A 線還沒接**）─► Nous ─► Pi 上的 Nous 頁面開始對話
-Chromium 語音終端（B 線）同時讀 duck_mic、直接播到 CD002；對話期間這個服務不偵測喚醒詞
+Chromium 語音終端（B 線）同時讀 duck_mic、直接播到喇叭；對話期間這個服務不偵測喚醒詞
 ```
 
 | 檔案 | 內容 |
@@ -103,17 +103,27 @@ ssh duck-pi4 'sudo systemctl start duck-voice && journalctl -u duck-voice -f'
 
 對鴨子說「Hello 鴨子」或「Hey 鴨子」：應該聽到往上的「嘟嘟」，log 出現「喚醒詞 HELLO_YAZI（第 n 次）」。
 
-Chromium 語音終端要共用麥克風：啟動時設 `ALSA_CONFIG_PATH=/usr/share/alsa/alsa.conf:$HOME/duck/voice/alsa/duck-audio.conf`，加 `--alsa-input-device=duck_mic --alsa-output-device=plughw:CARD=CD002,DEV=0`。
+Chromium 語音終端要共用麥克風：啟動時設 `ALSA_CONFIG_PATH=/usr/share/alsa/alsa.conf:$HOME/duck/voice/alsa/duck-audio.conf`，加 `--alsa-input-device=duck_mic --alsa-output-device=<喇叭>`；喇叭名稱用 `python -m duck_audio.speaker` 查。
 
 還沒做、要別的線配合的：
 
 - **duckd（A 線）**：2026-11-27 已接上（分支 `claude/duckd-wake-relay`）——收到 `kind:"wake_word"` 發 duck-link 的 `wake_word` 事件、用最新的聲音方位補 `doa_deg`、把 presence 轉送到 `127.0.0.1:8794`。Pi 上不出力的實測通過（手動觸發）；頭部出力時的反應、頭在動時舵機聲會不會誤觸發喚醒詞**還沒測**（可能需要這個服務加「頭在動時不偵測」）。見 [`duckd-wake-relay-2026-11-27.md`](../../docs/validation/duckd-wake-relay-2026-11-27.md)。
 - **Chromium 語音終端的啟動與服務化、真的連 Nous 出聲**（B 線＋使用者在場）。
-- **回音消除的參考訊號**：Chromium 直接播到 CD002 時，XVF3800 拿不到參考；第一版靠 Chromium 的 `echoCancellation`。
+- **回音消除的參考訊號**：Chromium 直接播到喇叭時，XVF3800 拿不到參考；第一版靠 Chromium 的 `echoCancellation`。
 
 ### 實驗：原生上下行通道（未採用）
 
 路線 2 定案前寫的：`--mode native` 會在喚醒後把語音送到 Nous 端的 `/duck-voice`，把回話變聲後播出（`session.py`、`playback.StreamPlayer`／`RefSink`、`mock_nous.py`，介面 [duck-voice v0](../../protocol/proposals/d-duck-voice-media-channel.md)）。對模擬的 Nous 在 Pi 上跑通過，測試也還在跑，但**Nous 端沒有採用、不是鴨子現有的能力**；systemd 服務不用這個模式。留著的理由：之後若要讓對話的聲音經過變聲或鴨子的音量閘門，這是現成的起點。
+
+## 喇叭在哪（自動找）
+
+喇叭的 ALSA 名稱由 [`duck_audio/speaker.py`](duck_audio/speaker.py) 找，換喇叭不用改程式：環境變數 `DUCK_SPEAKER_DEVICE` 優先；否則找卡名以 `CD002` 開頭的 USB 音效卡；沒有的話用唯一一張不是麥克風（`Array`）的 USB 音效卡；分不出來就照實報錯，不亂挑。查目前的結果：
+
+```bash
+ssh duck-pi4 'cd ~/duck/voice && ~/duck/audio-venv/bin/python -m duck_audio.speaker'
+```
+
+2026-11-27 使用者換了喇叭：舊的 `e2b7:0811`（卡名 `CD002`）→ 新的 `e2b8:0811`「CD002-AUDIO」（卡名 `CD002AUDIO`），兩顆都只支援 48 kHz 雙聲道。新喇叭的硬體音量（`amixer -c CD002AUDIO`，0～147）設在 110（75%，約 −8 dB）：使用者在這個音量、軟體增益 0.5 下聽到了合成語音。
 
 ## 播放路徑（D5）
 

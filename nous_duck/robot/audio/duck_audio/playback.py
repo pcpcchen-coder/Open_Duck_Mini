@@ -11,7 +11,8 @@
 - 聲音只在記憶體裡串流，不留檔（`WavSink` 只給測試與離線試聽檔用）。
 - `levels`：實際送出聲音的音量包絡（10 Hz），給「說話時的動作」用；只有等級，不含聲音。
 
-喇叭（2026-11-25 在 Pi 上查）：USB `CD002`，只支援 S16_LE、2 聲道、48000 Hz。
+喇叭：USB 音效卡，裝置名由 `speaker.find_speaker()` 找（2026-11-25 的 `CD002` 與 2026-11-27 換上的 `CD002AUDIO`
+都只支援 S16_LE、2 聲道、48000 Hz）。
 驗證層級：單元測試；Pi 上只做過「音量 0＋靜音，送到裝置沒有錯誤」，**沒有人聽過**。
 """
 
@@ -103,7 +104,7 @@ class WavSink(NullSink):
 class AplaySink:
     """用系統的 `aplay`（alsa-utils）把 48 kHz 雙聲道 S16_LE 送到 ALSA 裝置。
 
-    `device` 例：`plughw:CARD=CD002,DEV=0`（鴨子的 USB 喇叭）、`null`（ALSA 的丟棄裝置）。
+    `device` 例：`plughw:CARD=CD002AUDIO,DEV=0`（鴨子的 USB 喇叭；用 `speaker.find_speaker()` 取得）、`null`（ALSA 的丟棄裝置）。
     """
 
     def __init__(self, device: str) -> None:
