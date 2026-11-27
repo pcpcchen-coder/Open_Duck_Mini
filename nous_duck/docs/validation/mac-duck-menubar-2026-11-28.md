@@ -68,9 +68,11 @@ bash nous_duck/tools/mac_duck_menubar/build.sh && "nous_duck/tools/mac_duck_menu
 - **Pi 開機時**：「鴨子設定…」實際打開 Pi 的頁面、在裡面存設定、區網權限的系統提示、鴨子連上時圖示變實心。要等 Pi 開機。
 - **登入的彈出視窗**：Nous 的 ChatGPT 方案登入是先開空白視窗再換網址；App 用一個看不見的 WebView 接住後交給系統瀏覽器。這條路沒有實際按過（按了會開始真的登入流程）。
 - **「重新啟動 Nous…」**：沒有按（會中斷 8791）；`launchctl kickstart -k` 的用法和 `mac_launch_agents.sh` 的 label 對過。
-- **安裝腳本**：寫完時還沒在這台 Mac 執行（要使用者同意）。安裝後補在 §5。
+- `install.sh --uninstall`：寫好了，沒有在這台 Mac 執行過（裝好就是要用）。
 - 只在 Apple Silicon、macOS 27.2.1 上建置過。
 
 ## 5. 安裝與使用者親手試
 
-（待補：使用者同意後執行 `install.sh`，以及使用者試用的結果。）
+2026-11-28，使用者在 H 線說「可以安裝」後執行 `bash nous_duck/tools/mac_duck_menubar/install.sh`：自我測試 44 項通過、建置、裝到 `~/Applications/Nous Duck.app`、`com.nousduck.menubar.plist` 通過 `plutil -lint` 並載入。`install.sh --status`：App 在、LaunchAgent 已載入、選單列圖示在跑，App 看到的狀態和 §3.2 相同（Pi 仍關機）。8791 的 Nous 沒有被重啟（pid 56695 不變）。
+
+使用者親手試：（待補）
