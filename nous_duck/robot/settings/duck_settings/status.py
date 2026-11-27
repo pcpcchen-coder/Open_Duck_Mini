@@ -136,6 +136,11 @@ def effects(view: View, directory: Path, services: dict[str, dict]) -> dict[str,
             out[s.key] = {"state": "not_reading", "label": f"{s.consumer} 沒有回報這一項（程式版本比較舊）"}
             continue
         running = rep["values"][s.key]
+        if running is None:
+            # 服務在跑、有回報這一項，但套用失敗（例如找不到喇叭）：照實說原因，不寫「已生效」
+            why = str(rep.get("note") or "沒有說明原因")
+            out[s.key] = {"state": "failed", "label": f"{s.consumer} 套用失敗：{why}"[:200]}
+            continue
         shown = f"{running:g}" if isinstance(running, float) else ("開" if running is True else "關" if running is False else str(running))
         if running == view.values[s.key]:
             out[s.key] = {"state": "applied", "label": "已生效", "running": running}

@@ -233,9 +233,9 @@ jobs:
       - name: duckd 讀設定（模擬身體）
         working-directory: nous_duck/robot/duckd
         run: python -m pytest tests/test_settings_in.py -v
-      - name: 聲源方位服務讀設定（模擬麥克風）
+      - name: 聲源方位服務讀設定（模擬麥克風）、語音服務套用喇叭音量（假的 amixer）
         working-directory: nous_duck/robot/audio
-        run: python -m pytest tests/test_doa.py tests/test_doa_settings.py -v
+        run: python -m pytest tests/test_doa.py tests/test_doa_settings.py tests/test_mixer.py -v
       - name: 安裝 Playwright 與 Chromium
         working-directory: nous_duck/robot/settings/tests/web
         run: |

@@ -127,3 +127,14 @@ def test_public_view_has_what_the_page_needs():
     assert d["apply"] == "restart" and d["consumer"] == "duckd" and (d["min"], d["max"], d["default"]) == (5.0, 60.0, 30.0)
     b = BY_KEY["privacy.camera"].public()
     assert b["writable"] is False and b["status_label"] == "硬體未到" and b["blocked_by"]
+
+
+def test_speaker_volume_is_read_by_the_voice_service():
+    """對話音量只能調喇叭的硬體音量（Chromium 直接播）：設定要有程式在讀，而且部署時不會改變現況。"""
+    s = BY_KEY["audio.speaker_volume"]
+    assert (s.type, s.min, s.max, s.default, s.consumer, s.apply, s.writable) == ("int", 0, 100, 100, "duck-voice", "live", True)
+    src = (ROBOT / "audio" / "duck_audio" / "voice_service.py").read_text(encoding="utf-8")
+    keys = re.search(r"KEYS = \((.*?)\n\)", src, re.S).group(1)
+    voice_keys = set(re.findall(r'"([a-z_.]+)"', keys))
+    # 設定頁上歸語音服務的每一項，服務都有讀（服務另外也讀「夜間音量上限」這種還不能設定、只會是預設值的項目）
+    assert {x.key for x in SETTINGS if x.consumer == "duck-voice"} <= voice_keys and "audio.speaker_volume" in voice_keys
