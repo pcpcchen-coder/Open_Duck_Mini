@@ -60,18 +60,25 @@ def build(args) -> tuple[Duckd, LinkRunner]:
         try:
             from .eyes_out import EyesOutput
 
-            hardware, hw_error = None, None
-            if args.eyes_hw:
-                try:
-                    from duck_eyes.gc9a01 import open_eyes
+            if args.eyes_hw and not args.eyes_in_process:
+                # 實體螢幕：渲染與 SPI 在子行程，不和控制迴圈搶 GIL（驗證紀錄 eyes-duckd-2026-11-28 §5）
+                from .eyes_proc import EyesProcess
 
-                    hardware = open_eyes(hz=args.eyes_spi_hz, rotation=args.eyes_rotation, swap=args.eyes_swap, band=args.eyes_band)
-                except Exception as exc:  # noqa: BLE001 沒開 SPI、少套件、腳位被占：退回虛擬面板
-                    logging.error("實體眼睛螢幕打不開（%s）；只用虛擬面板", exc)
-                    hw_error = f"open failed: {exc}"[:150]
-            eyes = EyesOutput(args.eyes_panel, fps=args.eyes_fps, hardware=hardware)
-            if args.eyes_hw and hardware is None:
-                eyes.hardware_error = hw_error
+                hw_kwargs = dict(hz=args.eyes_spi_hz, rotation=args.eyes_rotation, swap=args.eyes_swap, band=args.eyes_band)
+                eyes = EyesProcess(args.eyes_panel, fps=args.eyes_fps, hw_kwargs=hw_kwargs)
+            else:
+                hardware, hw_error = None, None
+                if args.eyes_hw:
+                    try:
+                        from duck_eyes.gc9a01 import open_eyes
+
+                        hardware = open_eyes(hz=args.eyes_spi_hz, rotation=args.eyes_rotation, swap=args.eyes_swap, band=args.eyes_band)
+                    except Exception as exc:  # noqa: BLE001 沒開 SPI、少套件、腳位被占：退回虛擬面板
+                        logging.error("實體眼睛螢幕打不開（%s）；只用虛擬面板", exc)
+                        hw_error = f"open failed: {exc}"[:150]
+                eyes = EyesOutput(args.eyes_panel, fps=args.eyes_fps, hardware=hardware)
+                if args.eyes_hw and hardware is None:
+                    eyes.hardware_error = hw_error
         except ImportError as exc:
             logging.warning("眼睛渲染不能用（%s）；capabilities.eyes 會回報 unsupported", exc)
     percept = None
@@ -123,6 +130,7 @@ def main() -> int:
     p.add_argument("--eyes-spi-hz", type=int, default=20_000_000, help="實體螢幕 SPI 時脈（桌上實測 20 MHz 不花屏）")
     p.add_argument("--eyes-rotation", type=int, default=0, choices=[0, 90, 180, 270], help="實機只看過 0")
     p.add_argument("--eyes-swap", action="store_true", help="左右眼對調（CE0 當右眼）")
+    p.add_argument("--eyes-in-process", action="store_true", help="實體螢幕也在 duckd 行程裡畫（舊做法，會和控制迴圈搶 GIL）")
     p.add_argument("--eyes-band", type=int, default=16, help="局部更新：每幾列一條、條內只送有變的欄；0＝舊的 24×24 格子")
     p.add_argument("--no-eyes", action="store_true")
     p.add_argument("--percept-port", type=int, default=8793, help="感知輸入的 UDP 埠（只綁 127.0.0.1）")

@@ -26,6 +26,7 @@ duckd 不做語音、視覺、決策（那是 Nous 的事，[ADR-0001](../../doc
 | `duckd/head_real.py` | 頭部實機後端：重用舵機控制台的 `Controller`、`FeetechBus`，外加只放行 ID 30–33 的白名單 | A3 |
 | `duckd/gestures.py`、`duckd/library/*.json` | 動作庫：定義檔、載入時檢查、播放（`nod`、`shake`、`tilt`、`look_around`） | A4 |
 | `duckd/presence.py` | `presence` → 眼睛表情＋頭部目標 | A5 |
+| `duckd/eyes_proc.py` | `--eyes-hw` 時眼睛在子行程渲染與傳送（不和控制迴圈搶 GIL）；子行程死掉會標示並重啟 | A6 |
 | `duckd/eyes_out.py` | `duck_eyes` 渲染＋實體螢幕（`duck_eyes.gc9a01`）＋虛擬面板（PNG） | A6 |
 | `duckd/percept.py` | 感知的本機輸入（UDP `127.0.0.1:8793`）：人臉／聲音方位、來源存活訊息、喚醒服務送來的 `wake_word` | T5 |
 | `duckd/voice_out.py` | 把目前的 presence 用 UDP 送給喚醒服務（`127.0.0.1:8794`） | 喚醒 |
