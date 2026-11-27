@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key><string>com.nousduck.menubar</string>
+  <key>CFBundleName</key><string>Nous Duck</string>
+  <key>CFBundleDisplayName</key><string>鴨子 Nous</string>
+  <key>CFBundleExecutable</key><string>NousDuck</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleShortVersionString</key><string>0.1.0</string>
+  <key>CFBundleVersion</key><string>1</string>
+  <key>CFBundleDevelopmentRegion</key><string>zh-Hant</string>
+  <key>LSMinimumSystemVersion</key><string>13.0</string>
+  <key>LSUIElement</key><true/>
+  <key>NSHighResolutionCapable</key><true/>
+  <key>NSAppTransportSecurity</key>
+  <dict>
+    <!-- 只連 localhost:8791 與區網上的鴨子（*.local 或 IP），都是 http -->
+    <key>NSAllowsLocalNetworking</key><true/>
+  </dict>
+  <key>NSLocalNetworkUsageDescription</key>
+  <string>鴨子 Nous 要連到同一個 Wi-Fi 上的鴨子（Pi）看它的狀態、打開它的設定頁。</string>
+</dict>
+</plist>
