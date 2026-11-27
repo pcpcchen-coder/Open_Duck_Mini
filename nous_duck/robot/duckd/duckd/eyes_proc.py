@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import logging
 import multiprocessing as mp
+import os
 import threading
 import time
 from pathlib import Path
@@ -25,6 +26,7 @@ SNAPSHOT_PERIOD_S = 0.05
 STATUS_PERIOD_S = 1.0
 STALE_S = 3.0
 RESTART_S = 5.0
+CHILD_NICE = 5  # 和 Pi 上的 chromium 一樣
 
 
 def _child_main(conn, panel_path, fps, hw_kwargs) -> None:  # pragma: no cover - 在子行程跑；測試從父行程觀察
@@ -35,6 +37,11 @@ def _child_main(conn, panel_path, fps, hw_kwargs) -> None:  # pragma: no cover -
     # systemd 停服務時整個 cgroup 都收到 SIGTERM：子行程不自己結束，等 duckd 叫它收尾（或管線斷了再走）
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
     signal.signal(signal.SIGINT, signal.SIG_IGN)
+    # 眼睛的優先權比 duckd 的控制迴圈低：CPU 搶不過來時先慢的是眼睛（11-28 實測：子行程 nice 0 時對話中仍約 10 次 overrun／分鐘）
+    try:
+        os.nice(CHILD_NICE)
+    except OSError:
+        pass
     hardware, error = None, None
     if hw_kwargs is not None:
         try:
