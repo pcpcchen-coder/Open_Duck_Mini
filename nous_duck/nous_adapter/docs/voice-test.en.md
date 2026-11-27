@@ -214,16 +214,19 @@ Until all four are in place, you can do the one-time setup in 7.2 and the "witho
 3. Press consent on the duck's browser profile (once per profile). First start Nous and the tunnel following §2.1 and §2.2, then:
 
    ```bash
-   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --debug-port 9333 --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic --speaker plughw:CARD=CD002,DEV=0'
+   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --auto-accept-mic --debug-port 9333 --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic --speaker plughw:CARD=CD002AUDIO,DEV=0'
    ```
 
    ```bash
    ssh -N -L 9333:127.0.0.1:9333 duck-pi4
    ```
 
-   In Chrome on the Mac open `chrome://inspect`, add `localhost:9333` to Discover network targets, and click inspect on that page; you can then see and operate the Nous page on the duck: start realtime voice once, press agree on the consent notice, press allow on the microphone permission, then end the conversation. After that this profile remembers.
+   In Chrome on the Mac open `chrome://inspect`, add `localhost:9333` to Discover network targets, and click inspect on that page; you can then see and operate the Nous page on the duck: click the brain to start realtime voice once, press agree on the consent notice (the left button, 「啟用語音」 "Enable voice"), then say 「再見」 ("goodbye") to end the conversation. After that this profile remembers. When done, restart without `--debug-port` (the command in 7.3) and close the `ssh -L` on the Mac: while the debug port is open, any process on the Pi can control this browser.
 
-   **None of the details** of this step (whether DevTools can operate that page this way, whether the permission prompt appears in no-screen mode) **has been verified**; if you get stuck, note down the screen and the messages.
+   What came up when this was actually done on 2026-11-27 (see the [validation record](../../docs/validation/duck-first-voice-call-2026-11-27.md)):
+   - **Realtime voice needs its own sign-in.** The Nous dev instance's chat sign-in is not the realtime sign-in; when the bottom line of the page says 「即時語音：不可用」 ("Realtime voice: unavailable"), open `http://localhost:8791/` on the Mac → Settings → Realtime voice → "Sign in with the ChatGPT plan". Without that sign-in, clicking the brain brings up a different consent (the browser's speech recognition, sent to Google); press 「不要」 ("No") on it.
+   - **The microphone permission prompt cannot be seen in a screenless Chromium**, and DevTools cannot press it either (it is in the browser frame). So the command adds `--auto-accept-mic`: it auto-allows for this Chromium only, and the microphone is still the real one. On 2026-11-27 the user agreed to this.
+   - **Chinese text shows as boxes in the DevTools view** (the Pi has no Chinese font); this does not affect voice. The consent box's buttons are 「啟用語音」 ("Enable voice") on the left and 「不要」 ("No") on the right.
 
 ### 7.3 Every test session
 
@@ -232,7 +235,7 @@ Until all four are in place, you can do the one-time setup in 7.2 and the "witho
 3. Pi: start the terminal page.
 
    ```bash
-   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic --speaker plughw:CARD=CD002,DEV=0'
+   ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --auto-accept-mic --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic --speaker plughw:CARD=CD002AUDIO,DEV=0'
    ```
 
 4. Pi: start duckd and `engage` (§2.3). `鴨子：鴨子已連線` (Duck: duck connected) appears in Nous's log.
@@ -271,5 +274,7 @@ If the log is `鴨子：聽到喚醒詞，但終端頁面（?terminal=duck）沒
 3. Mac: Ctrl-C on the tunnel; Ctrl-C on `npm start`.
 
 ### 7.8 Verification level of this section
+
+2026-11-27: with the user present, the first conversation was completed on the real hardware by following 7.2–7.3: realtime voice started by hand and a conversation started by saying 「Hey 鴨子」 ("Hey duck") both worked, with the sound coming out of the duck's speaker. See the [validation record](../../docs/validation/duck-first-voice-call-2026-11-27.md). The original text written on 2026-11-26 follows.
 
 As of 2026-11-26: the server side on the AIOS side has fixture tests (a fake duck, a fake voice path); the page side has only type checking and a build, and **has not been run in a browser**. Chromium on the Pi has only been measured in the case of not connected to Nous, no sound, no microphone. **Not a single one of the steps above has been run by anyone.**
