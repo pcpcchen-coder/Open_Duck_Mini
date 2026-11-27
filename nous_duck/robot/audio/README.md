@@ -18,6 +18,7 @@
 |---|---|---|
 | `duck_audio/sfx_synth.py` | 用 numpy 合成 21 個音效（規格：[`eye_expressions.md`](../../docs/eye_expressions.md) §5.3） | D5 |
 | `sounds/*.wav`、`sounds/manifest.json` | 產生的音效（**自製、原創合成**；24 kHz 單聲道，共 392 KB）。不要手改，改程式後重新產生；測試會核對與程式一致 | D5 |
+| `duck_audio/mixer.py` | 喇叭的硬體音量（ALSA 混音器，`amixer -M`，照聽感換算的百分比）：設定、回讀、找控制項（優先 `PCM`）。`duck-voice` 用它套用設定頁的「喇叭音量」；`python -m duck_audio.mixer [百分比]` 手動查／設 | 2026-11-28 |
 | `duck_audio/playback.py` | `DuckAudioOut`：`play_voice`（`duck_voice`，變聲）、`play_raw`／`play_sfx`（`duck_raw`）；`PlaybackGate`；`AplaySink`／`NullSink`／`WavSink` | D5 |
 | `duck_audio/play.py` | 播放檢查用的命令列工具 | D5 |
 | `duck_audio/voice.py` | 變聲候選：`DelayLineShifter`、`PhaseVocoderShifter`（可設共振峰） | D6 |

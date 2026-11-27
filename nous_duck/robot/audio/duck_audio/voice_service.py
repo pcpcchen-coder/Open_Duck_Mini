@@ -42,6 +42,7 @@ import numpy as np
 from .capture import ArecordSource, CaptureError
 from .kws import AUDIO_ROOT, KWS_RATE, WakeConfig, WakeEngine, WakeRuntimeMissing
 from .playback import AplaySink, DuckAudioOut, GateConfig, PlaybackGate, RefSink, StreamPlayer, TeeSink
+from .mixer import TOLERANCE_PCT, MixerError, SpeakerMixer, card_of
 from .speaker import SpeakerNotFound, find_speaker
 from .session import Action, SessionConfig, State, VoiceSession
 from .voice import make_voice_changer
@@ -58,7 +59,10 @@ WAKE_CONFIG = AUDIO_ROOT / "config" / "wake_keywords.json"
 KEYS = (
     "features.wake_word", "privacy.wake_listening", "audio.wake_keyword", "audio.wake_sensitivity", "audio.wake_holdoff_s",
     "audio.volume", "audio.volume_cap_day", "audio.volume_cap_night", "audio.mute", "features.sound_effects",
+    "audio.speaker_volume",
 )
+#: 每隔幾秒重新確認一次喇叭的硬體音量（喇叭拔插後混音器會回到驅動的預設值；別人用 alsamixer 改了也會被改回設定值）。
+SPEAKER_VOLUME_CHECK_S = 5.0
 #: 只有實驗的 native 模式用得到、設定頁上沒有的值（路線 2 不適用，所以不做成看起來有效的開關）。
 NATIVE_DEFAULTS = {
     "audio.voice_changer": "phase_vocoder", "audio.voice_semitones": 5.0, "audio.voice_formant_ratio": 1.12,
@@ -141,6 +145,11 @@ class VoiceService:
         self._level = 0.0
         self.mic_status = "off"
         self.wakes = 0
+        #: 喇叭硬體音量（`audio.speaker_volume`）：實際回讀到的值與失敗原因。對話的聲音只能靠它調（Chromium 直接播）。
+        self.mixer_factory = SpeakerMixer
+        self._mixer: SpeakerMixer | None = None
+        self.speaker_volume_actual: int | None = None
+        self.speaker_volume_error = ""
 
     # ---- 設定 ----
 
@@ -167,8 +176,36 @@ class VoiceService:
             self.kws_reload.set()
         enabled = bool(v["features.wake_word"]) and bool(v["privacy.wake_listening"])
         (self.mic_wanted.set if enabled else self.mic_wanted.clear)()
-        self.watcher.report({k: v[k] for k in KEYS})
+        self.apply_speaker_volume()
         return self.session.set_enabled(enabled, t)
+
+    def apply_speaker_volume(self) -> None:
+        """把喇叭的硬體音量設成 `audio.speaker_volume`，回讀確認，然後回報。失敗照實回報原因、不重試到卡住。"""
+        wanted = int(round(self.values["audio.speaker_volume"]))
+        try:
+            card = card_of(self._speaker())
+            if self._mixer is None or self._mixer.card != card:
+                self._mixer = self.mixer_factory(card)
+            current = self._mixer.get()
+            if abs(current - wanted) > TOLERANCE_PCT or self._mixer.muted():
+                current = self._mixer.set(wanted)
+                log.info("喇叭音量（%s %s）設成 %d%%，回讀 %d%%", card, self._mixer.control, wanted, current)
+            self.speaker_volume_actual, self.speaker_volume_error = current, ""
+        except (SpeakerNotFound, MixerError) as e:
+            if str(e) != self.speaker_volume_error:
+                log.warning("喇叭音量設不了：%s", e)
+            self._mixer = None
+            self.speaker_volume_actual, self.speaker_volume_error = None, str(e)[:160]
+        self._report()
+
+    def _report(self) -> None:
+        values = {k: self.values[k] for k in KEYS}
+        actual = self.speaker_volume_actual
+        # 回讀和設定值差在捨入範圍內就回報設定值（設定頁才會顯示「已生效」）；差太多或失敗就回報實際值（None＝讀不到）。
+        if actual is None or abs(actual - values["audio.speaker_volume"]) > TOLERANCE_PCT:
+            values["audio.speaker_volume"] = actual
+        note = f"喇叭音量：{self.speaker_volume_error}" if self.speaker_volume_error else ""
+        self.watcher.report(values, note)
 
     def _speaker(self) -> str:
         """喇叭的 ALSA 名稱；沒指定就每次播之前重新找（喇叭可以在服務執行中換）。"""
@@ -420,6 +457,8 @@ class VoiceService:
             n += 1
             if n % 10 == 0 and self.watcher.poll() is not None:
                 self.perform(self.apply_settings(self._now()))
+            elif n % round(SPEAKER_VOLUME_CHECK_S * 10) == 0:
+                self.apply_speaker_volume()
 
     async def run(self) -> None:
         self.loop = asyncio.get_running_loop()

@@ -51,7 +51,7 @@ PRESENCE_LABEL = {
 
 SECTIONS = (
     ("features", "功能開關", "打開或關掉鴨子的各項行為。"),
-    ("audio", "語音與聲音", "音量上限、夜間時段、變聲、喚醒詞。喇叭播放還沒接成常駐服務，這一區目前只能看。"),
+    ("audio", "語音與聲音", "喇叭音量（對話也會跟著變）、提示音、喚醒詞。夜間時段與變聲還不能設定。"),
     ("hearing", "聽聲轉頭門檻", "多大聲才算有人說話、轉頭前要等多久、多久沒聲音就回正。"),
     ("head", "頭部動作", "頭轉多快、可以轉多遠、對話時小動作的幅度。"),
     ("eyes", "眼睛表情", "各個對話狀態用哪個表情。螢幕還沒到貨，現在只有虛擬面板（PNG）。"),
@@ -199,8 +199,15 @@ def _build() -> tuple[Setting, ...]:
                 consumer=VOICE, basis=_VOICE_TEST))
 
     # ------------------------------------------------------------ 語音與聲音（duck-voice 服務）
+    add(Setting("audio.speaker_volume", "audio", "喇叭音量（對話與提示音）", "int", 100,
+                "鴨子喇叭的硬體音量：和 Nous 對話的聲音、本機提示音都會跟著變。100＝喇叭本身的最大音量；0＝喇叭沒有聲音"
+                "（連安全提示也聽不到）。百分比照聽感換算，50 大約是聽起來一半大聲。改了之後幾秒內生效，不用重啟。",
+                consumer=VOICE, min=0, max=100, step=5, unit="%",
+                basis="喇叭（CD002-AUDIO）的硬體音量 PCM，由語音服務用 amixer 設定並回讀；2026-11-28 部署前機上是 100%。"
+                      "沒有量過聲壓"))
     add(Setting("audio.volume", "audio", "提示音音量", "number", 0.2,
-                "鴨子本機提示音（被叫醒的「嘟嘟」等）的音量（線性增益），不會超過下面的上限。**管不到對話的聲音**：那是 Chromium 直接播的。", consumer=VOICE, min=0.0, max=1.0, step=0.05,
+                "鴨子本機提示音（被叫醒的「嘟嘟」等）的音量（線性增益），不會超過下面的上限。對話的聲音不受這一項影響，"
+                "請用上面的「喇叭音量」。", consumer=VOICE, min=0.0, max=1.0, step=0.05,
                 basis="保守初值；沒有量過聲壓。" + _VOICE_TEST))
     add(Setting("audio.volume_cap_day", "audio", "提示音音量上限", "number", 0.5,
                 "鴨子本機提示音的線性增益上限。", consumer=VOICE,
@@ -212,7 +219,7 @@ def _build() -> tuple[Setting, ...]:
                 blocked_by="夜間模式的排程還沒做（ADR-0006 待決第 4 項）"))
     add(Setting("audio.night_end", "audio", "夜間結束", "time", "07:00", "夜間模式結束的時間。", status="planned",
                 blocked_by="夜間模式的排程還沒做（ADR-0006 待決第 4 項）"))
-    add(Setting("audio.mute", "audio", "本機靜音", "bool", False, "擋下鴨子本機的提示音。**擋不到對話的聲音**（Chromium 直接播的）。", consumer=VOICE))
+    add(Setting("audio.mute", "audio", "本機靜音", "bool", False, "擋下鴨子本機的提示音。**擋不到對話的聲音**（Chromium 直接播的）；要讓對話小聲，調「喇叭音量」。", consumer=VOICE))
     why_voice = "路線 2 不適用：對話的聲音由 Pi 上的 Chromium 直接播出，不經過鴨子的變聲（使用者 2026-11-26 決定走路線 2）"
     add(Setting("audio.voice_changer", "audio", "變聲方式", "enum", "phase_vocoder",
                 "把 Nous 的聲音變成鴨子的聲音的演算法。", status="planned", blocked_by=why_voice,

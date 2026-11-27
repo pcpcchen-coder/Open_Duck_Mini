@@ -17,7 +17,7 @@
 | 分區 | 內容 | 現況 |
 |---|---|---|
 | 功能開關 | 聽聲轉頭、具名動作、對話時的頭部小動作、說話時點頭 | 4 項接上 duckd，即時生效；看人（鏡頭未到）、喚醒詞、本機音效是停用的 |
-| 語音與聲音 | 音量上限、夜間時段、靜音、變聲、喚醒詞 | **全部只能看**：喇叭播放路徑還沒接成常駐服務，沒有程式讀這些值 |
+| 語音與聲音 | **喇叭音量（對話與提示音）**、提示音音量與上限、本機靜音、喚醒詞、門檻倍數 | 接上 `duck-voice`，即時生效。喇叭音量調的是喇叭的硬體音量，對話的聲音也會跟著變；夜間時段、夜間上限、變聲停用 |
 | 聽聲轉頭門檻 | 語音能量門檻、停穩等待、回正時間、死區；進階 5 項 | 9 項都接上（`duck-doa` 5 項、duckd 4 項），即時生效 |
 | 頭部動作 | 最高角速度、活動範圍、對話小動作幅度 | 前兩項要重啟 duckd；幅度即時 |
 | 眼睛表情 | 8 個 presence 狀態各用哪個表情；25 個表情的預覽圖；在鴨子上預覽 | 對應表接上 duckd，即時；預覽圖由 `duck_eyes` 渲染；螢幕未到，鴨子上只有虛擬面板（PNG）；亮度、自動眨眼停用 |
@@ -54,6 +54,7 @@
 | 方位視窗、最少樣本數、分群角度 | `DoaConfig` 的預設（可寫進 `doa.json`） | duck-doa | 原本要重啟；現在即時 | 已實作 | `hearing.window_s`、`min_speech_samples`、`cluster_tolerance_deg` |
 | 取樣率、送出頻率 | `DoaConfig` | duck-doa | 要重啟 | 已實作 | 沒接（沒有調的理由） |
 | 讀不讀麥克風的方向 | 沒有（服務有跑就讀） | — | — | — | `privacy.sound_direction`（關掉就不讀裝置） |
+| 喇叭音量（對話也跟著變） | 沒有（喇叭的硬體音量，手動用 `amixer` 調） | duck-voice（用 `amixer -M` 設定並回讀，每 5 秒確認一次） | 即時 | 已實作（2026-11-28） | `audio.speaker_volume`（0～100%，預設 100＝和部署前一樣） |
 | 提示音音量與上限、本機靜音 | `duck_audio/playback.py` 的 `GateConfig`／`GateState` | duck-voice | 即時 | 已實作（2026-11-26；只管本機提示音，管不到 Chromium 播的對話聲音；沒有量過聲壓） | `audio.volume`、`audio.volume_cap_day`、`audio.mute` |
 | 夜間時段、夜間音量上限、房間禁止出聲 | `GateState`（沒有來源在設定它） | — | — | 規劃中 | `audio.night_start`／`night_end`、`audio.volume_cap_night`（停用） |
 | 變聲方式、音高、共振峰 | `duck_audio/voice.py` 的參數 | — | — | **路線 2 不適用**（對話的聲音由 Chromium 直接播，不經過變聲） | `audio.voice_*` 3 項（停用） |
@@ -173,7 +174,7 @@ ssh duck-pi4 '~/duck/settings/duck-settings set privacy.sound_direction true'
 
 - **在實機上看設定生效**：設定頁（啟動中、已設成開機自動啟動，還沒有經過一次重開機確認）與會讀設定的 duckd、duck-doa 都已在 Pi 上，但兩個服務還沒有啟動過；下次有人在場啟動時要補實機紀錄。
 - 頁面看不出 Pi 上裝的 duckd／duck-doa 是不是會讀設定的版本：服務沒在跑時一律說「下次啟動時會用這個值」（[驗證紀錄 §4.3](../../docs/validation/settings-2026-11-26.md)）。
-- 「語音與聲音」整區：等喇叭播放接成常駐服務（D 線）再接。
+- 夜間時段與夜間音量上限：等夜間模式的排程。變聲：路線 2 不適用。
 - 隱私模式、鏡頭、常駐聆聽：等對應的服務與硬體。
 - Nous 經 duck-link 讀設定、收緊設定：只有[提案](../../protocol/proposals/e-settings-over-duck-link.md)。
 - presence 各狀態的個別角度、人臉追蹤的增益、聽聲轉頭的平滑視窗：還在程式裡。
