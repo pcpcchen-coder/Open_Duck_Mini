@@ -1,6 +1,6 @@
 """鴨子眼睛（GC9A01 1.28 吋圓形螢幕 ×2）的渲染程式。
 
-只負責「畫出每一幀」；螢幕的 SPI 驅動還沒寫（等 E1 實測）。設計見
+負責「畫出每一幀」；兩片螢幕的 SPI 驅動在 `duck_eyes.gc9a01`（只在 Pi 上用到，要 spidev 與 gpiod）。設計見
 `nous_duck/docs/eye_expressions.md` 與 `nous_duck/hardware/expression_mods/gc9a01_eyes.md`。
 """
 
