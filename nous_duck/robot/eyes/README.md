@@ -1,6 +1,6 @@
 # 眼睛渲染程式（robot/eyes）
 
-狀態：渲染程式**可用（單元測試＋預覽圖）**；GC9A01 驅動 `gc9a01.py` **實機點亮過（Pi 4，桌上，兩片，20 MHz）**，還沒裝上頭、沒和舵機一起測。duckd 用 `--eyes-hw` 接上這個驅動（2026-11-28，Pi 上實測，對話中約 6.5 fps，見 [`eyes-duckd-2026-11-28.md`](../../docs/validation/eyes-duckd-2026-11-28.md)）。紀錄見 [`eyes-render-speed-2026-11-27.md`](../../docs/validation/eyes-render-speed-2026-11-27.md)。
+狀態：渲染程式**可用（單元測試＋預覽圖）**；GC9A01 驅動 `gc9a01.py` **實機點亮過（Pi 4，桌上，兩片，20 MHz）**，還沒裝上頭、沒和舵機一起測。duckd 用 `--eyes-hw` 接上這個驅動（2026-11-28，Pi 上實測，加速後對話中約 11 fps、idle 15 fps，見 [`eyes-duckd-2026-11-28.md`](../../docs/validation/eyes-duckd-2026-11-28.md)）。紀錄見 [`eyes-render-speed-2026-11-27.md`](../../docs/validation/eyes-render-speed-2026-11-27.md)。
 
 在 **Raspberry Pi 4** 上執行（目前單板，[ADR-0008](../../docs/adr/ADR-0008-single-board-pi4.md)；畫眼睛屬於感知那一組服務）（[眼睛硬體設計 §3.1](../../hardware/expression_mods/gc9a01_eyes.md#31-為什麼由-pi-4-驅動)）。表情、使用情境、音效規格見 [`docs/eye_expressions.md`](../../docs/eye_expressions.md)。
 
