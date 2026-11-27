@@ -12,7 +12,7 @@
     python -m duck_audio.voice_service --mode native --url ws://127.0.0.1:8791/duck-voice --settings-dir ~/duck/settings
 
 - 介面：`protocol/proposals/d-duck-voice-media-channel.md`（duck-voice v0）。規則在 `session.py`。
-- 麥克風：XVF3800 的處理後聲道（ch0）；喇叭：CD002，同時把播出的聲音送給 XVF3800 當回音消除的參考。
+- 麥克風：XVF3800 的處理後聲道（ch0）；喇叭：自動找（`speaker.py`，卡名以 CD002 開頭的 USB 音效卡），同時把播出的聲音送給 XVF3800 當回音消除的參考。
 - 設定：只從「鴨子設定」（`robot/settings`，ADR-0019）讀，每秒看一次；`privacy.wake_listening` 關掉時**不開麥克風**。
 - 隱私（ADR-0003 §6）：喚醒前的音訊只經過喚醒引擎，在記憶體裡用完就丟；這個檔案沒有任何寫檔的程式；
   log 只有狀態與計數，沒有音訊、沒有辨識文字。只有 `LISTENING` 狀態的音訊會離開這個行程，而且只送到 loopback。
@@ -42,6 +42,7 @@ import numpy as np
 from .capture import ArecordSource, CaptureError
 from .kws import AUDIO_ROOT, KWS_RATE, WakeConfig, WakeEngine, WakeRuntimeMissing
 from .playback import AplaySink, DuckAudioOut, GateConfig, PlaybackGate, RefSink, StreamPlayer, TeeSink
+from .speaker import SpeakerNotFound, find_speaker
 from .session import Action, SessionConfig, State, VoiceSession
 from .voice import make_voice_changer
 
@@ -49,7 +50,7 @@ log = logging.getLogger("duck-voice")
 PROTOCOL = 0
 UPLINK = {"rate": KWS_RATE, "format": "s16le", "channels": 1, "frame_ms": 20}
 DOWNLINK = {"rate": 24000, "format": "s16le", "channels": 1}
-SPEAKER = "plughw:CARD=CD002,DEV=0"
+SPEAKER = None  # 啟動時用 speaker.find_speaker() 找（換喇叭不用改程式）
 SETTINGS_SERVICE = "duck-voice"
 WAKE_CONFIG = AUDIO_ROOT / "config" / "wake_keywords.json"
 
@@ -105,7 +106,7 @@ def loopback_url(url: str) -> str:
 
 
 class VoiceService:
-    def __init__(self, url: str, settings_dir: Path | None, mic_device: str | None = None, speaker: str = SPEAKER,
+    def __init__(self, url: str, settings_dir: Path | None, mic_device: str | None = None, speaker: str | None = SPEAKER,
                  notify_duckd: tuple[str, int] | None = None, models_dir: Path | None = None, mode: str = "wake",
                  wake_udp: tuple[str, int] | None = WAKE_UDP, control_udp: tuple[str, int] | None = CONTROL_UDP) -> None:
         if mode not in ("wake", "native"):
@@ -118,6 +119,7 @@ class VoiceService:
         self.wake_sent = 0
         self.url = loopback_url(url)
         self.mic_device, self.speaker = mic_device, speaker
+        self._speaker_error: str | None = None
         self.models_dir = models_dir
         self.session = VoiceSession()
         self.gate = PlaybackGate()
@@ -168,8 +170,14 @@ class VoiceService:
         self.watcher.report({k: v[k] for k in KEYS})
         return self.session.set_enabled(enabled, t)
 
+    def _speaker(self) -> str:
+        """喇叭的 ALSA 名稱；沒指定就每次播之前重新找（喇叭可以在服務執行中換）。"""
+        if self.speaker:
+            return self.speaker
+        return find_speaker()
+
     def _sink(self):
-        main = AplaySink(self.speaker)
+        main = AplaySink(self._speaker())
         return TeeSink(main, RefSink()) if self.values.get("audio.aec_reference", True) else main
 
     def _shifter(self, rate: int):
@@ -339,6 +347,8 @@ class VoiceService:
             r = self.sfx.play_sfx(name)
             if r.status != "played":
                 log.info("音效 %s 沒播：%s", name, r.reason)
+        except SpeakerNotFound as e:
+            log.error("音效 %s 沒播：找不到喇叭（%s）", name, e)
         except Exception as e:  # noqa: BLE001
             log.error("音效 %s 播放失敗：%s", name, e)
 
@@ -451,7 +461,7 @@ def main() -> int:
     ap.add_argument("--url", default="ws://127.0.0.1:8791/duck-voice", help="（native）Nous 端的 duck-voice 端點（只接受 loopback）")
     ap.add_argument("--settings-dir", type=Path, default=None, help="鴨子設定資料夾（預設 ~/duck/settings）")
     ap.add_argument("--mic-device", default=None)
-    ap.add_argument("--speaker", default=SPEAKER)
+    ap.add_argument("--speaker", default=None, help="喇叭的 ALSA 裝置（預設自動找，見 duck_audio/speaker.py）")
     ap.add_argument("--models-dir", type=Path, default=None)
     ap.add_argument("--notify-duckd", default=None, metavar="HOST:PORT", help="把語音狀態用 UDP 丟給 duckd（duckd 端尚未實作；預設關）")
     a = ap.parse_args()

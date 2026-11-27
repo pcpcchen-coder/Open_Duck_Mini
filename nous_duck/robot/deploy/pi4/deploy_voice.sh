@@ -84,7 +84,8 @@ IPAddressAllow=localhost
 [Install]
 WantedBy=multi-user.target
 EOF2
-ssh "$HOST" 'sudo systemctl daemon-reload; systemctl is-enabled duck-voice 2>/dev/null || true; arecord -l | grep -i "XVF3800" >/dev/null && echo "   麥克風在（XVF3800）" || echo "   （找不到 XVF3800 的收音裝置）"'
+ssh "$HOST" 'sudo systemctl daemon-reload; systemctl is-enabled duck-voice 2>/dev/null || true; arecord -l | grep -i "XVF3800" >/dev/null && echo "   麥克風在（XVF3800）" || echo "   （找不到 XVF3800 的收音裝置）"
+  cd ~/duck/voice && S=$(~/duck/audio-venv/bin/python -m duck_audio.speaker) && echo "   喇叭：$S（自動找到）" || echo "   （找不到喇叭；見上一行的原因）"'
 
 cat <<MSG
 
@@ -96,5 +97,6 @@ cat <<MSG
   喚醒詞、門檻倍數、提示音音量：在設定頁改（http://duck-pi4.local:8081/ 的「語音與聲音」），幾秒內生效。
   Chromium 語音終端要和它共用麥克風：啟動 Chromium 時設
      ALSA_CONFIG_PATH=/usr/share/alsa/alsa.conf:\$HOME/duck/voice/alsa/duck-audio.conf
-     並加 --alsa-input-device=duck_mic --alsa-output-device=plughw:CARD=CD002,DEV=0
+     並加 --alsa-input-device=duck_mic --alsa-output-device=<上面印出的喇叭名稱>
+  喇叭名稱：ssh $HOST "cd ~/duck/voice && ~/duck/audio-venv/bin/python -m duck_audio.speaker"
 MSG

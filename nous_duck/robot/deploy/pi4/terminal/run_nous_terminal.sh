@@ -28,7 +28,8 @@
 #   --speaker NAME     Chromium 的輸出裝置（--alsa-output-device=NAME）。
 #                      路線 2 要和鴨子本機的喚醒偵測共用麥克風時，用 D 線的共用裝置（dsnoop）：
 #                        --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic \
-#                        --speaker plughw:CARD=CD002,DEV=0
+#                        --speaker "$(cd ~/duck/voice && ~/duck/audio-venv/bin/python -m duck_audio.speaker)"
+#                        （喇叭的名稱自動找；2026-11-27 換喇叭後是 plughw:CARD=CD002AUDIO,DEV=0）
 #                      不要直接開 hw:Array（會和喚醒偵測搶麥克風）。
 #                      驗證層級：D 線 2026-11-26 在 Pi 上用 run_local_probe.sh --enumerate-only 確認過
 #                      duck_mic 能被 Chromium 開啟、同時喚醒偵測照常；這支腳本帶這三個選項**還沒有執行過**，
