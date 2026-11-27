@@ -180,10 +180,18 @@ class Panel:
 
 
 class EyePanels:
-    """兩片眼睛（畫面左、畫面右）。只送和上一幀不同的格子（`panel.dirty_spans`）。"""
+    """兩片眼睛（畫面左、畫面右）。只送和上一幀不同的部分。
 
-    def __init__(self, left: Panel, right: Panel, gpio: Gpio, pins: Pins, tile: int = 24) -> None:
+    `band`＞0：每 `band` 列一條、條內只送有變的欄（`panel.dirty_runs`，預設 16 列）；
+    `band`＝0：舊做法，24×24 格子（`panel.dirty_spans`，`tile`）。
+    """
+
+    def __init__(
+        self, left: Panel, right: Panel, gpio: Gpio, pins: Pins, tile: int = 24, band: int = 16, blit_cost_px: int = 400
+    ) -> None:
         self.left, self.right, self.gpio, self.pins, self.tile = left, right, gpio, pins, tile
+        self.band, self.blit_cost_px = band, blit_cost_px
+        self.blits = 0
         self._prev: list[np.ndarray | None] = [None, None]
         self._backlight = False
         self.last_sent: float | None = None  # time.monotonic()，渲染心跳
@@ -206,13 +214,19 @@ class EyePanels:
             self.gpio.set(self.pins.blk, on)
         self._backlight = on
 
+    def spans(self, prev, img):
+        if self.band > 0:
+            return _panel.dirty_runs(prev, img, self.band, self.blit_cost_px)
+        return _panel.dirty_spans(prev, img, self.tile)
+
     def show(self, left: np.ndarray, right: np.ndarray) -> int:
         """送一幀；回傳這次送出的像素數。兩片第一幀都送完才開背光。"""
         sent = 0
         for k, (p, img) in enumerate(((self.left, left), (self.right, right))):
-            for x0, y0, x1, y1 in _panel.dirty_spans(self._prev[k], img, self.tile):
+            for x0, y0, x1, y1 in self.spans(self._prev[k], img):
                 p.blit(img[y0:y1, x0:x1], x0, y0)
                 sent += (x1 - x0) * (y1 - y0)
+                self.blits += 1
             self._prev[k] = img
         if not self._backlight:
             self.backlight(True)
@@ -228,7 +242,7 @@ class EyePanels:
         self.gpio.close()
 
 
-def open_eyes(hz: int = 20_000_000, pins: Pins = Pins(), rotation: int = 0, swap: bool = False) -> EyePanels:
+def open_eyes(hz: int = 20_000_000, pins: Pins = Pins(), rotation: int = 0, swap: bool = False, band: int = 16) -> EyePanels:
     """在 Pi 上打開兩片眼睛（CE0＝畫面左、CE1＝畫面右；swap=True 對調）。
 
     20 MHz：2026-11-27 桌上實測使用者目視「很順」；裝上頭、和舵機一起時要重新確認。
@@ -245,7 +259,7 @@ def open_eyes(hz: int = 20_000_000, pins: Pins = Pins(), rotation: int = 0, swap
         raise
     left = Panel(buses[0], gpio, pins, rotation)
     right = Panel(buses[1], gpio, pins, rotation)
-    eyes = EyePanels(left, right, gpio, pins)
+    eyes = EyePanels(left, right, gpio, pins, band=band)
     try:
         eyes.start()
     except Exception:

@@ -36,13 +36,13 @@ class FakeSpi:
         self.closed = True
 
 
-def make(rotation=0):
+def make(rotation=0, band=16):
     log = Log()
     pins = G.Pins()
     gpio = FakeGpio(log)
     left = G.Panel(FakeSpi(log, "L", gpio, pins.dc), gpio, pins, rotation)
     right = G.Panel(FakeSpi(log, "R", gpio, pins.dc), gpio, pins, rotation)
-    return log, gpio, G.EyePanels(left, right, gpio, pins), pins
+    return log, gpio, G.EyePanels(left, right, gpio, pins, band=band), pins
 
 
 def commands(log, name):
@@ -120,7 +120,7 @@ def test_full_frame_goes_out_in_chunks_when_real_bus_splits(monkeypatch):
 
 
 def test_only_changed_tiles_are_resent():
-    log, gpio, eyes, pins = make()
+    log, gpio, eyes, pins = make(band=0)
     eyes.start()
     a = np.zeros((240, 240, 3), np.uint8)
     eyes.show(a, a)
@@ -156,3 +156,16 @@ def test_driver_imports_without_hardware_libraries():
     import importlib
 
     importlib.reload(G)
+
+
+def test_band_mode_sends_only_changed_columns_and_counts_blits():
+    log, gpio, eyes, pins = make()
+    eyes.start()
+    a = np.zeros((240, 240, 3), np.uint8)
+    eyes.show(a, a)
+    b = a.copy()
+    b[100, 100] = 255
+    b[100, 200] = 255  # 同一條、隔很遠：分兩段
+    blits = eyes.blits
+    assert eyes.show(b, a) == 2 * 1 * 16  # 每段 1 欄寬 × 16 列
+    assert eyes.blits - blits == 2
