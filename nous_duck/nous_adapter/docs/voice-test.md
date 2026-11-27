@@ -232,7 +232,7 @@ ssh duck-pi4 '~/duck/duckd/duckd-ctl engage'
 
 1. Mac：啟動 Nous（§2.1）。log 要有 `鴨子：duck-link 已開在 ws://127.0.0.1:8791/duck-link…；語音終端頁面：http://localhost:8791/?terminal=duck`。
 2. Mac：開通道（§2.2）。
-3. Pi：啟動終端頁面。
+3. Pi：啟動終端頁面。裝了開機常駐的服務 `duck-terminal`（[`deploy_terminal_service.sh`](../../robot/deploy/pi4/deploy_terminal_service.sh)）就跳過這一步，它會自己連上；手動開要先 `sudo systemctl stop duck-terminal`，同一個設定檔不能開兩個。
 
    ```bash
    ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --auto-accept-mic --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic --speaker plughw:CARD=CD002AUDIO,DEV=0'

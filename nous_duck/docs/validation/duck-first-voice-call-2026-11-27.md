@@ -51,11 +51,23 @@
 
 ## 現在的狀態
 
-- Pi：終端頁面（Chromium，headless，沒有除錯埠）在背景跑著，用 `setsid nohup` 啟動，**不是服務**，Pi 重開就沒了。關法：`ssh duck-pi4 'pkill -TERM -f "run_nous_terminal[.]sh"'`。
+- Pi：寫這份紀錄時，終端頁面是用 `setsid nohup` 手動開的；之後改成開機常駐的服務 `duck-terminal`，見最後一節。
 - Mac：開發實例與通道是整合線啟動的，B 線沒有動。
 
-## 開機常駐的做法與風險（只是提案，沒有安裝）
+## 開機常駐的做法與風險（寫這份紀錄時的提案；Pi 這一半之後已裝，見下一節）
 
 - Pi：寫一個 systemd **使用者**服務（或系統服務，`User=duck`）跑 `run_nous_terminal.sh`，`Restart=on-failure`，排在 duckd 與 `duck-voice` 之後。腳本要求 `I_AM_PRESENT_AND_OK_WITH_SOUND=yes`（設計時假設有人在場），常駐等於永遠同意出聲、永遠開麥克風（只有喚醒後才送出）。通道沒開時頁面連不到 Nous，腳本會直接結束——常駐要先解決通道常駐。不要帶 `--debug-port`。
 - Mac：通道與開發實例要常駐，得用 launchd（`~/Library/LaunchAgents`），會改使用者的系統設定；開發實例用的是 `~/AIOS-duck-link` 這個 clone 與獨立設定目錄，常駐後更新程式要手動 `git pull` 並重啟。
 - 共同風險：常駐的即時語音會用 ChatGPT 方案的額度；誤喚醒會耗額度（沒人說話要等頁面的閒置時間到才結束）。每分鐘 3 次的限速仍在。
+
+## 補記：Pi 上的終端改成開機常駐服務（2026-11-27 晚）
+
+使用者看到上面的提案後說：「把它弄成服務啊！！要開機常駐！」
+
+- 新增 `nous_duck/robot/deploy/pi4/deploy_terminal_service.sh`，裝成 systemd 服務 `duck-terminal`（`User=duck`，enable 並啟動）。`run_nous_terminal.sh` 加 `--speaker auto`（用 D 線的 `duck_audio.speaker` 找喇叭，喇叭重插後卡名變了也找得到）。
+- 服務裡設 `I_AM_PRESENT_AND_OK_WITH_SOUND=yes`：常駐等於同意隨時可能出聲、麥克風一直開著（聲音只有被叫醒、頁面開始即時語音後才送出）。不開除錯埠。
+- 通道沒開時腳本會結束，服務 `Restart=always`、每 30 秒重試。
+- 實測（Pi 實機）：安裝後 `enabled`、`active`；Chromium 開的是 `duck_mic` 與 `plughw:CARD=CD002AUDIO,DEV=0`；`systemctl restart` 一次後仍是 `active`、Chromium 行程數相同、沒有留下孤兒行程。
+- **沒有驗證**：重開 Pi 後是否自己起來並連上（沒有重開 Pi）；改成服務後還記不記得即時語音的同意（同一個設定檔，理論上會記得）；服務啟動後用喚醒詞對話（要使用者說一次）。
+- Mac 這一半（Nous 開發實例與通道）**還不是常駐**：Mac 重開或登出後，Pi 的終端會一直重試、連不上，直到有人再開 Nous 與通道。
+

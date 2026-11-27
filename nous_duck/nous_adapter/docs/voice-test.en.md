@@ -232,7 +232,7 @@ Until all four are in place, you can do the one-time setup in 7.2 and the "witho
 
 1. Mac: start Nous (§2.1). The log must contain `鴨子：duck-link 已開在 ws://127.0.0.1:8791/duck-link…；語音終端頁面：http://localhost:8791/?terminal=duck` (Duck: duck-link is open at ws://127.0.0.1:8791/duck-link…; voice terminal page: http://localhost:8791/?terminal=duck).
 2. Mac: open the tunnel (§2.2).
-3. Pi: start the terminal page.
+3. Pi: start the terminal page. If the boot-persistent service `duck-terminal` is installed ([`deploy_terminal_service.sh`](../../robot/deploy/pi4/deploy_terminal_service.sh)), skip this step; it connects by itself. To start it by hand, first `sudo systemctl stop duck-terminal`, because the same profile cannot be opened twice.
 
    ```bash
    ssh duck-pi4 'cd ~/duck/terminal-spike && AIOS_PORT=8791 I_AM_PRESENT_AND_OK_WITH_SOUND=yes bash run_nous_terminal.sh --auto-accept-mic --alsa-config "$HOME/duck/voice/alsa/duck-audio.conf" --mic duck_mic --speaker plughw:CARD=CD002AUDIO,DEV=0'
