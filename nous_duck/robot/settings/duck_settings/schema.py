@@ -54,7 +54,7 @@ SECTIONS = (
     ("audio", "語音與聲音", "喇叭音量（對話也會跟著變）、提示音、喚醒詞。夜間時段與變聲還不能設定。"),
     ("hearing", "聽聲轉頭門檻", "多大聲才算有人說話、轉頭前要等多久、多久沒聲音就回正。"),
     ("head", "頭部動作", "頭轉多快、可以轉多遠、對話時小動作的幅度。"),
-    ("eyes", "眼睛表情", "各個對話狀態用哪個表情。螢幕還沒到貨，現在只有虛擬面板（PNG）。"),
+    ("eyes", "眼睛", "兩片 GC9A01 圓形螢幕：各個對話狀態用哪個表情、畫面亮度、每秒畫幾幀。"),
     ("privacy", "隱私", "在這一頁只能收緊。放寬要在鴨子本機用指令（ADR-0006 §3、ADR-0019 §2.5）。"),
     ("calibration", "機體量測值", "跟這隻鴨子的組裝有關的量測結果，不是偏好。「回復預設」不會動到這一區。"),
 )
@@ -289,8 +289,16 @@ def _build() -> tuple[Setting, ...]:
                     f"Nous 的語音工作階段在「{PRESENCE_LABEL[state]}」時，眼睛顯示哪個表情。"
                     + ("鏡頭開著時不會顯示閉眼睡著（ADR-0013）。" if state == "sleeping" else ""),
                     consumer=DUCKD, choices=_expr_choices(state), extra={"presence": state}))
-    add(Setting("eyes.brightness", "eyes", "螢幕亮度", "number", 1.0, "眼睛螢幕的背光亮度。", status="hardware_missing",
-                blocked_by="GC9A01 螢幕還沒到貨；有沒有背光控制腳要收貨後確認", min=0.1, max=1.0, step=0.1))
+    add(Setting("eyes.brightness", "eyes", "畫面亮度", "number", 1.0,
+                "把眼睛畫面的顏色調暗。背光腳（BLK，GPIO 6）沒有硬體 PWM，背光本身一直全亮，所以調暗**不會省電**，"
+                "暗的地方也會稍微透光；顏色會少幾階。",
+                consumer=DUCKD, min=0.1, max=1.0, step=0.05, unit=" 倍",
+                basis="2026-11-28 接上兩片螢幕（docs/validation/eyes-duckd-2026-11-28.md）；BLK 接線見眼睛設計 §3.2"))
+    add(Setting("eyes.fps", "eyes", "每秒畫幾幀", "int", 15,
+                "眼睛動畫的目標幀率。調低可以讓出 CPU 給控制迴圈與其他服務；實際幀率受 SPI 頻寬限制，"
+                "對話中（狀態環在動）大約 10 fps 就到頂了。",
+                consumer=DUCKD, min=2, max=20, step=1, unit=" fps", advanced=True,
+                basis="2026-11-28 實測：idle 約 15 fps、對話中約 10～11 fps（SPI 20 MHz；docs/validation/eyes-duckd-2026-11-28.md）"))
     add(Setting("eyes.auto_blink", "eyes", "自動眨眼", "bool", True, "每隔幾秒自動眨眼。", status="planned",
                 blocked_by="眨眼間隔寫在各表情的定義裡，還沒有開關"))
 

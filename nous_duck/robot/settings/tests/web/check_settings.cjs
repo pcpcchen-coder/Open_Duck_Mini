@@ -80,7 +80,7 @@ const card = (page, key) => page.locator(`[id="card-${key}"]`);
 
   // ---------------------------------------------------------------- 桌面
   const page = await open({ width: 1280, height: 900 });
-  ok("七個分區加系統狀態都在", (await page.locator("nav a").allInnerTexts()).join("|") === "功能開關|語音與聲音|聽聲轉頭門檻|頭部動作|眼睛表情|隱私|機體量測值|系統狀態");
+  ok("七個分區加系統狀態都在", (await page.locator("nav a").allInnerTexts()).join("|") === "功能開關|語音與聲音|聽聲轉頭門檻|頭部動作|眼睛|隱私|機體量測值|系統狀態");
   ok("表情預覽 25 張都畫出來了", await page.evaluate(() => [...document.querySelectorAll(".expr img")].every((i) => i.complete && i.naturalWidth === 200)));
   ok("已實作的設定顯示「已生效」", (await chip(page, "hearing.min_speech_energy")) === "已生效" && (await chip(page, "features.track_sound")) === "已生效");
   const blocked = card(page, "audio.volume_cap_night");
@@ -124,6 +124,28 @@ const card = (page, key) => page.locator(`[id="card-${key}"]`);
   await card(page, "eyes.presence.thinking").locator("select").selectOption("curious");
   await page.click("#save");
   ok("presence 表情對應改了，duckd 即時套用", await until(async () => (await chip(page, "eyes.presence.thinking")) === "已生效" && /目前 curious/.test(await card(page, "eyes.presence.thinking").innerText()), 8000));
+
+  // 眼睛亮度與幀率：改了之後 duckd 即時套用（模擬的 duckd 只有虛擬面板，套用的是渲染端）
+  const bright = card(page, "eyes.brightness").locator("input[type=number]");
+  await bright.fill("0.5");
+  await bright.blur();
+  await page.click("#save");
+  ok("眼睛亮度改了，duckd 即時套用", await until(async () => (await chip(page, "eyes.brightness")) === "已生效" && /目前 0.5/.test(await card(page, "eyes.brightness").innerText()), 8000), await chip(page, "eyes.brightness"));
+  ok("亮度說明寫明是軟體調暗、不省電", /不會省電/.test(await card(page, "eyes.brightness").innerText()));
+  const openAdv = () => page.evaluate(() => { document.querySelector("#sec-eyes details").open = true; });
+  await openAdv();
+  const fps = card(page, "eyes.fps").locator("input[type=number]");
+  await fps.fill("8");
+  await fps.blur();
+  await page.click("#save");
+  ok("眼睛幀率改了，duckd 即時套用", await until(async () => (await openAdv(), await chip(page, "eyes.fps")) === "已生效" && /目前 8/.test(await card(page, "eyes.fps").innerText()), 8000), await chip(page, "eyes.fps"));
+  await openAdv();  // 儲存後頁面重畫，進階區會收起來
+  await fps.fill("30");
+  await fps.blur();
+  await page.click("#save");
+  await page.waitForFunction(() => /沒有儲存/.test(document.getElementById("toast").textContent));
+  ok("幀率超出範圍被拒絕", /超出範圍 2～20/.test(await card(page, "eyes.fps").innerText()));
+  await page.click("#discard");
 
   // 在鴨子上預覽（模擬的 duckd：虛擬面板）
   await page.locator(".expr", { hasText: "happy" }).first().locator("button").click();

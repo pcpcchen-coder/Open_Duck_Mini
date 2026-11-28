@@ -541,6 +541,12 @@ class Duckd:
                 recenter_s=num("hearing.recenter_s", cfg.recenter_s),
                 min_confidence=num("hearing.min_confidence", cfg.min_confidence),
             )
+            if self.eyes is not None:
+                b, fps = values.get("eyes.brightness"), values.get("eyes.fps")
+                if isinstance(b, (int, float)) and not isinstance(b, bool):
+                    self.eyes.set_brightness(float(b))
+                if isinstance(fps, (int, float)) and not isinstance(fps, bool):
+                    self.eyes.set_fps(float(fps))
             for state in self.expression_map:
                 name = values.get(f"eyes.presence.{state}")
                 if isinstance(name, str) and (self.eyes is None or self.eyes.known(name)):
@@ -564,6 +570,9 @@ class Duckd:
             "hearing.min_confidence": cfg.min_confidence,
         })
         out.update({f"eyes.presence.{k}": v for k, v in self.expression_map.items()})
+        if self.eyes is not None:  # 沒有眼睛渲染時不回報：設定頁就不會說「已生效」
+            out["eyes.brightness"] = self.eyes.brightness
+            out["eyes.fps"] = int(round(self.eyes.fps))
         return out
 
     # ================================================================ 每圈

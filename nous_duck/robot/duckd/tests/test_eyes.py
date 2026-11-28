@@ -169,3 +169,46 @@ def test_render_and_send_overlap_without_piling_up(tmp_path):
     sent = len(hw.shown)
     assert sent >= 9  # 不重疊的話是 1 / (80 ms＋渲染時間)
     assert eyes.frames - sent <= 3 and hw.closed
+
+
+def test_brightness_dims_frames_and_is_clamped(tmp_path):
+    eyes = EyesOutput(None)
+    full, _ = eyes.render_once()
+    eyes.set_brightness(0.5)
+    half, _ = eyes.render_once()
+    bright = full > 40
+    assert bright.any()
+    ratio = half[bright].astype(float) / full[bright]
+    assert 0.45 < ratio.mean() < 0.55
+    eyes.set_brightness(0.0)
+    assert eyes.brightness == 0.1  # 夾限：不會全黑看起來像壞掉
+    eyes.set_fps(100)
+    assert eyes.fps == 20.0
+
+
+def test_settings_page_values_reach_eyes_and_are_reported(tmp_path):
+    eyes = EyesOutput(None)
+    h = make_harness(eyes=eyes)
+    applied = h.core.apply_settings({"eyes.brightness": 0.4, "eyes.fps": 8})
+    assert eyes.brightness == 0.4 and eyes.fps == 8.0
+    assert applied["eyes.brightness"] == 0.4 and applied["eyes.fps"] == 8
+    assert "eyes.fps" not in make_harness().core.settings_applied()  # 沒有眼睛就不回報「已生效」
+
+
+def test_fps_change_takes_effect_while_running():
+    import time
+
+    hw = FakePanels()
+    eyes = EyesOutput(None, fps=20, hardware=hw)
+    eyes.start()
+    time.sleep(1.0)
+    fast = len(hw.shown)
+    eyes.set_fps(4)
+    time.sleep(0.3)
+    n0 = len(hw.shown)
+    time.sleep(1.5)
+    slow = len(hw.shown) - n0
+    st = eyes.stats()
+    eyes.stop()
+    assert fast >= 10 and slow <= 8, (fast, slow)
+    assert st["fps_target"] == 4.0
