@@ -82,7 +82,11 @@ const card = (page, key) => page.locator(`[id="card-${key}"]`);
   const page = await open({ width: 1280, height: 900 });
   ok("七個分區加系統狀態都在", (await page.locator("nav a").allInnerTexts()).join("|") === "功能開關|語音與聲音|聽聲轉頭門檻|頭部動作|眼睛|隱私|機體量測值|系統狀態");
   ok("表情預覽 25 張都畫出來了", await page.evaluate(() => [...document.querySelectorAll(".expr img")].every((i) => i.complete && i.naturalWidth === 200)));
-  ok("已實作的設定顯示「已生效」", (await chip(page, "hearing.min_speech_energy")) === "已生效" && (await chip(page, "features.track_sound")) === "已生效");
+  ok("已實作的設定顯示「已生效」", (await chip(page, "hearing.min_speech_energy")) === "已生效" && (await chip(page, "eyes.presence.thinking")) === "已生效");
+  // 模擬的 duckd 沒有接手頭部：頭部相關的項目不能寫「已生效」，要照實說現在不會動與原因（ADR-0014 補充 §C）
+  const trackChip = await chip(page, "features.track_sound");
+  ok("頭沒出力時，頭部項目顯示「已讀到，但現在不會動」與原因", /^已讀到，但現在不會動：/.test(trackChip) && /頭部沒有出力/.test(trackChip) && !/已生效/.test(trackChip), trackChip);
+  ok("「對話時讓頭出力」預設關", /目前 關/.test(await card(page, "features.head_auto_engage").innerText()) || (await card(page, "features.head_auto_engage").locator("input").isChecked()) === false);
   const blocked = card(page, "audio.volume_cap_night");
   ok("規劃中的項目停用、標示原因", (await blocked.locator("input").first().isDisabled()) && /規劃中/.test(await blocked.innerText()) && /還不能設定/.test(await blocked.innerText()));
   ok("硬體未到的項目停用", (await card(page, "privacy.camera").locator("input").isDisabled()) && /硬體未到/.test(await card(page, "privacy.camera").innerText()));
