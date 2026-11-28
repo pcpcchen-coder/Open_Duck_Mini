@@ -50,11 +50,16 @@ def build(args) -> tuple[Duckd, LinkRunner]:
     )
     arbiter = SafetyArbiter(limits, walk_supported=False, walk_unsupported_reason=WALK_REASON)
     if args.body == "mock":
-        body = MockBody()
+        if getattr(args, "legs", False):
+            from .posture import load_postures
+
+            body = MockBody(legs=True, legs_start=load_postures()["stand"])
+        else:
+            body = MockBody()
     else:
         from .head_real import HeadBody
 
-        body = HeadBody.real(limits, args.serial, args.duck_config)
+        body = HeadBody.real(limits, args.serial, args.duck_config, legs=getattr(args, "legs", False))
     eyes = None
     if not args.no_eyes:
         try:
@@ -118,6 +123,12 @@ def main() -> int:
     p = argparse.ArgumentParser(description="duckd：鴨子端常駐程式（duck-link v0）")
     p.add_argument("--url", default=DEFAULT_URL, help="Nous 端 hub（經 SSH 通道的本機 loopback）")
     p.add_argument("--body", choices=["mock", "head"], default="mock", help="mock＝模擬身體；head＝實機頭頸 4 顆（ID 30–33）")
+    p.add_argument(
+        "--legs",
+        action="store_true",
+        help="開發用（ADR-0020 草案，沒有實機驗證）：也管腿部 10 顆，可以用 duckd-ctl engage-legs／posture 蹲低與起立。"
+        "接手頭部時不碰腿；緊急停止會讓 14 顆都放鬆",
+    )
     p.add_argument("--engage", action="store_true", help="啟動後直接接手硬體（預設不碰硬體，等 `duckd.ctl engage`）")
     p.add_argument("--serial", default="/dev/ttyACM0")
     p.add_argument("--duck-config", type=Path, default=Path.home() / "duck_config.json", help="上游 duck_config.json（只讀偏移）")

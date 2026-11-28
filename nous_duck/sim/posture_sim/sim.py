@@ -248,3 +248,49 @@ def head_level_offset(crouch: dict | None = None) -> float:
         else:
             hi = mid
     return (lo + hi) / 2
+
+
+def run_controller(sim: "PostureSim", controller, seconds: float, *, overrun_at: float | None = None, overrun_s: float = 1.0):
+    """把外部控制器（例如 duckd 的 `PostureMotion`）接進模擬：每拍呼叫
+    `controller(dt, actual_joints, t) -> 14 關節目標或 None`，None＝維持上一拍。
+
+    `overrun_at`：在那個時間點讓控制器「晚 overrun_s 秒」才被呼叫（模擬那段時間的物理照跑、目標不變），
+    下一拍傳給控制器的 dt 就是 overrun_s＋0.02。回傳 (TrialResult 的精簡 dict)。
+    """
+    m, d = sim.m, sim.d
+    sim.reset()
+    feet0 = sim.feet_xy()
+    stand_z = float(d.qpos[2])
+    t = 0.0
+    dt_next = 1.0 / CONTROL_HZ
+    max_tau, min_margin, min_z = 0.0, math.inf, math.inf
+    pitches = []
+    stalled_once = False
+    while t < seconds:
+        actual = {n: float(d.qpos[sim._qadr[i]]) for i, n in enumerate(JOINTS)}
+        tgt = controller(dt_next, actual, t)
+        if tgt is not None:
+            sim.target = as_array(tgt)
+            d.ctrl[sim._act] = sim.target
+        steps = DECIMATION
+        dt_next = 1.0 / CONTROL_HZ
+        if overrun_at is not None and not stalled_once and t >= overrun_at:
+            stalled_once = True
+            steps += int(round(overrun_s / SIM_DT))
+            dt_next += overrun_s
+        for _ in range(steps):
+            mujoco.mj_step(m, d)
+            max_tau = max(max_tau, float(np.abs(d.actuator_force[sim._act]).max()))
+        t += steps * SIM_DT
+        min_margin = min(min_margin, sim.support_margin())
+        min_z = min(min_z, float(d.qpos[2]))
+        pitches.append(sim.trunk_pitch_deg())
+    return {
+        "base_drop_cm": round((stand_z - min_z) * 100, 2),
+        "min_support_margin_cm": round(min_margin * 100, 2),
+        "max_torque_nm": round(max_tau, 3),
+        "foot_slip_cm": round(float(np.abs(sim.feet_xy() - feet0).max()) * 100, 2),
+        "pitch_max_deg": round(max(pitches), 1),
+        "end_pitch_deg": round(pitches[-1], 1),
+        "fell": bool(d.qpos[2] < 0.08 or abs(pitches[-1]) > 60),
+    }

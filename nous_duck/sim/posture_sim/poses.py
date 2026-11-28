@@ -13,6 +13,9 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import numpy as np
 
 from walk_sim.model import HOME_POSE, POLICY_JOINTS
@@ -57,3 +60,26 @@ SIT3 = {
 
 def as_array(pose: dict) -> np.ndarray:
     return np.array([pose[n] for n in JOINTS], dtype=float)
+
+
+# --------------------------------------------------------------------------- duckd 用的姿勢檔
+LEG_JOINTS = tuple(n for n in JOINTS if not n.startswith(("neck", "head")))
+DUCKD_POSTURES = Path(__file__).resolve().parents[2] / "robot" / "duckd" / "duckd" / "postures" / "postures.json"
+
+
+def duckd_postures() -> dict:
+    """`robot/duckd/duckd/postures/postures.json` 的內容（只有腿；頭部補償第一版不用，見 ADR-0020 §2.3）。"""
+    return {
+        "schema": "nous-duck/postures@1",
+        "source": "nous_duck/sim/posture_sim/poses.py（python -m posture_sim.poses 重新產生）",
+        "verification": "simulation",
+        "postures": {
+            "stand": {"description": "上游 runtime init_pos", "legs": {n: STAND[n] for n in LEG_JOINTS}},
+            "crouch": {"description": "原地蹲低（第一版「坐下」），模擬驗證", "legs": {n: CROUCH[n] for n in LEG_JOINTS}},
+        },
+    }
+
+
+if __name__ == "__main__":
+    DUCKD_POSTURES.write_text(json.dumps(duckd_postures(), ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    print(f"寫入 {DUCKD_POSTURES}")

@@ -33,7 +33,8 @@ duckd 不做語音、視覺、決策（那是 Nous 的事，[ADR-0001](../../doc
 | `duckd/track.py` | 聽聲辨位轉頭的目標決定：死區、平滑、舵機自噪音迴避、逾時回正 | T5 |
 | [`tools/head_check.sh`](tools/head_check.sh) | 實機頭部檢查：前置檢查 → 接手 → 端到端與租約量測 → 釋放 | T1 |
 | `duckd/gait_host.py`、`duckd/gait_fakes.py` | 步態 host：以 importlib 載入上游步態腳本、把手把換成仲裁器；假硬體介面（mock） | A7 |
-| `duckd/localctl.py`、`duckd/ctl.py` | 本機控制（UNIX socket）：`status`、`engage`、`release`、`estop`、`clear-estop` | A8 |
+| `duckd/localctl.py`、`duckd/ctl.py` | 本機控制（UNIX socket）：`status`、`engage`、`release`、`estop`、`clear-estop`；`--legs` 時再加 `engage-legs`、`posture crouch|stand`、`posture-stop` | A8 |
+| `duckd/posture.py`、`duckd/postures/postures.json` | 原地蹲低／起立（ADR-0020 草案）：站姿 ↔ 蹲姿一條路徑、時間軸每拍最多前進 0.03 秒、收手停在原地、跟隨誤差自動停住。姿勢檔由 `sim/posture_sim/poses.py` 產生 | 姿勢 |
 | `duckd/settings_in.py` | 讀「[鴨子設定](../settings/README.md)」（ADR-0019）：啟動時讀頭部角速度與活動範圍，之後每秒看一次有沒有變，即時套用功能開關、聽聲轉頭的時間與死區、對話小動作幅度、presence 的表情對應；回報實際在用的值 | 設定 |
 | `duckd/mock_hub.py` | **假的** hub（mock）：測試與開發用，不是 Nous，也不是 B 線的 hub | 測試 |
 | [`../deploy/pi4/deploy_duckd.sh`](../deploy/pi4/deploy_duckd.sh) | 部署到 Pi、systemd 服務 `duckd` | A8 |
@@ -201,4 +202,26 @@ ssh duck-pi4 'cd ~/duck/duckd && ~/duck/duckd-venv/bin/python -m duckd.mock_hub 
 - `state.link.rtt_ms` 一直是 `null`：往返時間由 Nous 端用心跳回聲量，鴨子端量不到。
 - **實機頭部**（T1）：2026-11-26 舵機沒有電，還沒做。電源接上後跑 `tools/head_check.sh`。
 - 協定上的缺口寫在 [`protocol/proposals/a-duckd-gaps.md`](../../protocol/proposals/a-duckd-gaps.md)。
-- 原地蹲低／起立（**規劃中**，還沒實作）：設計見 [ADR-0020 草案](../../docs/adr/ADR-0020-crouch-and-stand.md)，協定提案見 [`protocol/proposals/a-posture-command.md`](../../protocol/proposals/a-posture-command.md)，模擬在 [`sim/posture_sim/`](../../sim/posture_sim/)。
+- 原地蹲低／起立：**實機沒有驗證**，duck-link 也還沒開放（協定提案 [`a-posture-command`](../../protocol/proposals/a-posture-command.md)）。見下一節。
+
+## 原地蹲低／起立（`--legs`，開發用）
+
+設計：[ADR-0020 草案](../../docs/adr/ADR-0020-crouch-and-stand.md)；驗證：[模擬](../../docs/validation/posture-crouch-sim-2026-11-28.md)、[duckd 姿勢功能](../../docs/validation/duckd-posture-2026-11-28.md)（單元測試＋MuJoCo，**沒有實機**）。
+
+- 預設**不管腿**。要用 `--legs` 啟動 duckd，部署的 systemd 服務沒有加這個旗標。`--legs` 時頭部後端的白名單加上腿部 10 顆，`engage` 仍然只接手頭部、不碰腿的扭力。
+- `duckd-ctl engage-legs`：沒出力的腿先寫目前位置再開扭力（不跳），之後才接受姿勢指令。
+- `duckd-ctl posture crouch`／`posture stand [--duration 3～10]`：只走「站姿 ↔ 蹲姿」這一條路徑；腿不在路徑上（每個關節差 > 6°）就拒絕，請先用舵機控制台擺回站姿。
+- `duckd-ctl posture-stop`、緊急停止、釋放、低電壓或過熱（身體後端的 block）、有腿沒出力、跟隨誤差 > 20° 持續 0.5 秒：**停在目前位置**，之後只接受 `stand`，回站姿至少 6 秒。不放鬆：模擬裡放鬆會往前倒。
+- 緊急停止（含過熱 65°C、低電壓 6.0 V 的自動停止）在 `--legs` 時會讓 **14 顆都放鬆**（舵機控制台的規則）。
+- `release`：腿的扭力**不關**（站著時關掉會倒），只是 duckd 不再送目標。要放鬆腿請用舵機控制台、人扶著。
+- 頭不跟著補償：蹲低時臉會朝下約 28°。模擬算出 `head_pitch` 要 +0.5 rad 才朝前，但 duckd 的頭部範圍上限是 0.3 rad（ADR-0009 §2.5）；要不要放寬另外決定。
+- 沒有 IMU 跌倒判斷：BNO055 讀值會錯一個位元，還沒處理（模擬驗證紀錄 §6）。
+- 每次實機讓腿出力都要使用者當下同意、人在旁邊、先架高或扶著。
+
+```bash
+# 開發機：模擬身體（mock）
+.venv/bin/python -m duckd --body mock --legs --engage &
+.venv/bin/python -m duckd.ctl engage-legs
+.venv/bin/python -m duckd.ctl posture crouch
+.venv/bin/python -m duckd.ctl status      # posture.state：moving → crouched
+```

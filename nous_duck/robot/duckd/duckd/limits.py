@@ -12,6 +12,27 @@ HEAD_JOINTS: tuple[str, ...] = ("neck_pitch", "head_pitch", "head_yaw", "head_ro
 # 上游 Open_Duck_Mini_Runtime（376de65）rustypot_position_hwi.py 的 ID
 HEAD_SERVO_IDS: dict[str, int] = {"neck_pitch": 30, "head_pitch": 31, "head_yaw": 32, "head_roll": 33}
 LEG_SERVO_IDS: frozenset[int] = frozenset({10, 11, 12, 13, 14, 20, 21, 22, 23, 24})
+LEG_JOINTS: tuple[str, ...] = (
+    "left_hip_yaw", "left_hip_roll", "left_hip_pitch", "left_knee", "left_ankle",
+    "right_hip_yaw", "right_hip_roll", "right_hip_pitch", "right_knee", "right_ankle",
+)
+LEG_SERVO_ID_BY_NAME: dict[str, int] = {
+    "right_hip_yaw": 10, "right_hip_roll": 11, "right_hip_pitch": 12, "right_knee": 13, "right_ankle": 14,
+    "left_hip_yaw": 20, "left_hip_roll": 21, "left_hip_pitch": 22, "left_knee": 23, "left_ankle": 24,
+}
+# 上游 robot.xml 的腿部關節範圍（rad）。tests/test_limits.py 會對照上游檔案（唯讀）。
+ROBOT_XML_LEG_RANGE: dict[str, tuple[float, float]] = {
+    "left_hip_yaw": (-0.523599, 0.523599),
+    "left_hip_roll": (-0.436332, 0.436332),
+    "left_hip_pitch": (-1.22173, 0.523599),
+    "left_knee": (-1.5708, 1.5708),
+    "left_ankle": (-1.5708, 1.5708),
+    "right_hip_yaw": (-0.523599, 0.523599),
+    "right_hip_roll": (-0.436332, 0.436332),
+    "right_hip_pitch": (-0.523599, 1.22173),
+    "right_knee": (-1.5708, 1.5708),
+    "right_ankle": (-1.5708, 1.5708),
+}
 
 # 上游 robot.xml 的頭頸關節範圍（rad）。tests/test_limits.py 會對照上游檔案（唯讀）。
 ROBOT_XML_HEAD_RANGE: dict[str, tuple[float, float]] = {
