@@ -201,3 +201,4 @@ ssh duck-pi4 'cd ~/duck/duckd && ~/duck/duckd-venv/bin/python -m duckd.mock_hub 
 - `state.link.rtt_ms` 一直是 `null`：往返時間由 Nous 端用心跳回聲量，鴨子端量不到。
 - **實機頭部**（T1）：2026-11-26 舵機沒有電，還沒做。電源接上後跑 `tools/head_check.sh`。
 - 協定上的缺口寫在 [`protocol/proposals/a-duckd-gaps.md`](../../protocol/proposals/a-duckd-gaps.md)。
+- 原地蹲低／起立（**規劃中**，還沒實作）：設計見 [ADR-0020 草案](../../docs/adr/ADR-0020-crouch-and-stand.md)，協定提案見 [`protocol/proposals/a-posture-command.md`](../../protocol/proposals/a-posture-command.md)，模擬在 [`sim/posture_sim/`](../../sim/posture_sim/)。
