@@ -28,6 +28,7 @@ class SettingsInput:
     def __init__(self, directory: Path | None):
         self.watcher = None
         self.error = ""
+        self._last_inactive: dict | None = None
         self.startup = dict(CONSERVATIVE)
         try:
             ensure_sibling_packages()
@@ -49,16 +50,31 @@ class SettingsInput:
                 "problems": list(self.watcher.view.problems)}
 
     def poll(self, core, force: bool = False) -> bool:
-        """檔案有變就套用到 core。回傳有沒有套用。"""
+        """檔案有變就套用到 core。回傳有沒有套用。
+
+        另外：「讀到了但現在不會動」的原因（`core.settings_inactive()`，例如頭沒有出力）變了，就重新回報，
+        讓設定頁不要對這些項目顯示「已生效」。
+        """
         if self.watcher is None:
             return False
         try:
             view = self.watcher.view if force else self.watcher.poll()
+            inactive = core.settings_inactive() if hasattr(core, "settings_inactive") else {}
             if view is None:
+                if inactive != self._last_inactive:
+                    self._report(core.settings_applied(), inactive)
                 return False
             applied = core.apply_settings(view.values)
-            self.watcher.report({**applied, **self.startup})
+            self._report(applied, core.settings_inactive() if hasattr(core, "settings_inactive") else {})
             return True
         except Exception:  # noqa: BLE001
             log.exception("套用設定失敗；維持原本的值")
             return False
+
+    def _report(self, applied: dict, inactive: dict) -> None:
+        values = {**applied, **self.startup}
+        try:
+            self.watcher.report(values, inactive=inactive)
+        except TypeError:  # duck_settings 是舊版（reader.report 還沒有 inactive）：照舊回報，不帶原因
+            self.watcher.report(values)
+        self._last_inactive = dict(inactive)

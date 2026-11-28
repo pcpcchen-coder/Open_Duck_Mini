@@ -27,7 +27,7 @@ from .body import BodyReading, EngageError
 from .gestures import GestureLibrary, GesturePlayer
 from .limits import HEAD_JOINTS
 from .posture import PostureMotion
-from .presence import EXPRESSION, PresenceState, head_target
+from .presence import CONVERSATION_STATES, EXPRESSION, PresenceState, head_target
 from .protocol import PROTOCOL_VERSION, Protocol
 from .track import SoundTrackConfig, SoundTracker
 
@@ -36,6 +36,10 @@ log = logging.getLogger("duckd.core")
 STATE_PERIOD_S = 1.0
 DEDUPE_SIZE = 256
 RELEASE_TIMEOUT_S = 8.0
+#: 「對話時讓頭出力」（ADR-0014 補充 §A）：對話結束（presence 回到 idle 等）多久後放開頭部。
+AUTO_RELEASE_IDLE_S = 120.0
+#: 自動接手失敗（匯流排被占、緊急停止、低電壓…）後，多久才再試。
+AUTO_RETRY_S = 30.0
 TRACK_FRESH_S = 0.5  # 觀測超過這麼久就不拿來用
 TRACK_LOST_S = 2.0  # 這麼久沒有觀測 → tracking_lost
 TRACK_GAIN = 0.6
@@ -83,10 +87,13 @@ class Duckd:
         self._local_wake_until: float | None = None  # 本機因喚醒詞設的 wake，等 Nous 接手；到期回 idle
         self.wake_stats = {"received": 0, "forwarded": 0, "dropped_no_link": 0, "dropped_stale": 0}
         #: 鴨子設定（ADR-0019）給的功能開關與幅度；沒有設定來源時就是這些內建預設
-        self.features = {"track_sound": True, "gestures": True, "presence_head_motion": True, "speaking_bob": True}
+        self.features = {"track_sound": True, "gestures": True, "presence_head_motion": True, "speaking_bob": True,
+                         # 對話時讓頭出力（ADR-0014 補充 §A）：預設關；關著時 duckd 只有本機 engage 才會接手頭部
+                         "head_auto_engage": False}
         self.presence_amplitude = 1.0
         self.expression_map = dict(EXPRESSION)
         self.tracking = "none"
+        self.tracking_paused = False
         self._track_until = math.inf
         self._track_acquired = False
         self._track_seen = -math.inf
@@ -114,6 +121,15 @@ class Duckd:
         self._latency_from: float | None = None
         self._prev_head_out: dict[str, float] | None = None
         self.motion_latency_ms: deque = deque(maxlen=50)
+        #: 各 action 收到幾次、最後一次 presence（診斷：Nous 到底送了什麼）
+        self.commands_by_action: dict[str, int] = {}
+        self.presence_log: deque = deque(maxlen=20)
+        self.speech_level_seen = 0
+        #: 「對話時讓頭出力」的狀態（本機 status 與設定頁用）
+        self._auto_engaged = False  # 這次接手是不是自動的（本機 engage 的不自動放開）
+        self._auto_idle_since: float | None = None
+        self._auto_next_try = -math.inf
+        self.auto_engage = {"state": "off", "reason": "", "engages": 0, "releases": 0, "failures": 0}
         #: 原地蹲低／起立（ADR-0020 草案）：只有身體後端支援腿（`--legs`）才有；只能從本機控制
         self.posture: PostureMotion | None = PostureMotion() if getattr(body, "legs_supported", False) else None
         self.posture_events: deque = deque(maxlen=50)
@@ -138,7 +154,8 @@ class Duckd:
 
         put("walk", "unsupported", self.arbiter.walk_unsupported_reason or "gait host not integrated")
         if not r.engaged:
-            put("head", "unsupported", "servo bus not engaged (needs local engage)")
+            put("head", "unsupported", "servo bus not engaged (auto engage on conversation is "
+                + ("on" if self.features["head_auto_engage"] else "off") + "; or local engage)")
             put("battery", "unsupported", "servo bus not engaged")
         elif self.body.mock:
             put("head", "mock")
@@ -309,6 +326,7 @@ class Duckd:
             return
         self.stats["commands"] += 1
         action, params, ttl_ms = msg["action"], msg.get("params") or {}, msg["ttl_ms"]
+        self.commands_by_action[action] = self.commands_by_action.get(action, 0) + 1
         if now - received_at > ttl_ms / 1000.0:
             self._ack(rid, Decision(False, "expired"))
             return
@@ -406,6 +424,9 @@ class Duckd:
         if not self.arbiter.lease_ok:
             return Decision(False, "link_degraded", "no heartbeat lease")
         self._local_wake_until = None  # Nous 接手了對話狀態
+        if "speech_level" in params:
+            self.speech_level_seen += 1
+        self.presence_log.append({"t": round(now, 2), "state": params["state"], **({"speech_level": params["speech_level"]} if "speech_level" in params else {})})
         self._set_presence(params["state"], params.get("speech_level"), now)
         applied = {"state": self.presence.state}
         if "speech_level" in params:
@@ -667,6 +688,94 @@ class Duckd:
             out["eyes.fps"] = int(round(self.eyes.fps))
         return out
 
+    def settings_inactive(self) -> dict[str, str]:
+        """設定讀到了、但現在不會有效果的項目與原因（設定頁顯示用；誠實規則：不要讓「已生效」誤導）。"""
+        out: dict[str, str] = {}
+        r = self.reading
+        head_keys = ("presence_head_motion", "speaking_bob", "gestures", "track_sound")
+        if not r.engaged:
+            if self.features["head_auto_engage"]:
+                why = "頭部現在沒有出力：開著「對話時讓頭出力」，對話開始時才會接手"
+                if self.auto_engage["state"] == "blocked":
+                    why = f"頭部沒有出力：自動接手失敗（{self.auto_engage['reason']}）"[:180]
+            else:
+                why = "頭部沒有出力：duckd 沒有接手頭部（「對話時讓頭出力」關著），這些現在不會動"
+            for k in head_keys:
+                if self.features[k]:
+                    out[f"features.{k}"] = why
+        if self.features["speaking_bob"] and "features.speaking_bob" not in out and self.speech_level_seen == 0:
+            out["features.speaking_bob"] = "還沒收到說話音量（speech_level）：Nous 目前沒有送，說話時頭不會點"
+        if self.features["track_sound"] and "features.track_sound" not in out:
+            src = self.percept.source("sound", 5.0) if self.percept else None
+            if src is None or not src.ok:
+                out["features.track_sound"] = "聽聲轉頭的來源（duck-doa）沒有在跑"
+        return out
+
+    def _auto_engage_step(self, now: float, r: BodyReading) -> None:
+        """「對話時讓頭出力」：對話開始（presence 進入 wake／listening／thinking／speaking）時接手頭部，
+        對話結束 AUTO_RELEASE_IDLE_S 秒後放開。只接手頭部（和本機 engage 一樣），腿的規則不變。"""
+        st = self.auto_engage
+        engaged = r.engaged or getattr(self.body, "engaged", False)
+        if not self.features["head_auto_engage"]:
+            if self._auto_engaged and engaged and self._releasing_until is None:
+                self.begin_release(now)  # 開關被關掉：自動接手的頭放開（本機 engage 的不動）
+                st["releases"] += 1
+            self._auto_engaged = False
+            st.update(state="off", reason="")
+            return
+        active = self.presence.state in CONVERSATION_STATES
+        if not engaged:
+            self._auto_engaged = False
+            self._auto_idle_since = None
+            if not active:
+                if st["state"] != "blocked" or now >= self._auto_next_try:
+                    st.update(state="waiting", reason="")
+                return
+            if now < self._auto_next_try or self._releasing_until is not None:
+                return
+            why = None
+            if self.arbiter.estop_reason:
+                why = f"estop: {self.arbiter.estop_reason}"
+            elif self.arbiter.fallen:
+                why = "fallen"
+            if why is None:
+                try:
+                    self.engage(now)
+                except EngageError as exc:
+                    why = str(exc)
+            if why:
+                self._auto_next_try = now + AUTO_RETRY_S
+                st["failures"] += 1
+                st.update(state="blocked", reason=why[:160])
+                log.warning("對話時讓頭出力：接手失敗（%s），%d 秒後再試", why, AUTO_RETRY_S)
+                return
+            self._auto_engaged = True
+            st["engages"] += 1
+            st.update(state="engaged", reason="")
+            log.info("對話時讓頭出力：已接手頭部（presence=%s）", self.presence.state)
+            return
+        if not self._auto_engaged:
+            st.update(state="manual", reason="")
+            return
+        if r.block and self._releasing_until is None:  # 低電壓、過熱等：放開，過一陣子再試
+            self.begin_release(now)
+            st["releases"] += 1
+            self._auto_next_try = now + AUTO_RETRY_S
+            st.update(state="blocked", reason=f"{r.block[0]}: {r.block[1]}"[:160])
+            return
+        if active:
+            self._auto_idle_since = None
+            st.update(state="engaged", reason="")
+            return
+        if self._auto_idle_since is None:
+            self._auto_idle_since = now
+        if (now - self._auto_idle_since >= AUTO_RELEASE_IDLE_S and self._releasing_until is None
+                and not r.legs_engaged):  # 腿接手中（--legs）不自動放：那是有人在旁邊的試跑
+            self.begin_release(now)
+            st["releases"] += 1
+            st.update(state="releasing", reason="idle")
+            log.info("對話時讓頭出力：對話結束 %d 秒，放開頭部", AUTO_RELEASE_IDLE_S)
+
     # ================================================================ 每圈
     def _cancel_gesture(self, reason: str) -> None:
         if self.player.active:
@@ -811,6 +920,8 @@ class Duckd:
                 self._end_tracking()
             a.set_block(*(r.block or (None, "")))
             self._wake_step(now)
+            self._auto_engage_step(now, r)
+            r = self.reading  # 接手或放開後重讀過
 
             if r.engaged and a.head_enabled:
                 if self._releasing_until is not None:
@@ -832,9 +943,14 @@ class Duckd:
                         name, rid, was_clamped = self.player.finish()
                         self._event("gesture_done", request_id=rid, data={"name": name, "completed": True, "clamped": was_clamped})
                 elif self.tracking != "none":
-                    targets = self._track_step(now)
-                    if targets:
-                        a.stream_head(targets, now)
+                    # 聽聲轉頭只在對話中動（電視開著時才不會被帶走；2026-11-26 實機紀錄）。對話外頭停在原地
+                    if self.tracking == "sound" and self.presence.state not in CONVERSATION_STATES:
+                        self.tracking_paused = True
+                    else:
+                        self.tracking_paused = False
+                        targets = self._track_step(now)
+                        if targets:
+                            a.stream_head(targets, now)
                 elif self.presence_motion:  # look 會把它關掉；presence 狀態改變才再打開
                     a.stream_head(head_target(
                         self.presence, now, amplitude=self.presence_amplitude,

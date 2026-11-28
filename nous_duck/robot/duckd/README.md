@@ -205,6 +205,16 @@ ssh duck-pi4 'cd ~/duck/duckd && ~/duck/duckd-venv/bin/python -m duckd.mock_hub 
 - 協定上的缺口寫在 [`protocol/proposals/a-duckd-gaps.md`](../../protocol/proposals/a-duckd-gaps.md)。
 - 原地蹲低／起立：**實機沒有驗證**，duck-link 也還沒開放（協定提案 [`a-posture-command`](../../protocol/proposals/a-posture-command.md)）。見下一節。
 
+## 對話時讓頭出力（`features.head_auto_engage`，預設關）
+
+設計：[ADR-0014 補充](../../docs/adr/ADR-0014-duckd-head-direct-and-single-process.md#補充2026-11-28對話時讓頭出力聽聲轉頭只在對話中)；驗證：[紀錄](../../docs/validation/duckd-head-auto-engage-2026-11-28.md)（單元測試＋mock，**實機沒有驗證**）。
+
+- 鴨子設定頁「對話時讓頭出力」開著時：presence 進入 `wake`／`listening`／`thinking`／`speaking`（包括鴨子本機聽到喚醒詞）就接手頭部 4 顆；對話結束 120 秒後放開，回到接手時的位置與扭力狀態。關著時跟以前一樣不會自己接手（測試證明匯流排一次都不開）。
+- 接手失敗（舵機控制台占著匯流排、緊急停止、跌倒、低電壓、過熱）時 30 秒後再試，原因在 `duckd-ctl status` 的 `auto_engage`。
+- 本機 `duckd-ctl engage` 的不會被自動放開。
+- 聽聲轉頭只在對話中轉，對話外頭停住（`tracking_paused`）。
+- `duckd-ctl status` 多了 `commands_by_action`、`presence_log`、`speech_level_seen`、`settings_inactive`；設定頁用 `settings_inactive` 顯示「已讀到，但現在不會動」。
+
 ## 原地蹲低／起立（`--legs`，開發用）
 
 設計：[ADR-0020 草案](../../docs/adr/ADR-0020-crouch-and-stand.md)；驗證：[模擬](../../docs/validation/posture-crouch-sim-2026-11-28.md)、[duckd 姿勢功能](../../docs/validation/duckd-posture-2026-11-28.md)（單元測試＋MuJoCo，**沒有實機**）。

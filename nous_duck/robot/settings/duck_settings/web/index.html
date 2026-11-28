@@ -41,6 +41,7 @@ h2 { font-size: 18px; margin: 0; }
 .chip { background: var(--chip); border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
 .chip.ok { color: var(--ok); } .chip.warn { color: var(--warn); } .chip.bad { color: var(--bad); } .chip.off { color: var(--off); }
 .chip.status { border: 1px solid currentColor; background: transparent; font-weight: 600; }
+.chip.long { white-space: normal; overflow-wrap: anywhere; border-radius: 10px; max-width: 100%; }  /* 長的原因（例如「已讀到，但現在不會動：…」）在手機上換行 */
 .why { font-size: 13px; color: var(--muted); margin-top: 8px; }
 .err { color: var(--bad); font-size: 14px; margin-top: 8px; font-weight: 600; }
 .control { margin-top: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -157,8 +158,9 @@ function refreshSavebar() {
 function applyText(s) { return s.apply === "restart" ? "改了要重啟 " + s.consumer : "約 1 秒內自動生效"; }
 function effectChip(s) {
   const e = s.effect || {};
-  const cls = { applied: "ok", pending: "warn", restart_needed: "warn", service_down: "off", not_reading: "bad", failed: "bad" }[e.state] || "off";
-  return h("span", { class: "chip " + cls, "data-effect": s.key }, e.label || "");
+  const cls = { applied: "ok", inactive: "warn", pending: "warn", restart_needed: "warn", service_down: "off", not_reading: "bad", failed: "bad" }[e.state] || "off";
+  const label = e.label || "";
+  return h("span", { class: "chip " + cls + (label.length > 16 ? " long" : ""), "data-effect": s.key }, label);
 }
 function lockedLoosen(s) {  // 隱私設定：這一頁不能往寬鬆的方向改
   if (!s.privacy || !s.writable) return null;

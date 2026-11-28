@@ -53,6 +53,12 @@ def handle(core, link, request: dict) -> dict:
                 "wake": dict(getattr(core, "wake_stats", {})),
                 "voice_relay": core.voice.stats() if getattr(core, "voice", None) else None,
                 "posture": core.posture_status() if hasattr(core, "posture_status") else None,
+                "auto_engage": dict(getattr(core, "auto_engage", {})),
+                "commands_by_action": dict(getattr(core, "commands_by_action", {})),
+                "presence_log": list(getattr(core, "presence_log", []))[-10:],
+                "speech_level_seen": getattr(core, "speech_level_seen", None),
+                "tracking_paused": getattr(core, "tracking_paused", None),
+                "settings_inactive": core.settings_inactive() if hasattr(core, "settings_inactive") else None,
             }
     if cmd == "express":
         # 本機預覽表情（設定頁的「在鴨子上預覽」）：最多 10 秒，之後回到 presence 決定的表情。
