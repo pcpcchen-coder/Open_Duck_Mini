@@ -7,6 +7,9 @@
 - 開扭力前先把目標設成舵機目前的位置，開扭力的瞬間不會跳。
 - 緊急停止：全部關扭力並鎖住；沒連線時也會臨時開序列埠關扭力。要按「解除」才能再開扭力。
 - 溫度、電壓超過門檻：自動緊急停止（門檻是暫定值，見下方常數）。
+  舵機回報的電壓、溫度有**單拍雜訊**（2026-11-28 實測：每輪最多 1 顆讀錯，最低 6.0 V、溫度跳到 50°C，
+  見 `docs/validation/duckd-posture-2026-11-28.md` §5.1），所以：電壓用 14 顆的**中位數**（同一組電源），
+  溫度要**連續 `CONFIRM_READS` 次狀態讀值**都過門檻才算；某一顆自己連續偏低另外警告（可能是接線）。
 - 連續讀取失敗：停止移動（維持目前指令）並警告。
 - 瀏覽器超過 2 秒沒有回應：停止移動，維持目前姿勢（不關扭力，避免懸空時摔下來）。
 
@@ -24,7 +27,7 @@ import statistics
 import threading
 import time
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
 
@@ -36,6 +39,7 @@ TEMP_WARN_C = 55
 TEMP_STOP_C = 65
 VOLT_WARN_V = 6.6  # 2S 鋰電每顆 3.3 V
 VOLT_STOP_V = 6.0  # 每顆 3.0 V
+CONFIRM_READS = 3  # 連續幾次狀態讀值（每 STATUS_PERIOD_S 一次，約 1.5 秒）都過門檻才算
 READ_FAIL_LIMIT = 5
 HEARTBEAT_S = 2.0
 STATUS_PERIOD_S = 0.5
@@ -69,6 +73,21 @@ class Joint:
     kp: int | None = None
     current_ma: float | None = None
     status: list[str] | None = None  # 舵機自己回報的異常旗標
+    #: 最近幾次狀態讀值（過濾單拍雜訊用）
+    temp_hist: deque = field(default_factory=lambda: deque(maxlen=CONFIRM_READS))
+    volt_hist: deque = field(default_factory=lambda: deque(maxlen=CONFIRM_READS))
+
+    def sustained_temperature(self) -> int | None:
+        """最近 CONFIRM_READS 次的最低溫度（還沒讀滿就是 None）：連續都高才算高。"""
+        if len(self.temp_hist) < CONFIRM_READS:
+            return None
+        return min(self.temp_hist)
+
+    def sustained_low_voltage(self) -> float | None:
+        """最近 CONFIRM_READS 次的最高電壓（還沒讀滿就是 None）：連續都低才算低。"""
+        if len(self.volt_hist) < CONFIRM_READS:
+            return None
+        return max(self.volt_hist)
 
 
 def scan_port_users(paths: list[str]) -> list[tuple[int, str]]:
@@ -126,6 +145,8 @@ class Controller:
         self.heartbeat_frozen = False
         self.offsets: dict[str, float] = {}
         self.offsets_saved: dict[str, float] = {}
+        #: 電源電壓：每次狀態讀值取各顆的中位數，保留最近 CONFIRM_READS 次
+        self.bus_volt_hist: deque = deque(maxlen=CONFIRM_READS)
         self._load_offsets()
 
     # ------------------------------------------------------------------ 共用
@@ -255,6 +276,10 @@ class Controller:
                 finally:
                     raise CommandError(f"連線失敗：{exc}") from exc
             self.bus = bus
+            self.bus_volt_hist.clear()  # 上一次連線留下的讀值不算
+            for j in self.joints.values():
+                j.temp_hist.clear()
+                j.volt_hist.clear()
             for i, servo_id in enumerate(self.ids):
                 j = self.joints[self.name_of[servo_id]]
                 j.actual = self._joint_rad(j.info.name, positions[i])
@@ -474,7 +499,29 @@ class Controller:
                 j.current_ma = status["current_ma"][i]
             if "status" in status:
                 j.status = status["status"][i]
+            if j.temperature is not None:
+                j.temp_hist.append(j.temperature)
+            if j.voltage:
+                j.volt_hist.append(j.voltage)
+        volts = [j.voltage for j in self.joints.values() if j.voltage]
+        if volts:
+            self.bus_volt_hist.append(statistics.median(volts))
         self._check_limits()
+
+    def bus_voltage(self) -> float | None:
+        """最近一次的電源電壓（各顆的中位數）。"""
+        return self.bus_volt_hist[-1] if self.bus_volt_hist else None
+
+    def sustained_bus_voltage(self) -> float | None:
+        """最近 CONFIRM_READS 次電源電壓的最高值（還沒讀滿就是 None）：連續都低才算低。"""
+        if len(self.bus_volt_hist) < CONFIRM_READS:
+            return None
+        return max(self.bus_volt_hist)
+
+    def sustained_temp_max(self) -> tuple[int, int] | None:
+        """(溫度, ID)：各顆「連續 CONFIRM_READS 次的最低溫度」裡最高的那顆。"""
+        temps = [(t, j.info.servo_id) for j in self.joints.values() if (t := j.sustained_temperature()) is not None]
+        return max(temps) if temps else None
 
     def _set_alarm(self, key: str, level: str | None, message: str = "") -> None:
         if level is None:
@@ -486,24 +533,31 @@ class Controller:
             self.log("error" if level == "stop" else "warn", message)
 
     def _check_limits(self) -> None:
-        temps = [(j.temperature, j.info.servo_id) for j in self.joints.values() if j.temperature is not None]
-        if temps:
-            t, sid = max(temps)
+        hot = self.sustained_temp_max()
+        if hot:
+            t, sid = hot
             if t >= TEMP_STOP_C:
                 self._set_alarm("temp", "stop", f"ID {sid} 溫度 {t} °C ≥ {TEMP_STOP_C} °C")
             elif t >= TEMP_WARN_C:
                 self._set_alarm("temp", "warn", f"ID {sid} 溫度 {t} °C ≥ {TEMP_WARN_C} °C")
             else:
                 self._set_alarm("temp", None)
-        volts = [(j.voltage, j.info.servo_id) for j in self.joints.values() if j.voltage]
-        if volts:
-            v, sid = min(volts)
+        v = self.sustained_bus_voltage()
+        if v is not None:
             if v < VOLT_STOP_V:
-                self._set_alarm("volt", "stop", f"ID {sid} 電壓 {v:.1f} V < {VOLT_STOP_V} V（電池快沒電）")
+                self._set_alarm("volt", "stop", f"電源電壓 {v:.1f} V < {VOLT_STOP_V} V（各顆中位數，連續 {CONFIRM_READS} 次；電池快沒電）")
             elif v < VOLT_WARN_V:
-                self._set_alarm("volt", "warn", f"ID {sid} 電壓 {v:.1f} V < {VOLT_WARN_V} V")
+                self._set_alarm("volt", "warn", f"電源電壓 {v:.1f} V < {VOLT_WARN_V} V（各顆中位數，連續 {CONFIRM_READS} 次）")
             else:
                 self._set_alarm("volt", None)
+        # 單顆自己連續偏低（其他顆正常）：只警告，可能是那顆的接線或電源接頭
+        low = [(lv, j.info.servo_id) for j in self.joints.values() if (lv := j.sustained_low_voltage()) is not None and lv < VOLT_WARN_V]
+        bus = self.bus_voltage()
+        if low and bus is not None and bus >= VOLT_WARN_V:
+            lv, sid = min(low)
+            self._set_alarm("volt_servo", "warn", f"ID {sid} 電壓連續 {CONFIRM_READS} 次低於 {VOLT_WARN_V} V（{lv:.1f} V），其他顆正常：檢查那顆的接線")
+        else:
+            self._set_alarm("volt_servo", None)
         flagged = [f"ID {j.info.servo_id}（{'、'.join(j.status)}）" for j in self.joints.values() if j.status]
         if flagged:
             self._set_alarm("servo_status", "warn", "舵機回報異常旗標：" + "、".join(flagged))

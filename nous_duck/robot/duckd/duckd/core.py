@@ -26,6 +26,7 @@ from .arbiter import Decision, SafetyArbiter
 from .body import BodyReading, EngageError
 from .gestures import GestureLibrary, GesturePlayer
 from .limits import HEAD_JOINTS
+from .posture import PostureMotion
 from .presence import EXPRESSION, PresenceState, head_target
 from .protocol import PROTOCOL_VERSION, Protocol
 from .track import SoundTrackConfig, SoundTracker
@@ -113,6 +114,9 @@ class Duckd:
         self._latency_from: float | None = None
         self._prev_head_out: dict[str, float] | None = None
         self.motion_latency_ms: deque = deque(maxlen=50)
+        #: 原地蹲低／起立（ADR-0020 草案）：只有身體後端支援腿（`--legs`）才有；只能從本機控制
+        self.posture: PostureMotion | None = PostureMotion() if getattr(body, "legs_supported", False) else None
+        self.posture_events: deque = deque(maxlen=50)
 
     # ================================================================ 輸出
     def _flush(self) -> list[dict]:
@@ -477,9 +481,95 @@ class Duckd:
             self._state_dirty = True
             return actual
 
+    # ================================================================ 腿與姿勢（本機；不在 duck-link 上）
+    def _posture_log(self, now: float, kind: str, **fields) -> None:
+        entry = {"t": round(now, 3), "event": kind, **fields}
+        self.posture_events.append(entry)
+        log.info("posture %s %s", kind, fields)
+
+    def engage_legs(self, now: float) -> dict:
+        """接手腿（`--legs` 模式）。失敗丟 EngageError。"""
+        with self.lock:
+            if self.posture is None:
+                raise EngageError("這個 duckd 沒有用 --legs 啟動，不能接手腿")
+            if self.arbiter.estop_reason:
+                raise EngageError(f"緊急停止鎖定中：{self.arbiter.estop_reason}")
+            actual = self.body.engage_legs()
+            state = self.posture.attach(actual)
+            self.reading = self.body.read(now)
+            self._posture_log(now, "legs_engaged", posture=state)
+            return {"legs_rad": actual, "posture": self.posture.snapshot()}
+
+    def posture_command(self, target: str, duration_s: float | None, now: float) -> dict:
+        """開始蹲低（crouch）或起立（stand）。回傳 {ok, ...}；拒絕時 ok=False 並附原因。"""
+        with self.lock:
+            p, r, a = self.posture, self.reading, self.arbiter
+            if p is None:
+                return {"ok": False, "reason": "unsupported", "error": "duckd was not started with --legs"}
+            if not r.legs_engaged or r.legs is None:
+                return {"ok": False, "reason": "unsupported", "error": "legs are not engaged (duckd-ctl engage-legs)"}
+            if a.estop_reason:
+                return {"ok": False, "reason": "estop_latched", "error": a.estop_reason}
+            if a.fallen:
+                return {"ok": False, "reason": "fallen", "error": "duck is marked fallen"}
+            if not r.legs_torque:
+                return {"ok": False, "reason": "hardware_fault", "error": "not all leg servos have torque"}
+            # 低電壓、過熱警告等 block：不開始新動作；但收手後停在半路時，允許慢慢回站姿（ADR-0020 §2.2）
+            if r.block and not (target == "stand" and p.state == "holding_partial"):
+                return {"ok": False, "reason": r.block[0], "error": r.block[1]}
+            err = p.start(target, r.legs, duration_s)
+            if err:
+                return {"ok": False, "reason": "invalid", "error": err, "posture": p.snapshot()}
+            self._posture_log(now, "start", target=target, recovering=p.recovering)
+            return {"ok": True, "posture": p.snapshot()}
+
+    def posture_stop(self, now: float, why: str = "stop") -> dict:
+        with self.lock:
+            if self.posture is None:
+                return {"ok": False, "error": "duckd was not started with --legs"}
+            was = self.posture.state
+            state = self.posture.hold()
+            if was == "moving":
+                self._posture_log(now, "aborted", reason=why, posture=state)
+            return {"ok": True, "posture": self.posture.snapshot()}
+
+    def posture_status(self) -> dict | None:
+        if self.posture is None:
+            return None
+        return {**self.posture.snapshot(), "legs_engaged": self.reading.legs_engaged, "events": list(self.posture_events)[-10:]}
+
+    def _posture_step(self, now: float, dt: float, r: BodyReading) -> dict[str, float] | None:
+        p = self.posture
+        if p is None:
+            return None
+        if not r.legs_engaged:
+            if p.state != "unknown":
+                p.detach()
+            return None
+        if p.state == "moving":
+            why = None
+            if self.arbiter.estop_reason or r.estop:
+                why = "estop"
+            elif r.block and not p.recovering:  # 回站姿的那一段不因 block 再停
+                why = r.block[0]
+            elif not r.legs_torque:
+                why = "hardware_fault"
+            if why:
+                self.posture_stop(now, why)
+        was = p.state
+        target = p.step(dt, r.legs, now)
+        if was == "moving" and p.state != "moving":
+            if p.last_fault is not None:
+                self._posture_log(now, "aborted", reason=p.last_fault.code, detail=p.last_fault.detail, posture=p.state)
+            else:
+                self._posture_log(now, "done", posture=p.state)
+        return target
+
     def begin_release(self, now: float) -> bool:
         """開始釋放：頭先以限速回到接手時的位置，到位（或逾時）後恢復扭力狀態、放開匯流排。"""
         with self.lock:
+            if self.posture is not None:
+                self.posture_stop(now, "release")
             if not self.reading.engaged and not getattr(self.body, "engaged", False):
                 return False
             self._cancel_gesture("interrupted")
@@ -507,6 +597,8 @@ class Duckd:
     def local_estop(self, reason: str, now: float) -> None:
         with self.lock:
             self.arbiter.estop(reason, now)
+            if self.posture is not None:
+                self.posture_stop(now, "estop")
             self._cancel_gesture("estop")
             self._end_tracking()
             if hasattr(self.body, "estop"):
@@ -759,7 +851,11 @@ class Duckd:
                     self._local_wake_until = None
                 self._event(name, **fields)
                 self._state_dirty = True
-            self.body.step(out.head, out.velocity, now)
+            legs = self._posture_step(now, dt, r)
+            if legs is not None:
+                self.body.step(out.head, out.velocity, now, legs=legs)
+            else:
+                self.body.step(out.head, out.velocity, now)
             if self._latency_from is not None and out.head and self._prev_head_out and out.head != self._prev_head_out:
                 self.motion_latency_ms.append(round((now - self._latency_from) * 1000.0, 1))
                 self._latency_from = None

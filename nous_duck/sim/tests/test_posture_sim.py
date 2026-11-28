@@ -97,3 +97,71 @@ def test_sit3_direct_tips_forward():
     r = PostureSim().run([Segment(SIT3, 3.0, "down"), Segment(None, 3.0, "hold")])
     assert r.fell
     assert r.segments[-1].trunk_pitch_deg > 60
+
+
+# --------------------------------------------------------------------------- duckd 的姿勢引擎
+import json  # noqa: E402
+import sys  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+from posture_sim.poses import DUCKD_POSTURES, duckd_postures  # noqa: E402
+from posture_sim.sim import run_controller  # noqa: E402
+
+DUCKD_DIR = Path(__file__).resolve().parents[2] / "robot" / "duckd"
+
+
+def test_duckd_postures_file_matches_sim_poses():
+    """duckd 讀的姿勢檔要和這裡的數字一致（改了 poses.py 要跑 `python -m posture_sim.poses`）。"""
+    assert json.loads(DUCKD_POSTURES.read_text(encoding="utf-8")) == duckd_postures()
+
+
+def _duckd_motion():
+    if str(DUCKD_DIR) not in sys.path:
+        sys.path.insert(0, str(DUCKD_DIR))
+    from duckd.posture import PostureMotion  # 純 Python，不需要 servo_console
+
+    return PostureMotion()
+
+
+def _driver(motion, plan):
+    """plan：[(時間, 'crouch'|'stand'|'stop')]。回傳給 run_controller 的函式。"""
+    pending = list(plan)
+    legs_names = list(motion.stand)
+
+    def ctl(dt, actual, t):
+        legs_actual = {n: actual[n] for n in legs_names}
+        if motion.state == "unknown":
+            motion.attach(legs_actual)
+        while pending and t >= pending[0][0]:
+            _, what = pending.pop(0)
+            if what == "stop":
+                motion.hold()
+            else:
+                assert motion.start(what, legs_actual) is None, what
+        legs = motion.step(dt, legs_actual, t)
+        return None if legs is None else {**STAND, **legs}
+
+    return ctl
+
+
+def test_duckd_motion_in_mujoco_round_trip():
+    m = _duckd_motion()
+    r = run_controller(PostureSim(), _driver(m, [(0.5, "crouch"), (5.0, "stand")]), 9.0)
+    assert not r["fell"]
+    assert m.state == "standing"
+    assert 3.0 <= r["base_drop_cm"] <= 4.0
+    assert r["min_support_margin_cm"] > 2.5
+    assert r["foot_slip_cm"] < 1.0
+    assert r["max_torque_nm"] < 1.0
+    assert m.last_fault is None  # 模擬裡跟隨誤差沒有超過 20°
+
+
+def test_duckd_motion_overrun_and_abort_in_mujoco():
+    """控制迴圈卡 1 秒、再中途收手、慢慢站回來：都不倒、力矩不爆。"""
+    m = _duckd_motion()
+    plan = [(0.5, "crouch"), (2.0, "stop"), (4.0, "stand")]
+    r = run_controller(PostureSim(), _driver(m, plan), 12.0, overrun_at=1.2, overrun_s=1.0)
+    assert not r["fell"]
+    assert m.state == "standing"
+    assert r["max_torque_nm"] < 1.0
+    assert r["min_support_margin_cm"] > 2.5

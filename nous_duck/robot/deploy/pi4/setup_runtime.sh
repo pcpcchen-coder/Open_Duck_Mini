@@ -69,12 +69,19 @@ echo "==> 安裝 runtime 與鎖定的套件（第一次約 1–2 分鐘）"
 # gpiod：Blinka 在 Pi 4 的新 kernel 上需要它才能用 board 模組，上游 setup.cfg 沒有列
 "$UV" pip install -q --python runtime-venv/bin/python -c runtime-constraints.txt -e ./Open_Duck_Mini_Runtime gpiod
 
-echo "==> I2C（BNO055）"
-if grep -q '^dtparam=i2c_arm=on' /boot/firmware/config.txt; then
-  echo "已開啟"
+echo "==> I2C（BNO055）：用 i2c-gpio，不用硬體 I2C"
+# BNO055 會 clock stretching，Pi 的硬體 I2C 處理不好：100 kHz 時某些暫存器約 80% 讀到第 7 位元錯，
+# 降到 50k／10k 仍約 1%；i2c-gpio 50000 次讀取 0 錯（docs/validation/bno055-i2c-2026-11-28.md）。
+# i2c-gpio 一樣是 /dev/i2c-1、GPIO2（SDA）／GPIO3（SCL），上游 runtime 的 busio.I2C(board.SCL, board.SDA) 不用改。
+CFG=/boot/firmware/config.txt
+OVERLAY='dtoverlay=i2c-gpio,bus=1,i2c_gpio_sda=2,i2c_gpio_scl=3,i2c_gpio_delay_us=2'
+if grep -qx "$OVERLAY" "$CFG" && ! grep -q '^dtparam=i2c_arm=on' "$CFG"; then
+  echo "已設定（i2c-gpio）"
 else
-  sudo -n raspi-config nonint do_i2c 0
-  echo "剛打開，要重開機才會有 /dev/i2c-1：sudo reboot"
+  sudo cp "$CFG" "$CFG.bak-$(date +%Y%m%d-%H%M%S)"
+  sudo sed -i 's/^dtparam=i2c_arm=on/#dtparam=i2c_arm=on  # 改用 i2c-gpio（Nous Duck）/; /^dtparam=i2c_arm_baudrate=/d' "$CFG"
+  grep -qx "$OVERLAY" "$CFG" || echo "$OVERLAY" | sudo tee -a "$CFG" >/dev/null
+  echo "剛設定，要重開機才生效：sudo reboot"
 fi
 
 if [ -e "$HOME/duck_config.json" ]; then

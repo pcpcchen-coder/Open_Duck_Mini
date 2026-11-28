@@ -188,13 +188,15 @@ def test_overtemp_auto_estop(setup):
     c.connect()
     c.set_torque(list(c.joints), True)
     bus.temp[23] = ctl.TEMP_STOP_C
+    tick(c, clock, ctl.CONFIRM_READS - 1, dt=ctl.STATUS_PERIOD_S + 0.01)
+    assert not c.estop_reason  # 還沒連續 CONFIRM_READS 次
     tick(c, clock, 1, dt=ctl.STATUS_PERIOD_S + 0.01)
     assert c.estop_reason and "ID 23" in c.estop_reason
     assert not any(bus.torque.values())
     with pytest.raises(CommandError, match="警報"):
         c.reset_estop()
     bus.temp[23] = 40
-    tick(c, clock, 1, dt=ctl.STATUS_PERIOD_S + 0.01)
+    tick(c, clock, 1, dt=ctl.STATUS_PERIOD_S + 0.01)  # 一次正常的讀值就解除
     c.reset_estop()
     assert c.estop_reason is None
 
@@ -203,11 +205,68 @@ def test_low_voltage(setup):
     c, bus, clock = setup
     c.connect()
     bus.voltage = 6.5
-    tick(c, clock, 1, dt=ctl.STATUS_PERIOD_S + 0.01)
+    tick(c, clock, ctl.CONFIRM_READS, dt=ctl.STATUS_PERIOD_S + 0.01)
     assert c.alarms["volt"][0] == "warn" and not c.estop_reason
     bus.voltage = 5.9
-    tick(c, clock, 1, dt=ctl.STATUS_PERIOD_S + 0.01)
+    tick(c, clock, ctl.CONFIRM_READS, dt=ctl.STATUS_PERIOD_S + 0.01)
     assert c.estop_reason and "電壓" in c.estop_reason
+
+
+class NoisyStatus:
+    """包住 MockBus.read_status：照順序把某幾顆的電壓／溫度換成指定值（模擬 2026-11-28 實測的單拍雜訊）。"""
+
+    def __init__(self, bus, script):
+        self.bus, self.script, self.n = bus, list(script), 0
+        self.orig = bus.read_status
+        bus.read_status = self
+
+    def __call__(self, ids):
+        st = self.orig(ids)
+        if self.n < len(self.script):
+            for key, sid, value in self.script[self.n]:
+                st[key][list(ids).index(sid)] = value
+        self.n += 1
+        return st
+
+
+def test_single_servo_spikes_do_not_estop(setup):
+    """實測：每輪最多 1 顆讀到 6.0 V 或 50°C，下一輪就正常。不能因此緊急停止或警告。"""
+    c, bus, clock = setup
+    c.connect()
+    c.set_torque(list(c.joints), True)
+    bus.voltage = 7.4
+    script = []
+    for k in range(30):
+        sid = [14, 13, 12, 11, 10][k % 5]
+        script.append([("voltage", sid, 5.5), ("temperature", 12, 70)] if k % 2 == 0 else [])
+    NoisyStatus(bus, script)
+    tick(c, clock, 30, dt=ctl.STATUS_PERIOD_S + 0.01)
+    assert not c.estop_reason
+    assert "volt" not in c.alarms and "temp" not in c.alarms and "volt_servo" not in c.alarms
+    assert c.bus_voltage() == pytest.approx(7.4)
+
+
+def test_one_servo_persistently_low_warns_only(setup):
+    """某一顆連續偏低、其他正常：只警告那一顆（可能是接線），不緊急停止。"""
+    c, bus, clock = setup
+    c.connect()
+    bus.voltage = 7.4
+    NoisyStatus(bus, [[("voltage", 14, 5.5)]] * 10)
+    tick(c, clock, ctl.CONFIRM_READS + 1, dt=ctl.STATUS_PERIOD_S + 0.01)
+    assert not c.estop_reason
+    assert c.alarms["volt_servo"][0] == "warn" and "ID 14" in c.alarms["volt_servo"][1]
+    assert "volt" not in c.alarms
+
+
+def test_whole_bus_sag_still_stops(setup):
+    """真的沒電（全部一起低）連續 CONFIRM_READS 次：照樣緊急停止。"""
+    c, bus, clock = setup
+    c.connect()
+    c.set_torque(list(c.joints), True)
+    bus.voltage = 5.8
+    tick(c, clock, ctl.CONFIRM_READS, dt=ctl.STATUS_PERIOD_S + 0.01)
+    assert c.estop_reason and "電源電壓" in c.estop_reason
+    assert not any(bus.torque.values())
 
 
 def test_read_failures_freeze_motion(setup):
@@ -352,3 +411,32 @@ def test_servo_status_flags_raise_warning(setup, monkeypatch):
     assert c.alarms["servo_status"][0] == "warn" and "ID 13" in c.alarms["servo_status"][1]
     assert c.snapshot()["joints"][3]["status"] == ["過載"]
     assert not c.estop_reason  # 只警告，不自動停止
+
+
+def test_recorded_noise_from_real_duck_does_not_alarm(setup):
+    """用 2026-11-28 實機量到的 1500 輪讀值（fixture）重播：舊規則（看最低電壓、最高溫度）會反覆發出低電壓警告（最低 6.0 V，再低 0.1 V 就緊急停止），新規則不會。"""
+    import json
+    from pathlib import Path
+
+    data = json.loads((Path(__file__).parent / "fixtures" / "status_noise_2026-11-28.json").read_text(encoding="utf-8"))
+    c, bus, clock = setup
+    c.connect()
+    c.set_torque(list(c.joints), True)
+    order = {sid: k for k, sid in enumerate(data["ids"])}
+    rows = iter(zip(data["voltage_dv"], data["temperature_c"]))
+    orig = bus.read_status
+
+    def replay(ids):
+        st = orig(ids)
+        v, t = next(rows)
+        st["voltage"] = [v[order[i]] / 10.0 for i in ids]
+        st["temperature"] = [t[order[i]] for i in ids]
+        return st
+
+    bus.read_status = replay
+    raw_min_v = min(min(v) for v in data["voltage_dv"]) / 10.0
+    raw_max_t = max(max(t) for t in data["temperature_c"])
+    assert raw_min_v <= 6.0 and raw_max_t >= 50  # fixture 裡真的有這些單拍怪值
+    tick(c, clock, len(data["voltage_dv"]) - 1, dt=ctl.STATUS_PERIOD_S + 0.01)
+    assert not c.estop_reason
+    assert not {"volt", "temp", "volt_servo"} & set(c.alarms)

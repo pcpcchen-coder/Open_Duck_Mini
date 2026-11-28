@@ -1,6 +1,8 @@
 """本機控制介面：UNIX socket（只有同一個使用者能連），給在鴨子旁邊的人（或部署腳本）用。
 
-這些操作**刻意不在 duck-link 上**：接手／釋放硬體、緊急停止、解除緊急停止。
+這些操作**刻意不在 duck-link 上**：接手／釋放硬體、緊急停止、解除緊急停止，以及腿：
+`engage-legs`、`posture`（`{"cmd": "posture", "target": "crouch"|"stand", "duration_s": 3}`）、`posture-stop`
+（ADR-0020 草案；只有 `--legs` 啟動時有效）。
 一行 JSON 請求、一行 JSON 回覆：`{"cmd": "engage"}` → `{"ok": true, ...}`。
 """
 from __future__ import annotations
@@ -50,6 +52,7 @@ def handle(core, link, request: dict) -> dict:
                 "settings": getattr(core, "settings_status", None),
                 "wake": dict(getattr(core, "wake_stats", {})),
                 "voice_relay": core.voice.stats() if getattr(core, "voice", None) else None,
+                "posture": core.posture_status() if hasattr(core, "posture_status") else None,
             }
     if cmd == "express":
         # 本機預覽表情（設定頁的「在鴨子上預覽」）：最多 10 秒，之後回到 presence 決定的表情。
@@ -75,6 +78,18 @@ def handle(core, link, request: dict) -> dict:
             while started and core.engaged and time.monotonic() < end:
                 time.sleep(0.05)
             return {"ok": not core.engaged, "released": started}
+        if cmd == "engage-legs":
+            return {"ok": True, **core.engage_legs(now)}
+        if cmd == "posture":
+            duration = request.get("duration_s")
+            if duration is not None:
+                try:
+                    duration = float(duration)
+                except (TypeError, ValueError):
+                    return {"ok": False, "error": "duration_s is not a number"}
+            return core.posture_command(str(request.get("target")), duration, now)
+        if cmd == "posture-stop":
+            return core.posture_stop(now, "local operator")
         if cmd == "estop":
             core.local_estop("local operator", now)
             return {"ok": True}
@@ -141,9 +156,9 @@ class LocalControl:
             pass
 
 
-def request(cmd: str, path: Path | None = None, timeout: float = 15.0) -> dict:
+def request(cmd: str, path: Path | None = None, timeout: float = 15.0, **fields) -> dict:
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
         s.settimeout(timeout)
         s.connect(str(path or default_socket_path()))
-        s.sendall((json.dumps({"cmd": cmd}) + "\n").encode("utf-8"))
+        s.sendall((json.dumps({"cmd": cmd, **fields}) + "\n").encode("utf-8"))
         return json.loads(s.makefile("r", encoding="utf-8").readline())

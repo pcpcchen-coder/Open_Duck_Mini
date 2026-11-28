@@ -130,11 +130,14 @@ class ArbiterCommandSource:
 
 
 def build_rl_walk(runtime_dir: Path, onnx_model: Path, arbiter: SafetyArbiter, *, overrides: dict[str, object] | None = None,
-                  duck_config: Path | None = None, clock: Callable[[], float] = time.monotonic, on_poll=None, check_commit: bool = True):
+                  duck_config: Path | None = None, clock: Callable[[], float] = time.monotonic, on_poll=None, check_commit: bool = True,
+                  imu_mount: bool = True):
     """載入上游腳本並建立 `RLWalk`（指令來源已換成仲裁器）。回傳（rl_walk, source, module）。
 
     `overrides` 可以再換掉其他模組層級名稱——載入測試用它把 `HWI`、`Imu`、`FeetContacts` 換成假的。
     不給 `overrides` 就會用上游真的硬體介面：**建立 `RLWalk` 時上游就會開扭力並移到預備姿勢**。
+    `imu_mount`（預設開）：用 `imu_mount.mounted_imu_class` 包住上游的 `Imu`，改寫成這隻鴨子的軸向對應
+    （BNO055 裝轉了 90°；`overrides` 已經換掉 `Imu` 時不包）。
     """
     runtime_dir = Path(runtime_dir).expanduser()
     if check_commit:
@@ -147,6 +150,10 @@ def build_rl_walk(runtime_dir: Path, onnx_model: Path, arbiter: SafetyArbiter, *
     if str(scripts_dir) not in sys.path:
         sys.path.append(str(scripts_dir))
     module = load_upstream_walk(runtime_dir / SCRIPT, replacements)
+    if imu_mount and "Imu" not in (overrides or {}):
+        from .imu_mount import mounted_imu_class
+
+        module.Imu = mounted_imu_class(module.Imu)
     cwd = os.getcwd()
     os.chdir(scripts_dir)  # 上游用相對路徑讀 ./polynomial_coefficients.pkl
     try:

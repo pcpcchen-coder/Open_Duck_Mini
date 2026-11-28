@@ -36,3 +36,15 @@ def test_ids_and_speed_limits():
     assert Limits().lease_s == 1.5 and Limits().walk_duration_max_s == 3.0
     with pytest.raises(ValueError):
         Limits(head_max_speed=math.radians(120))
+
+
+@pytest.mark.skipif(not ROBOT_XML.exists(), reason="上游 robot.xml 不在（Pi 部署目錄）")
+def test_leg_ranges_match_upstream_file():
+    from duckd.limits import LEG_JOINTS, LEG_SERVO_ID_BY_NAME, ROBOT_XML_LEG_RANGE
+
+    text = ROBOT_XML.read_text(encoding="utf-8")  # 唯讀
+    for n in LEG_JOINTS:
+        m = re.search(rf'<joint name="{n}"[^>]*range="([-\d.e]+) ([-\d.e]+)"', text)
+        assert m, n
+        assert (float(m.group(1)), float(m.group(2))) == pytest.approx(ROBOT_XML_LEG_RANGE[n])
+    assert set(LEG_SERVO_ID_BY_NAME.values()) == LEG_SERVO_IDS

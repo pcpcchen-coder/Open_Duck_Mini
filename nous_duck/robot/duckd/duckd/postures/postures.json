@@ -1,0 +1,37 @@
+{
+ "schema": "nous-duck/postures@1",
+ "source": "nous_duck/sim/posture_sim/poses.py（python -m posture_sim.poses 重新產生）",
+ "verification": "simulation",
+ "postures": {
+  "stand": {
+   "description": "上游 runtime init_pos",
+   "legs": {
+    "left_hip_yaw": 0.002,
+    "left_hip_roll": 0.053,
+    "left_hip_pitch": -0.63,
+    "left_knee": 1.368,
+    "left_ankle": -0.784,
+    "right_hip_yaw": -0.003,
+    "right_hip_roll": -0.065,
+    "right_hip_pitch": 0.635,
+    "right_knee": 1.379,
+    "right_ankle": -0.796
+   }
+  },
+  "crouch": {
+   "description": "原地蹲低（第一版「坐下」），模擬驗證",
+   "legs": {
+    "left_hip_yaw": 0.002,
+    "left_hip_roll": 0.053,
+    "left_hip_pitch": 0.12,
+    "left_knee": 1.48,
+    "left_ankle": -1.18,
+    "right_hip_yaw": -0.003,
+    "right_hip_roll": -0.065,
+    "right_hip_pitch": -0.12,
+    "right_knee": 1.48,
+    "right_ankle": -1.18
+   }
+  }
+ }
+}

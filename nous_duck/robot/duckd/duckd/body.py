@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .limits import HEAD_JOINTS
+from .limits import HEAD_JOINTS, LEG_JOINTS
 
 
 class EngageError(RuntimeError):
@@ -24,6 +24,10 @@ class BodyReading:
     estop: str | None = None  # 後端自己觸發的緊急停止（例如過熱）
     block: tuple[str, str] | None = None  # 拒絕新動作的原因（reason 列舉, 說明）
     faults: list[str] = field(default_factory=list)
+    #: 腿（只有 `--legs` 模式才有）：duckd 有沒有接手腿、回讀角度、10 顆是不是都在出力
+    legs_engaged: bool = False
+    legs: dict[str, float] | None = None
+    legs_torque: bool = False
 
 
 class MockBody:
@@ -32,8 +36,15 @@ class MockBody:
     mock = True
     kind = "mock"
 
-    def __init__(self, start: dict[str, float] | None = None, lag: float = 0.5):
+    def __init__(self, start: dict[str, float] | None = None, lag: float = 0.5, legs: bool = False,
+                 legs_start: dict[str, float] | None = None):
         self.head = {n: float((start or {}).get(n, 0.0)) for n in HEAD_JOINTS}
+        #: 腿（mock）：`legs=True` 才有。預設停在 0；測試會給站姿。
+        self.legs_supported = legs
+        self.legs = {n: float((legs_start or {}).get(n, 0.0)) for n in LEG_JOINTS}
+        self.legs_engaged = False
+        self.leg_setpoints: list[dict[str, float]] = []
+        self.legs_stuck: set[str] = set()  # 測試用：這些關節不會動（模擬腿被擋住）
         self.lag = lag
         self.engaged = False
         self.voltage_v = 8.0
@@ -49,6 +60,15 @@ class MockBody:
 
     def release(self) -> None:
         self.engaged = False
+        self.legs_engaged = False  # 腿的扭力不關（實機也一樣），只是 duckd 不再送目標
+
+    def engage_legs(self) -> dict[str, float]:
+        if not self.legs_supported:
+            raise EngageError("這個 duckd 沒有用 --legs 啟動，不能接手腿")
+        if not self.engaged:
+            raise EngageError("先 engage（接手頭部與匯流排）")
+        self.legs_engaged = True
+        return dict(self.legs)
 
     def estop(self, reason: str) -> None:
         self.fault_estop = reason
@@ -56,9 +76,17 @@ class MockBody:
     def reset_estop(self) -> None:
         self.fault_estop = None
 
-    def step(self, head: dict[str, float] | None, velocity: tuple[float, float, float], now: float) -> None:
+    def step(self, head: dict[str, float] | None, velocity: tuple[float, float, float], now: float,
+             legs: dict[str, float] | None = None) -> None:
         if not self.engaged:
             return
+        if legs is not None and self.legs_engaged and self.fault_estop is None:
+            self.leg_setpoints.append(dict(legs))
+            if len(self.leg_setpoints) > 5000:
+                del self.leg_setpoints[:2500]
+            for n in LEG_JOINTS:
+                if n not in self.legs_stuck:
+                    self.legs[n] += (legs[n] - self.legs[n]) * self.lag
         if head is not None:
             self.setpoints.append(dict(head))
             if len(self.setpoints) > 5000:
@@ -80,4 +108,7 @@ class MockBody:
             voltage_v=self.voltage_v,
             servo_temp_max_c=self.temp_c,
             estop=self.fault_estop,
+            legs_engaged=self.legs_engaged,
+            legs=dict(self.legs) if self.legs_supported else None,
+            legs_torque=self.legs_engaged and self.fault_estop is None,
         )
