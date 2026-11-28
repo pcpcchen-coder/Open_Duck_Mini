@@ -24,7 +24,7 @@
 
 - 放在 **duckd** 裡，做成一個新的「姿勢」功能：兩個姿勢 `stand`（＝上游 `init_pos`）與 `crouch`（`sim/posture_sim/poses.py` 的 `CROUCH`），以及兩者之間的平滑內插（smoothstep，預設 3 秒）。
 - 姿勢的數字只有一份：由 `sim/posture_sim/poses.py` 產生 duckd 讀的 JSON（`robot/duckd/duckd/postures/postures.json`；不放 `library/`，那是動作庫），`sim/tests/test_posture_sim.py` 檢查兩邊一致。
-- **實作狀態（2026-11-28）**：`duckd/posture.py` 與 `--legs` 旗標已實作，只能從本機 `duckd-ctl` 下指令；驗證層級是單元測試＋MuJoCo（[紀錄](../validation/duckd-posture-2026-11-28.md)），**沒有實機**。部署的 systemd 服務沒有加 `--legs`。
+- **實作狀態（2026-11-28）**：`duckd/posture.py` 與 `--legs` 旗標已實作，只能從本機 `duckd-ctl` 下指令；驗證層級是單元測試＋MuJoCo＋實機（[紀錄](../validation/duckd-posture-2026-11-28.md) §5：架高兩次、著地扶著一次、著地不扶一次，6 秒版）。部署的 systemd 服務沒有加 `--legs`，試跑時用 `DUCKD_TEST_ARGS=--legs` 暫時開。
 - **腿要另外接手**：duckd 預設用 `HeadOnlyBus` 擋住腿部 ID。`--legs` 啟動時白名單才加上腿；`engage` 仍然只接手頭部，要另外下 `duckd-ctl engage-legs` 才會接受姿勢動作。釋放時腿的扭力不關（站著時關掉會倒）。**不經 duck-link 接手腿**：Nous 只能要求「蹲下／站起」，不能讓腿出力。
 - **和步態策略互斥**：之後步態 host 接上實機時，姿勢動作只能在「策略暫停」時執行，執行完回到站姿才交還。交接的規則等步態 host 上實機時另寫，本 ADR 不處理。
 - **和舵機控制台互斥**：照 ADR-0014，同一時間只有一個程式占匯流排；控制台連著時 engage 會被拒絕。
