@@ -79,3 +79,12 @@
 和 §5（同一行程，約 15 次／分鐘）比只少了三分之一，所以 GIL 不是主因。量的時候 4 核心上：chromium 兩個行程約 55%（nice 5），眼睛子行程三個執行緒合計約 36%；load 2.9。推測是 CPU 排程搶不到（對話中眼睛渲染＋傳送＋chromium＋語音服務同時在跑）。下一步先把子行程設成 nice 5（和 chromium 同級，低於 duckd），**還沒量**。
 
 單圈最長 43.9 ms 出現在剛啟動時（spawn 子行程 import numpy 的那幾秒）。
+
+## 7. 設定頁調亮度與幀率（使用者同意重開 duckd 與 duck-settings）
+
+`eyes.brightness`（0.1～1，軟體調暗）與 `eyes.fps`（2～20）上了設定頁，duckd 即時套用（子行程經快照）。
+
+- 部署：`deploy_duckd.sh` → 啟動 duckd；`deploy_settings.sh` 只複製檔案、**沒有重啟**正在跑的 duck-settings（頁面還是舊版、`eyes.brightness` 仍是「硬體未到」），所以另外 `sudo systemctl restart duck-settings`。
+- 在 Pi 上用設定頁的 API（和頁面送的一樣）存 `eyes.brightness=0.5`、`eyes.fps=8`：約 1 秒內 duckd 回報 `brightness 0.5`、`fps_target 8`、**實際 8.0 fps**；設定頁兩項都顯示「已生效」。改回 `eyes.fps=15`：實際 15.0 fps。頭**沒接手**。
+- 亮度留在 0.5 給使用者目視；**畫面變暗還沒經使用者確認**。
+- 無頭瀏覽器（Mac，模擬的 duckd）：改亮度、改幀率都顯示「已生效」，幀率 30 被拒絕。
