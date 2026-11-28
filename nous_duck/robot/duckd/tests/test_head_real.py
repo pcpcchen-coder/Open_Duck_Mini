@@ -222,15 +222,17 @@ def test_overheat_and_low_voltage_refuse_new_motion(tmp_path):
             h.t += 0.02
 
     bus.temp[31] = 56
-    run(0.7)
+    run(0.7)  # 讀到 1～2 次還不算（舵機讀值有單拍雜訊，要連續 3 次）
+    assert "reason" not in h.cmd("look", {"head_yaw": 0.0})
+    run(1.2)
     ack = h.cmd("look", {"head_yaw": 0.1})
     assert ack["reason"] == "overheat" and "servo_overheat" in h.cmd("status")["data"]["faults"]
     bus.temp[31] = 30
     bus.voltage = 6.5
-    run(0.7)
+    run(1.7)
     assert h.cmd("look", {"head_yaw": 0.1})["reason"] == "low_battery"
     bus.voltage = 5.9  # 舵機控制台的規則：自動緊急停止（只關頭部扭力）
-    run(0.7)
+    run(1.7)
     assert h.last_state()["mode"] == "estop" and h.events("estop")
     assert all(bus.torque[i] for i in LEG_SERVO_IDS) and bus.touched_write <= HEAD_IDS
 

@@ -266,26 +266,28 @@ class HeadBody:
         c = self.controller
         if not self.engaged:
             return BodyReading(engaged=False)
-        temps = [j.temperature for j in c.joints.values() if j.temperature is not None]
-        volts = [j.voltage for j in c.joints.values() if j.voltage]
+        # 舵機的電壓、溫度讀值有單拍雜訊：用 Controller 過濾後的值（電壓＝各顆中位數、溫度＝連續 3 次都高）
+        hot = c.sustained_temp_max()
+        bus_v = c.bus_voltage()
+        low_v = c.sustained_bus_voltage()
         block = None
         faults = []
         if "comm" in c.alarms:
             block = ("hardware_fault", "servo bus read failures")
             faults.append("servo_comm")
-        if temps and max(temps) >= TEMP_REFUSE_C:
-            block = block or ("overheat", f"head servo {max(temps)} C")
+        if hot and hot[0] >= TEMP_REFUSE_C:
+            block = block or ("overheat", f"servo ID {hot[1]} {hot[0]} C")
             faults.append("servo_overheat")
-        if volts and min(volts) < VOLT_REFUSE_V:
-            block = block or ("low_battery", f"servo bus {min(volts):.1f} V")
+        if low_v is not None and low_v < VOLT_REFUSE_V:
+            block = block or ("low_battery", f"servo bus {low_v:.1f} V")
             faults.append("low_voltage")
         return BodyReading(
             engaged=True,
             head=self._actual(),
             head_torque=all(bool(c.joints[n].torque) for n in HEAD_JOINTS),
             head_age_ms=max(0, int((now - self._last_read) * 1000)),
-            voltage_v=min(volts) if volts else None,
-            servo_temp_max_c=float(max(temps)) if temps else None,
+            voltage_v=bus_v,
+            servo_temp_max_c=float(hot[0]) if hot else None,
             estop=c.estop_reason,
             block=block,
             faults=faults,
