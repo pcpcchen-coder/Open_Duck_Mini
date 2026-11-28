@@ -1,7 +1,7 @@
 # duckd 的原地蹲低／起立（`--legs`）（2026-11-28）
 
 - 分支：`claude/duck-posture-duckd`（疊在 `claude/duck-sit-stand`／PR #66 上）
-- **驗證層級：單元測試（mock 身體、舵機控制台的模擬匯流排）＋MuJoCo 模擬＋開發機上的 mock 端到端**。**沒有實機**：腿沒有出力過，也沒有部署到 Pi。
+- **驗證層級：單元測試（mock 身體、舵機控制台的模擬匯流排）＋MuJoCo 模擬＋開發機上的 mock 端到端＋實機架高試跑一次（§5，腳不著地）**。**沒有著地試過**。
 - 設計：[ADR-0020 草案](../adr/ADR-0020-crouch-and-stand.md)；姿勢怎麼選：[模擬紀錄](posture-crouch-sim-2026-11-28.md)
 
 ```bash
@@ -57,9 +57,28 @@ duck-link 沒有改：`state` 沒有新欄位（測試 `test_engage_legs_require
 --- stand                   True（recovering）
 ```
 
-## 5. 限制
+## 5. 實機架高試跑（2026-11-28 20:03～20:08）
 
-- **沒有實機**。實機的步驟在 ADR-0020 §3：先 I2C 降速、足底開關按壓測試，再架高、再著地扶著。
+使用者在對話裡說「架好了，試跑」（鴨子架高、腳不著地、人在旁邊）。這是**架高**的結果，不代表著地站得住。
+
+1. 20:03 唯讀：舵機控制台已放開匯流排（`connected: false`，`fuser` 沒有程式占著）；最後讀到腿在上游站姿、14 顆出力、7.9～8.1 V、30～33°C；Pi `throttled=0x0`。
+2. 部署這個分支（`deploy_duckd.sh --test`）：Pi 上 190 通過、3 跳過、**1 失敗**：`test_eyes_proc.py::test_hardware_open_failure_in_child_is_reported`，它假設沒有 SPI 螢幕，Pi 上真的有，所以打開成功。和這次的改動無關，沒有修。
+3. `systemctl set-environment DUCKD_TEST_ARGS=--legs` 後啟動 duckd。`engage`（頭）：舵機最低 7.5 V、最高 32°C、50 Hz。
+4. `engage-legs`：腿角度（°）左 hip_pitch −35.8／knee 78.9／ankle −44.8，右 36.2／79.5／−45.6，判斷為 `standing`（s 0.005）。
+5. `posture crouch --duration 6`：20:06:59 開始，20:07:05 `crouched`，沒有跟隨誤差。蹲著停約 9 秒。電壓 7.5 → 7.1～7.2 V，最高溫 32°C。
+6. `posture stand --duration 6`：20:07:17 讀到 42°C 一次（下一拍回 32°C），20:07:18 在 **s 0.71 停住**（`aborted`，`reason: low_battery`）＝某一拍的舵機電壓讀值低於 6.6 V。停住期間又有一拍讀到 **6.1 V**（`low_voltage`），其他都是 7.3 V。照設計**停在原地、沒有放鬆**。
+7. `posture stand --duration 6`（收手後回站姿，`recovering`）：20:07:41～20:07:45 回到 `standing`；途中又一拍 6.3 V，照設計不再停。
+8. `release`（腿的扭力保持）、`unset-environment`、重啟 duckd，回到平常的設定（沒有 `--legs`、沒有接手、匯流排空著）。
+
+觀察：
+
+- **電壓讀值會有單拍掉到 6.1～6.3 V**，前後都是 7.2～7.3 V；溫度也有單拍 42°C。像是讀錯，或很短的電壓下陷，目前分不出來（duckd 沒記哪一顆）。如果某一拍讀到 < 6.0 V，舵機控制台的規則會**自動緊急停止、14 顆全部放鬆**，著地時就會倒。著地試跑前要先查清楚，或改成連續幾拍都低才算。
+- 控制迴圈 overrun：接手前 3 次；從 20:06:59 到 20:07:51 增加約 51 次（約 1 次／秒）。這段期間我每 0.5 秒呼叫一次 `duckd-ctl status`，眼睛也在跑，`--legs` 每拍讀 14 顆，三者分不開。
+- 只看了 duckd 回報的狀態，沒有錄影，也沒有量關節跟隨誤差（沒觸發 20° 的判斷）。
+
+## 6. 限制
+
+- 實機只有一次架高試跑（§5），**沒有著地**。著地前要先處理電壓讀值的單拍下陷（§5 觀察），並照 ADR-0020 §3 做 I2C 降速、足底開關按壓測試。
 - `--legs` 時 Controller 每拍要讀 14 顆的位置（頭部模式只讀 4 顆），匯流排時間變長；對控制迴圈 overrun 的影響沒有在 Pi 上量過。
 - 頭不補償（head_pitch 上限 0.3 rad），蹲低時臉朝下約 28°。
 - 沒有 IMU 跌倒判斷。
