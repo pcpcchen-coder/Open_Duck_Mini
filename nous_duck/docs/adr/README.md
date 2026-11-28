@@ -22,6 +22,7 @@
 | [ADR-0016](ADR-0016-navigation-core-and-sim-findings.md) | 導航核心的作法，以及模擬對既有 ADR 的回饋（起步門檻、速度為 0 不踏步、走路時頭回正） | 草案 | 2026-11-25 |
 | [ADR-0017](ADR-0017-audio-playback-path-v1.md) | 音訊播放路徑第一版：直接寫 ALSA，暫不裝 PipeWire | 草案 | 2026-11-25 |
 | [ADR-0019](ADR-0019-duck-settings-page.md) | 鴨子設定網頁與設定的單一來源（schema、偏好與量測值分開、服務即時讀取、這一頁只能收緊隱私、安全項目不上頁面）。ADR-0018 由 PR #37 使用 | 草案 | 2026-11-26 |
+| [ADR-0020](ADR-0020-crouch-and-stand.md) | 原地蹲低（第一版「坐下」）與起立：開迴路關鍵影格放在 duckd、腿另外接手、收手停在原地不放鬆、控制迴圈晚了時間軸跟著停（依據只有模擬） | 草案 | 2026-11-28 |
 
 編號說明：本序列只屬於本 repo 的 `nous_duck/docs/adr/`，與 AIOS repo 的 `docs/adr/`（ADR-0001 本機家人辨識等）是不同的序列。
 

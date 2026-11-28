@@ -1,6 +1,6 @@
 # ⑤ MuJoCo 模擬（sim）
 
-狀態：**三個模擬可用**（都只在開發機上跑，結果是模擬值，不是實機）：[`look_at_sim/`](look_at_sim/)（2026-11-16，[驗證紀錄](../docs/validation/look-at-sim-2026-11-16.md)）、[`walk_sim/`](walk_sim/) 全身走路與 [`nav_sim/`](nav_sim/) 家中導航（2026-11-25，[驗證紀錄](../docs/validation/sim-nav-2026-11-25.md)）。加裝後的質量模型（2026-11-26，[驗證紀錄](../docs/validation/mass-model-2026-11-26.md)）可用，但重量是估計值；duck-link 端到端模擬仍是規劃中。
+狀態：**四個模擬可用**（都只在開發機上跑，結果是模擬值，不是實機）：[`look_at_sim/`](look_at_sim/)（2026-11-16，[驗證紀錄](../docs/validation/look-at-sim-2026-11-16.md)）、[`walk_sim/`](walk_sim/) 全身走路與 [`nav_sim/`](nav_sim/) 家中導航（2026-11-25，[驗證紀錄](../docs/validation/sim-nav-2026-11-25.md)）、[`posture_sim/`](posture_sim/) 原地蹲低與起立（2026-11-28，[驗證紀錄](../docs/validation/posture-crouch-sim-2026-11-28.md)）。加裝後的質量模型（2026-11-26，[驗證紀錄](../docs/validation/mass-model-2026-11-26.md)）可用，但重量是估計值；duck-link 端到端模擬仍是規劃中。
 
 ## 職責
 
@@ -33,15 +33,17 @@ R-001（2026-11-12）後新增：
 | [`walk_sim/`](walk_sim/) | **全身走路**：用 `MjSpec` 由上游 `robot.xml` 組出浮動機身模型（不改原檔），跑上游步態策略 `BEST_WALK_ONNX_2.onnx`，50 Hz、7 維指令。觀測向量與動作的組法、參數來源寫在 `model.py` 與 `sim.py` 檔頭 | 可用；跟 Playground 自己的場景交叉檢查過；**沒有對照實機** |
 | [`walk_sim/measure.py`](walk_sim/measure.py) | 走、停、轉的量測：指令 vs 實際速度、起步門檻、起步與停下、轉身、頭部指令的影響、加速度限制、多種子跌倒率、里程誤差；另外產生導航用的步態反應表 | 可用（模擬值） |
 | [`walk_sim/mass.py`](walk_sim/mass.py)、[`walk_sim/mass_compare.py`](walk_sim/mass_compare.py) | **加裝後的質量模型**：依 [`mass_budget/`](mass_budget/README.md) 的質量預算，把元件合進上游模型的 body 慣量（可加可減：拿掉頭裡的 Pi Zero 2 W、機身加 Pi 4 等），再比較上游模型與加裝後的站立、走路、起步門檻、頭部大角度、跌倒率與加重餘裕 | 可用（模擬值）；**重量與位置都是估計，沒有秤過**（2026-11-26，[驗證紀錄](../docs/validation/mass-model-2026-11-26.md)） |
+| [`posture_sim/`](posture_sim/) | **原地蹲低與起立**（第一版「坐下」，ADR-0020 草案）：50 Hz 關鍵影格內插、重心餘裕、腳滑、力矩；中途停住、放鬆、控制迴圈卡住、舵機參數與加重的變化 | 可用（模擬值，2026-11-28，[驗證紀錄](../docs/validation/posture-crouch-sim-2026-11-28.md)）；**腿還沒在實機上動過** |
 | [`nav_sim/`](nav_sim/) | 把導航核心 [`robot/navigation/duck_nav`](../robot/navigation/README.md) 接上全身走路模擬：依地圖蓋牆、家具、充電座與貼了 tag36h11 貼圖的標籤；標籤觀測、障礙點、充電訊號是 **mock** | 可用；充電座的 V 形導引與電氣行為**沒有模擬** |
 | [`nav_sim/tagcheck.py`](nav_sim/tagcheck.py) | 頭上相機算圖＋OpenCV 的 tag36h11 偵測器，對照 mock 的標籤觀測 | 可用；算圖沒有畸變、模糊、雜訊 |
 
 ```bash
 cd nous_duck/sim
 uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requirements-dev.txt
-.venv/bin/python -m pytest tests -q              # 29 通過、2 跳過，約 8 秒
+.venv/bin/python -m pytest tests -q              # 52 通過、3 跳過，約 12 秒（2026-11-28）
 .venv/bin/python -m pytest tests -q --runslow    # 31 通過，約 1 分鐘
 .venv/bin/python -m look_at_sim                  # look_at 的結果表
+.venv/bin/python -m posture_sim                  # 蹲低／起立的情境表（約 3 秒）
 
 # 全身走路：軌跡 CSV、截圖、短 GIF
 .venv/bin/python -m walk_sim --vx 0.15 --duration 10 --png --out walk_sim_out

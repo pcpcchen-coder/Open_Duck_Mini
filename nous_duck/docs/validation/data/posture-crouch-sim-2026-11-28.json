@@ -1,0 +1,1168 @@
+{
+ "level": "simulation (MuJoCo)",
+ "poses": {
+  "stand": {
+   "left_hip_yaw": 0.002,
+   "left_hip_roll": 0.053,
+   "left_hip_pitch": -0.63,
+   "left_knee": 1.368,
+   "left_ankle": -0.784,
+   "neck_pitch": 0.0,
+   "head_pitch": 0.0,
+   "head_yaw": 0.0,
+   "head_roll": 0.0,
+   "right_hip_yaw": -0.003,
+   "right_hip_roll": -0.065,
+   "right_hip_pitch": 0.635,
+   "right_knee": 1.379,
+   "right_ankle": -0.796
+  },
+  "crouch": {
+   "left_hip_yaw": 0.002,
+   "left_hip_roll": 0.053,
+   "left_hip_pitch": 0.12,
+   "left_knee": 1.48,
+   "left_ankle": -1.18,
+   "neck_pitch": 0.0,
+   "head_pitch": 0.5,
+   "head_yaw": 0.0,
+   "head_roll": 0.0,
+   "right_hip_yaw": -0.003,
+   "right_hip_roll": -0.065,
+   "right_hip_pitch": -0.12,
+   "right_knee": 1.48,
+   "right_ankle": -1.18
+  },
+  "crouch_head_down": {
+   "left_hip_yaw": 0.002,
+   "left_hip_roll": 0.053,
+   "left_hip_pitch": 0.12,
+   "left_knee": 1.48,
+   "left_ankle": -1.18,
+   "neck_pitch": 0.0,
+   "head_pitch": 0.0,
+   "head_yaw": 0.0,
+   "head_roll": 0.0,
+   "right_hip_yaw": -0.003,
+   "right_hip_roll": -0.065,
+   "right_hip_pitch": -0.12,
+   "right_knee": 1.48,
+   "right_ankle": -1.18
+  },
+  "sit3": {
+   "right_hip_yaw": -0.003,
+   "right_hip_roll": -0.065,
+   "right_hip_pitch": -0.2094,
+   "right_knee": 1.5359,
+   "right_ankle": 0.4102,
+   "left_hip_yaw": 0.002,
+   "left_hip_roll": 0.053,
+   "left_hip_pitch": 0.2531,
+   "left_knee": 1.5359,
+   "left_ankle": 0.3578,
+   "neck_pitch": -0.2793,
+   "head_pitch": 0.3665,
+   "head_yaw": 0.0,
+   "head_roll": 0.0
+  }
+ },
+ "head_level_offset_rad": 0.5062,
+ "results": [
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.1292,
+     "trunk_pitch_deg": 27.3,
+     "support_margin_cm": 3.09,
+     "min_support_margin_cm": 3.08,
+     "pitch_range_deg": [
+      -1.1,
+      27.3
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1278,
+     "trunk_pitch_deg": 27.6,
+     "support_margin_cm": 3.12,
+     "min_support_margin_cm": 3.09,
+     "pitch_range_deg": [
+      27.3,
+      27.6
+     ]
+    },
+    {
+     "name": "up",
+     "base_z": 0.1595,
+     "trunk_pitch_deg": -0.3,
+     "support_margin_cm": 3.58,
+     "min_support_margin_cm": 3.11,
+     "pitch_range_deg": [
+      -0.3,
+      27.6
+     ]
+    },
+    {
+     "name": "settle",
+     "base_z": 0.1599,
+     "trunk_pitch_deg": -0.4,
+     "support_margin_cm": 3.56,
+     "min_support_margin_cm": 3.56,
+     "pitch_range_deg": [
+      -0.4,
+      -0.3
+     ]
+    }
+   ],
+   "base_drop_cm": 3.42,
+   "foot_slip_cm": 0.35,
+   "max_torque_nm": 0.665,
+   "min_support_margin_cm": 3.08,
+   "fell": false,
+   "stand_base_z": 0.162,
+   "extras": {},
+   "key": "nominal",
+   "label": "標準：3 秒蹲下、停 5 秒、3 秒起立"
+  },
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.1289,
+     "trunk_pitch_deg": 28.0,
+     "support_margin_cm": 3.68,
+     "min_support_margin_cm": 3.4,
+     "pitch_range_deg": [
+      -1.1,
+      28.0
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1275,
+     "trunk_pitch_deg": 28.3,
+     "support_margin_cm": 3.71,
+     "min_support_margin_cm": 3.68,
+     "pitch_range_deg": [
+      28.1,
+      28.3
+     ]
+    },
+    {
+     "name": "up",
+     "base_z": 0.1595,
+     "trunk_pitch_deg": -0.3,
+     "support_margin_cm": 3.59,
+     "min_support_margin_cm": 3.59,
+     "pitch_range_deg": [
+      -0.3,
+      28.3
+     ]
+    },
+    {
+     "name": "settle",
+     "base_z": 0.1599,
+     "trunk_pitch_deg": -0.4,
+     "support_margin_cm": 3.56,
+     "min_support_margin_cm": 3.56,
+     "pitch_range_deg": [
+      -0.4,
+      -0.3
+     ]
+    }
+   ],
+   "base_drop_cm": 3.45,
+   "foot_slip_cm": 0.35,
+   "max_torque_nm": 0.721,
+   "min_support_margin_cm": 3.4,
+   "fell": false,
+   "stand_base_z": 0.162,
+   "extras": {},
+   "key": "head_down",
+   "label": "頭不抬（對照）"
+  },
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.1294,
+     "trunk_pitch_deg": 27.3,
+     "support_margin_cm": 3.09,
+     "min_support_margin_cm": 3.08,
+     "pitch_range_deg": [
+      -1.1,
+      27.3
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1279,
+     "trunk_pitch_deg": 27.6,
+     "support_margin_cm": 3.14,
+     "min_support_margin_cm": 3.09,
+     "pitch_range_deg": [
+      27.3,
+      27.6
+     ]
+    },
+    {
+     "name": "up",
+     "base_z": 0.1594,
+     "trunk_pitch_deg": -0.4,
+     "support_margin_cm": 3.6,
+     "min_support_margin_cm": 3.14,
+     "pitch_range_deg": [
+      -0.4,
+      27.6
+     ]
+    },
+    {
+     "name": "settle",
+     "base_z": 0.1598,
+     "trunk_pitch_deg": -0.5,
+     "support_margin_cm": 3.56,
+     "min_support_margin_cm": 3.56,
+     "pitch_range_deg": [
+      -0.5,
+      -0.4
+     ]
+    }
+   ],
+   "base_drop_cm": 3.41,
+   "foot_slip_cm": 0.38,
+   "max_torque_nm": 0.711,
+   "min_support_margin_cm": 3.08,
+   "fell": false,
+   "stand_base_z": 0.162,
+   "extras": {},
+   "key": "fast",
+   "label": "快：1.5 秒蹲下、1.5 秒起立"
+  },
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.1287,
+     "trunk_pitch_deg": 27.3,
+     "support_margin_cm": 3.1,
+     "min_support_margin_cm": 3.09,
+     "pitch_range_deg": [
+      -1.1,
+      27.3
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1277,
+     "trunk_pitch_deg": 27.6,
+     "support_margin_cm": 3.12,
+     "min_support_margin_cm": 3.1,
+     "pitch_range_deg": [
+      27.3,
+      27.6
+     ]
+    },
+    {
+     "name": "up",
+     "base_z": 0.1596,
+     "trunk_pitch_deg": -0.2,
+     "support_margin_cm": 3.57,
+     "min_support_margin_cm": 3.1,
+     "pitch_range_deg": [
+      -0.2,
+      27.6
+     ]
+    },
+    {
+     "name": "settle",
+     "base_z": 0.16,
+     "trunk_pitch_deg": -0.4,
+     "support_margin_cm": 3.55,
+     "min_support_margin_cm": 3.55,
+     "pitch_range_deg": [
+      -0.4,
+      -0.2
+     ]
+    }
+   ],
+   "base_drop_cm": 3.43,
+   "foot_slip_cm": 0.35,
+   "max_torque_nm": 0.651,
+   "min_support_margin_cm": 3.09,
+   "fell": false,
+   "stand_base_z": 0.162,
+   "extras": {},
+   "key": "slow",
+   "label": "慢：6 秒蹲下、6 秒起立"
+  },
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.1276,
+     "trunk_pitch_deg": 29.2,
+     "support_margin_cm": 3.43,
+     "min_support_margin_cm": 3.43,
+     "pitch_range_deg": [
+      -0.4,
+      29.2
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1257,
+     "trunk_pitch_deg": 29.6,
+     "support_margin_cm": 3.47,
+     "min_support_margin_cm": 3.43,
+     "pitch_range_deg": [
+      29.2,
+      29.6
+     ]
+    },
+    {
+     "name": "up",
+     "base_z": 0.1568,
+     "trunk_pitch_deg": 1.4,
+     "support_margin_cm": 3.89,
+     "min_support_margin_cm": 3.47,
+     "pitch_range_deg": [
+      1.4,
+      29.6
+     ]
+    },
+    {
+     "name": "settle",
+     "base_z": 0.1572,
+     "trunk_pitch_deg": 1.1,
+     "support_margin_cm": 3.85,
+     "min_support_margin_cm": 3.85,
+     "pitch_range_deg": [
+      1.1,
+      1.4
+     ]
+    }
+   ],
+   "base_drop_cm": 3.53,
+   "foot_slip_cm": 0.49,
+   "max_torque_nm": 0.707,
+   "min_support_margin_cm": 3.43,
+   "fell": false,
+   "stand_base_z": 0.161,
+   "extras": {},
+   "key": "kp70",
+   "label": "舵機 kp −30%"
+  },
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.1276,
+     "trunk_pitch_deg": 29.2,
+     "support_margin_cm": 3.43,
+     "min_support_margin_cm": 3.43,
+     "pitch_range_deg": [
+      -0.4,
+      29.2
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1257,
+     "trunk_pitch_deg": 29.6,
+     "support_margin_cm": 3.47,
+     "min_support_margin_cm": 3.43,
+     "pitch_range_deg": [
+      29.2,
+      29.6
+     ]
+    },
+    {
+     "name": "up",
+     "base_z": 0.1568,
+     "trunk_pitch_deg": 1.4,
+     "support_margin_cm": 3.89,
+     "min_support_margin_cm": 3.47,
+     "pitch_range_deg": [
+      1.4,
+      29.6
+     ]
+    },
+    {
+     "name": "settle",
+     "base_z": 0.1572,
+     "trunk_pitch_deg": 1.1,
+     "support_margin_cm": 3.85,
+     "min_support_margin_cm": 3.85,
+     "pitch_range_deg": [
+      1.1,
+      1.4
+     ]
+    }
+   ],
+   "base_drop_cm": 3.53,
+   "foot_slip_cm": 0.49,
+   "max_torque_nm": 0.707,
+   "min_support_margin_cm": 3.43,
+   "fell": false,
+   "stand_base_z": 0.161,
+   "extras": {},
+   "key": "kp70_f2",
+   "label": "kp −30%、力矩上限 2.0 N·m"
+  },
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.1292,
+     "trunk_pitch_deg": 27.3,
+     "support_margin_cm": 3.07,
+     "min_support_margin_cm": 3.07,
+     "pitch_range_deg": [
+      -1.0,
+      27.3
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1279,
+     "trunk_pitch_deg": 27.6,
+     "support_margin_cm": 3.12,
+     "min_support_margin_cm": 3.07,
+     "pitch_range_deg": [
+      27.3,
+      27.6
+     ]
+    },
+    {
+     "name": "up",
+     "base_z": 0.1595,
+     "trunk_pitch_deg": -0.2,
+     "support_margin_cm": 3.57,
+     "min_support_margin_cm": 3.11,
+     "pitch_range_deg": [
+      -0.2,
+      27.6
+     ]
+    },
+    {
+     "name": "settle",
+     "base_z": 0.1599,
+     "trunk_pitch_deg": -0.4,
+     "support_margin_cm": 3.54,
+     "min_support_margin_cm": 3.54,
+     "pitch_range_deg": [
+      -0.4,
+      -0.2
+     ]
+    }
+   ],
+   "base_drop_cm": 3.41,
+   "foot_slip_cm": 0.34,
+   "max_torque_nm": 0.668,
+   "min_support_margin_cm": 3.07,
+   "fell": false,
+   "stand_base_z": 0.162,
+   "extras": {},
+   "key": "mu04",
+   "label": "地板摩擦 0.4（比較滑）"
+  },
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.1291,
+     "trunk_pitch_deg": 27.3,
+     "support_margin_cm": 3.07,
+     "min_support_margin_cm": 3.07,
+     "pitch_range_deg": [
+      -1.1,
+      27.3
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1278,
+     "trunk_pitch_deg": 27.6,
+     "support_margin_cm": 3.11,
+     "min_support_margin_cm": 3.07,
+     "pitch_range_deg": [
+      27.3,
+      27.6
+     ]
+    },
+    {
+     "name": "up",
+     "base_z": 0.1595,
+     "trunk_pitch_deg": -0.3,
+     "support_margin_cm": 3.57,
+     "min_support_margin_cm": 3.1,
+     "pitch_range_deg": [
+      -0.3,
+      27.6
+     ]
+    },
+    {
+     "name": "settle",
+     "base_z": 0.1599,
+     "trunk_pitch_deg": -0.4,
+     "support_margin_cm": 3.55,
+     "min_support_margin_cm": 3.55,
+     "pitch_range_deg": [
+      -0.4,
+      -0.3
+     ]
+    }
+   ],
+   "base_drop_cm": 3.42,
+   "foot_slip_cm": 0.34,
+   "max_torque_nm": 0.665,
+   "min_support_margin_cm": 3.07,
+   "fell": false,
+   "stand_base_z": 0.162,
+   "extras": {},
+   "key": "playground_solver",
+   "label": "Playground 的求解器設定"
+  },
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.1276,
+     "trunk_pitch_deg": 29.1,
+     "support_margin_cm": 3.79,
+     "min_support_margin_cm": 3.6,
+     "pitch_range_deg": [
+      -0.4,
+      29.1
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1261,
+     "trunk_pitch_deg": 29.4,
+     "support_margin_cm": 3.84,
+     "min_support_margin_cm": 3.79,
+     "pitch_range_deg": [
+      29.2,
+      29.4
+     ]
+    },
+    {
+     "name": "up",
+     "base_z": 0.1579,
+     "trunk_pitch_deg": 0.6,
+     "support_margin_cm": 3.82,
+     "min_support_margin_cm": 3.82,
+     "pitch_range_deg": [
+      0.6,
+      29.5
+     ]
+    },
+    {
+     "name": "settle",
+     "base_z": 0.1584,
+     "trunk_pitch_deg": 0.4,
+     "support_margin_cm": 3.79,
+     "min_support_margin_cm": 3.79,
+     "pitch_range_deg": [
+      0.4,
+      0.5
+     ]
+    }
+   ],
+   "base_drop_cm": 3.5,
+   "foot_slip_cm": 0.41,
+   "max_torque_nm": 0.884,
+   "min_support_margin_cm": 3.6,
+   "fell": false,
+   "stand_base_z": 0.1611,
+   "extras": {},
+   "key": "mass_high",
+   "label": "加裝件取上限（單板 Pi 4，質量預算 p2_single_pi4）"
+  },
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.1249,
+     "trunk_pitch_deg": 32.6,
+     "support_margin_cm": 4.49,
+     "min_support_margin_cm": 3.86,
+     "pitch_range_deg": [
+      0.7,
+      32.6
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1228,
+     "trunk_pitch_deg": 33.1,
+     "support_margin_cm": 4.59,
+     "min_support_margin_cm": 4.48,
+     "pitch_range_deg": [
+      32.6,
+      33.1
+     ]
+    },
+    {
+     "name": "up",
+     "base_z": 0.1542,
+     "trunk_pitch_deg": 3.4,
+     "support_margin_cm": 4.5,
+     "min_support_margin_cm": 4.5,
+     "pitch_range_deg": [
+      3.4,
+      33.1
+     ]
+    },
+    {
+     "name": "settle",
+     "base_z": 0.1546,
+     "trunk_pitch_deg": 3.1,
+     "support_margin_cm": 4.46,
+     "min_support_margin_cm": 4.46,
+     "pitch_range_deg": [
+      3.1,
+      3.3
+     ]
+    }
+   ],
+   "base_drop_cm": 3.67,
+   "foot_slip_cm": 0.56,
+   "max_torque_nm": 0.978,
+   "min_support_margin_cm": 3.86,
+   "fell": false,
+   "stand_base_z": 0.1595,
+   "extras": {},
+   "key": "mass_high_kp70",
+   "label": "加裝件取上限＋kp −30%"
+  },
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.1292,
+     "trunk_pitch_deg": 27.3,
+     "support_margin_cm": 3.08,
+     "min_support_margin_cm": 3.08,
+     "pitch_range_deg": [
+      -1.1,
+      27.3
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1278,
+     "trunk_pitch_deg": 27.6,
+     "support_margin_cm": 3.12,
+     "min_support_margin_cm": 3.08,
+     "pitch_range_deg": [
+      27.3,
+      27.6
+     ]
+    },
+    {
+     "name": "up",
+     "base_z": 0.1595,
+     "trunk_pitch_deg": -0.3,
+     "support_margin_cm": 3.58,
+     "min_support_margin_cm": 3.11,
+     "pitch_range_deg": [
+      -0.3,
+      27.6
+     ]
+    },
+    {
+     "name": "settle",
+     "base_z": 0.1599,
+     "trunk_pitch_deg": -0.4,
+     "support_margin_cm": 3.56,
+     "min_support_margin_cm": 3.56,
+     "pitch_range_deg": [
+      -0.4,
+      -0.3
+     ]
+    }
+   ],
+   "base_drop_cm": 3.42,
+   "foot_slip_cm": 0.35,
+   "max_torque_nm": 0.787,
+   "min_support_margin_cm": 3.08,
+   "fell": false,
+   "stand_base_z": 0.162,
+   "extras": {},
+   "key": "stall_200ms",
+   "label": "蹲到一半控制迴圈卡 0.2 秒"
+  },
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.129,
+     "trunk_pitch_deg": 27.6,
+     "support_margin_cm": 3.17,
+     "min_support_margin_cm": 2.69,
+     "pitch_range_deg": [
+      -1.1,
+      27.7
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1278,
+     "trunk_pitch_deg": 27.6,
+     "support_margin_cm": 3.13,
+     "min_support_margin_cm": 3.13,
+     "pitch_range_deg": [
+      27.5,
+      27.6
+     ]
+    },
+    {
+     "name": "up",
+     "base_z": 0.1595,
+     "trunk_pitch_deg": -0.3,
+     "support_margin_cm": 3.58,
+     "min_support_margin_cm": 3.12,
+     "pitch_range_deg": [
+      -0.3,
+      27.6
+     ]
+    },
+    {
+     "name": "settle",
+     "base_z": 0.1599,
+     "trunk_pitch_deg": -0.4,
+     "support_margin_cm": 3.56,
+     "min_support_margin_cm": 3.56,
+     "pitch_range_deg": [
+      -0.4,
+      -0.3
+     ]
+    }
+   ],
+   "base_drop_cm": 3.42,
+   "foot_slip_cm": 0.36,
+   "max_torque_nm": 3.23,
+   "min_support_margin_cm": 2.69,
+   "fell": false,
+   "stand_base_z": 0.162,
+   "extras": {},
+   "key": "stall_1s",
+   "label": "蹲到一半控制迴圈卡 1 秒，恢復後目標直接跳到該到的位置"
+  },
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.129,
+     "trunk_pitch_deg": 27.3,
+     "support_margin_cm": 3.09,
+     "min_support_margin_cm": 3.09,
+     "pitch_range_deg": [
+      -1.1,
+      27.3
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1278,
+     "trunk_pitch_deg": 27.6,
+     "support_margin_cm": 3.12,
+     "min_support_margin_cm": 3.09,
+     "pitch_range_deg": [
+      27.3,
+      27.6
+     ]
+    },
+    {
+     "name": "up",
+     "base_z": 0.1595,
+     "trunk_pitch_deg": -0.3,
+     "support_margin_cm": 3.58,
+     "min_support_margin_cm": 3.11,
+     "pitch_range_deg": [
+      -0.3,
+      27.6
+     ]
+    },
+    {
+     "name": "settle",
+     "base_z": 0.1599,
+     "trunk_pitch_deg": -0.4,
+     "support_margin_cm": 3.56,
+     "min_support_margin_cm": 3.56,
+     "pitch_range_deg": [
+      -0.4,
+      -0.3
+     ]
+    }
+   ],
+   "base_drop_cm": 3.42,
+   "foot_slip_cm": 0.35,
+   "max_torque_nm": 0.666,
+   "min_support_margin_cm": 3.09,
+   "fell": false,
+   "stand_base_z": 0.162,
+   "extras": {},
+   "key": "stall_1s_pause",
+   "label": "蹲到一半控制迴圈卡 1 秒，時間軸跟著暫停"
+  },
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.1549,
+     "trunk_pitch_deg": 6.1,
+     "support_margin_cm": 3.36,
+     "min_support_margin_cm": 3.36,
+     "pitch_range_deg": [
+      -1.1,
+      6.1
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1533,
+     "trunk_pitch_deg": 6.5,
+     "support_margin_cm": 3.42,
+     "min_support_margin_cm": 3.36,
+     "pitch_range_deg": [
+      6.2,
+      6.5
+     ]
+    },
+    {
+     "name": "up",
+     "base_z": 0.1599,
+     "trunk_pitch_deg": -0.3,
+     "support_margin_cm": 3.55,
+     "min_support_margin_cm": 3.39,
+     "pitch_range_deg": [
+      -0.3,
+      6.5
+     ]
+    },
+    {
+     "name": "settle",
+     "base_z": 0.1602,
+     "trunk_pitch_deg": -0.4,
+     "support_margin_cm": 3.54,
+     "min_support_margin_cm": 3.54,
+     "pitch_range_deg": [
+      -0.4,
+      -0.3
+     ]
+    }
+   ],
+   "base_drop_cm": 0.87,
+   "foot_slip_cm": 0.29,
+   "max_torque_nm": 0.579,
+   "min_support_margin_cm": 3.36,
+   "fell": false,
+   "stand_base_z": 0.162,
+   "extras": {},
+   "key": "freeze_25",
+   "label": "蹲到 25% 停住 10 秒再起立"
+  },
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.1469,
+     "trunk_pitch_deg": 13.2,
+     "support_margin_cm": 3.28,
+     "min_support_margin_cm": 3.27,
+     "pitch_range_deg": [
+      -1.1,
+      13.2
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1453,
+     "trunk_pitch_deg": 13.6,
+     "support_margin_cm": 3.34,
+     "min_support_margin_cm": 3.28,
+     "pitch_range_deg": [
+      13.3,
+      13.6
+     ]
+    },
+    {
+     "name": "up",
+     "base_z": 0.1598,
+     "trunk_pitch_deg": -0.2,
+     "support_margin_cm": 3.58,
+     "min_support_margin_cm": 3.31,
+     "pitch_range_deg": [
+      -0.2,
+      13.6
+     ]
+    },
+    {
+     "name": "settle",
+     "base_z": 0.1601,
+     "trunk_pitch_deg": -0.4,
+     "support_margin_cm": 3.55,
+     "min_support_margin_cm": 3.55,
+     "pitch_range_deg": [
+      -0.4,
+      -0.2
+     ]
+    }
+   ],
+   "base_drop_cm": 1.67,
+   "foot_slip_cm": 0.31,
+   "max_torque_nm": 0.613,
+   "min_support_margin_cm": 3.27,
+   "fell": false,
+   "stand_base_z": 0.162,
+   "extras": {},
+   "key": "freeze_50",
+   "label": "蹲到 50% 停住 10 秒再起立"
+  },
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.1383,
+     "trunk_pitch_deg": 20.3,
+     "support_margin_cm": 3.19,
+     "min_support_margin_cm": 3.18,
+     "pitch_range_deg": [
+      -1.1,
+      20.3
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1367,
+     "trunk_pitch_deg": 20.6,
+     "support_margin_cm": 3.23,
+     "min_support_margin_cm": 3.19,
+     "pitch_range_deg": [
+      20.3,
+      20.6
+     ]
+    },
+    {
+     "name": "up",
+     "base_z": 0.1596,
+     "trunk_pitch_deg": -0.2,
+     "support_margin_cm": 3.59,
+     "min_support_margin_cm": 3.22,
+     "pitch_range_deg": [
+      -0.2,
+      20.6
+     ]
+    },
+    {
+     "name": "settle",
+     "base_z": 0.16,
+     "trunk_pitch_deg": -0.4,
+     "support_margin_cm": 3.56,
+     "min_support_margin_cm": 3.56,
+     "pitch_range_deg": [
+      -0.4,
+      -0.2
+     ]
+    }
+   ],
+   "base_drop_cm": 2.53,
+   "foot_slip_cm": 0.34,
+   "max_torque_nm": 0.642,
+   "min_support_margin_cm": 3.18,
+   "fell": false,
+   "stand_base_z": 0.162,
+   "extras": {},
+   "key": "freeze_75",
+   "label": "蹲到 75% 停住 10 秒再起立"
+  },
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.1192,
+     "trunk_pitch_deg": 92.0,
+     "support_margin_cm": -2.75,
+     "min_support_margin_cm": -2.97,
+     "pitch_range_deg": [
+      -1.1,
+      93.0
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1069,
+     "trunk_pitch_deg": 92.0,
+     "support_margin_cm": -2.17,
+     "min_support_margin_cm": -2.74,
+     "pitch_range_deg": [
+      91.2,
+      92.1
+     ]
+    },
+    {
+     "name": "up",
+     "base_z": 0.0969,
+     "trunk_pitch_deg": 86.0,
+     "support_margin_cm": -3.88,
+     "min_support_margin_cm": -3.88,
+     "pitch_range_deg": [
+      86.0,
+      92.4
+     ]
+    },
+    {
+     "name": "settle",
+     "base_z": 0.0841,
+     "trunk_pitch_deg": 81.1,
+     "support_margin_cm": -5.39,
+     "min_support_margin_cm": -5.39,
+     "pitch_range_deg": [
+      81.1,
+      85.9
+     ]
+    }
+   ],
+   "base_drop_cm": 7.79,
+   "foot_slip_cm": 1.42,
+   "max_torque_nm": 0.464,
+   "min_support_margin_cm": -5.39,
+   "fell": true,
+   "stand_base_z": 0.162,
+   "extras": {},
+   "key": "limp_mid",
+   "label": "蹲到一半時放鬆（kp 0.5）"
+  },
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.1292,
+     "trunk_pitch_deg": 27.3,
+     "support_margin_cm": 3.09,
+     "min_support_margin_cm": 3.08,
+     "pitch_range_deg": [
+      -1.1,
+      27.3
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1112,
+     "trunk_pitch_deg": 93.0,
+     "support_margin_cm": -2.49,
+     "min_support_margin_cm": -3.11,
+     "pitch_range_deg": [
+      27.3,
+      94.0
+     ]
+    },
+    {
+     "name": "up",
+     "base_z": 0.0983,
+     "trunk_pitch_deg": 86.6,
+     "support_margin_cm": -3.97,
+     "min_support_margin_cm": -3.97,
+     "pitch_range_deg": [
+      86.6,
+      93.0
+     ]
+    },
+    {
+     "name": "settle",
+     "base_z": 0.0851,
+     "trunk_pitch_deg": 81.6,
+     "support_margin_cm": -5.51,
+     "min_support_margin_cm": -5.51,
+     "pitch_range_deg": [
+      81.6,
+      86.5
+     ]
+    }
+   ],
+   "base_drop_cm": 7.69,
+   "foot_slip_cm": 1.29,
+   "max_torque_nm": 0.542,
+   "min_support_margin_cm": -5.51,
+   "fell": true,
+   "stand_base_z": 0.162,
+   "extras": {},
+   "key": "limp_crouched",
+   "label": "蹲好後放鬆（kp 0.5）"
+  },
+  {
+   "segments": [
+    {
+     "name": "stand",
+     "base_z": 0.1616,
+     "trunk_pitch_deg": -0.9,
+     "support_margin_cm": 3.45,
+     "min_support_margin_cm": 3.4,
+     "pitch_range_deg": [
+      -1.1,
+      -0.9
+     ]
+    },
+    {
+     "name": "limp",
+     "base_z": 0.0375,
+     "trunk_pitch_deg": 96.3,
+     "support_margin_cm": -14.85,
+     "min_support_margin_cm": -14.85,
+     "pitch_range_deg": [
+      -0.8,
+      96.4
+     ]
+    }
+   ],
+   "base_drop_cm": 12.45,
+   "foot_slip_cm": 4.66,
+   "max_torque_nm": 0.446,
+   "min_support_margin_cm": -14.85,
+   "fell": true,
+   "stand_base_z": 0.162,
+   "extras": {},
+   "key": "limp_standing",
+   "label": "站著時放鬆（kp 0.5），對照"
+  },
+  {
+   "segments": [
+    {
+     "name": "down",
+     "base_z": 0.0975,
+     "trunk_pitch_deg": 94.7,
+     "support_margin_cm": -5.33,
+     "min_support_margin_cm": -12.41,
+     "pitch_range_deg": [
+      -1.1,
+      94.7
+     ]
+    },
+    {
+     "name": "hold",
+     "base_z": 0.1005,
+     "trunk_pitch_deg": 94.2,
+     "support_margin_cm": -4.83,
+     "min_support_margin_cm": -5.31,
+     "pitch_range_deg": [
+      94.2,
+      94.7
+     ]
+    }
+   ],
+   "base_drop_cm": 6.45,
+   "foot_slip_cm": 0.41,
+   "max_torque_nm": 1.32,
+   "min_support_margin_cm": -12.41,
+   "fell": true,
+   "stand_base_z": 0.162,
+   "extras": {},
+   "key": "sit3_direct",
+   "label": "對照：從站姿直接換到「坐下3」"
+  }
+ ]
+}
