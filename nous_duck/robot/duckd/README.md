@@ -34,6 +34,7 @@ duckd 不做語音、視覺、決策（那是 Nous 的事，[ADR-0001](../../doc
 | [`tools/head_check.sh`](tools/head_check.sh) | 實機頭部檢查：前置檢查 → 接手 → 端到端與租約量測 → 釋放 | T1 |
 | `duckd/gait_host.py`、`duckd/gait_fakes.py` | 步態 host：以 importlib 載入上游步態腳本、把手把換成仲裁器；假硬體介面（mock） | A7 |
 | `duckd/localctl.py`、`duckd/ctl.py` | 本機控制（UNIX socket）：`status`、`engage`、`release`、`estop`、`clear-estop`；`--legs` 時再加 `engage-legs`、`posture crouch|stand`、`posture-stop` | A8 |
+| `duckd/imu_mount.py`、[`tools/imu_tilt_check.py`](tools/imu_tilt_check.py)、[`tools/imu_calibrate_mounted.py`](tools/imu_calibrate_mounted.py) | 這隻鴨子的 BNO055 裝轉了 90°：在上游 `Imu` 建構時改寫軸向對應（不改上游）；步態 host 預設套用。傾斜測試與用修正後軸向校正的工具（[紀錄](../../docs/validation/bno055-i2c-2026-11-28.md) §6、§7） | IMU |
 | `duckd/posture.py`、`duckd/postures/postures.json` | 原地蹲低／起立（ADR-0020 草案）：站姿 ↔ 蹲姿一條路徑、時間軸每拍最多前進 0.03 秒、收手停在原地、跟隨誤差自動停住。姿勢檔由 `sim/posture_sim/poses.py` 產生 | 姿勢 |
 | `duckd/settings_in.py` | 讀「[鴨子設定](../settings/README.md)」（ADR-0019）：啟動時讀頭部角速度與活動範圍，之後每秒看一次有沒有變，即時套用功能開關、聽聲轉頭的時間與死區、對話小動作幅度、presence 的表情對應；回報實際在用的值 | 設定 |
 | `duckd/mock_hub.py` | **假的** hub（mock）：測試與開發用，不是 Nous，也不是 B 線的 hub | 測試 |
