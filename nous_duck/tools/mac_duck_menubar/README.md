@@ -1,6 +1,6 @@
 # 鴨子 Nous：Mac 選單列 App（H 線）
 
-狀態：**第一版**（2026-11-28）。驗證層級：自我測試（44 項，fixture）；在這台 Mac 上建置並對執行中的 8791 讀狀態；App 自己存下的視窗畫面（設定畫面自動打開、Pi 離線頁）。**Pi 開機、鴨子連上時的樣子還沒看過**；選單列本身要使用者親手試。紀錄見 [`docs/validation/mac-duck-menubar-2026-11-28.md`](../../docs/validation/mac-duck-menubar-2026-11-28.md)。
+狀態：**第一版，已裝在使用者的 Mac、使用者親手試過（Pi 關機時）**（2026-11-28）。驗證層級：自我測試（44 項，fixture）；在這台 Mac 上建置並對執行中的 8791 讀狀態；App 自己存下的視窗畫面（設定畫面自動打開、Pi 離線頁）。**Pi 開機、鴨子連上時的樣子還沒看過**；選單列本身要使用者親手試。紀錄見 [`docs/validation/mac-duck-menubar-2026-11-28.md`](../../docs/validation/mac-duck-menubar-2026-11-28.md)。
 
 ## 為什麼有這個
 

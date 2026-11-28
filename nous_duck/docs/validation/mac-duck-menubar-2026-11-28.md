@@ -75,4 +75,4 @@ bash nous_duck/tools/mac_duck_menubar/build.sh && "nous_duck/tools/mac_duck_menu
 
 2026-11-28，使用者在 H 線說「可以安裝」後執行 `bash nous_duck/tools/mac_duck_menubar/install.sh`：自我測試 44 項通過、建置、裝到 `~/Applications/Nous Duck.app`、`com.nousduck.menubar.plist` 通過 `plutil -lint` 並載入。`install.sh --status`：App 在、LaunchAgent 已載入、選單列圖示在跑，App 看到的狀態和 §3.2 相同（Pi 仍關機）。8791 的 Nous 沒有被重啟（pid 56695 不變）。
 
-使用者親手試：（待補）
+使用者親手試（2026-11-28，Pi 仍關機）：使用者回報「正常」。範圍是選單列圖示與狀態、「Nous 設定…」視窗；「鴨子設定…」在 Pi 關機時是灰的，**實際打開 Pi 的設定頁、區網權限提示、圖示變實心還沒試**（等 Pi 開機）。
