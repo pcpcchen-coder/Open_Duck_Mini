@@ -106,7 +106,7 @@ duck-link 沒有改：`state` 沒有新欄位（測試 `test_engage_legs_require
 - 測試：`servo_console/tests/test_controller.py` 加了單拍雜訊、單顆持續偏低、整組電源下陷，以及**用這次 1500 輪實測讀值重播**（`tests/fixtures/status_noise_2026-11-28.json`，實機量測，不是合成）：重播後沒有任何電壓、溫度警報。舊規則在同一份資料上會反覆發出低電壓警告（最低 6.0 V）。
 - 代價：真的過熱或沒電時，晚約 1 秒才反應。
 - 舵機控制台網頁的「舵機最低／最高電壓」仍然顯示原始讀值，所以還是會看到單拍的低值。
-- **還沒部署到 Pi**：Pi 上的舵機控制台和 duckd 都還是舊規則。
+- **已部署到 Pi**（使用者同意「好，部署」，commit `3ff202c`）：`deploy_duckd.sh` 後 `systemctl start duckd`，回讀 active、enabled、連上 Nous、沒有接手、沒有 `--legs`；`deploy_console.sh` 後 duck-console active、enabled、沒連匯流排、不需要 token（和部署前一樣）。兩邊的 `controller.py` 都有新的過濾函式。這次沒有在 Pi 上跑測試；新規則在實機上的行為還沒看過，要等下一次接手匯流排。
 
 ## 6. 限制
 
