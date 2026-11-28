@@ -69,6 +69,7 @@ def test_track_sound_uses_body_frame_and_is_clamped():
     t = [100.0]
     p = PerceptInput(lambda: t[0])
     h = make_harness(percept=p)
+    h.cmd("presence", {"state": "listening"})  # 聽聲轉頭只在對話中動
     p.feed(obs(kind="sound", yaw=1.2))
     assert h.cmd("track", {"target": "sound", "timeout_s": 1.0})["status"] == "accepted"
     for _ in range(100):

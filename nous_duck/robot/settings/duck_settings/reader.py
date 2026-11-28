@@ -135,10 +135,15 @@ class Watcher:
     def keys(self) -> list[str]:
         return [s.key for s in schema.SETTINGS if s.consumer == self.service]
 
-    def report(self, applied: dict[str, Any], note: str = "") -> None:
-        """寫下「這個服務現在實際在用的值」。內容沒變就不重寫（少寫 SD 卡）。寫不進去不影響服務。"""
+    def report(self, applied: dict[str, Any], note: str = "", inactive: dict[str, str] | None = None) -> None:
+        """寫下「這個服務現在實際在用的值」。內容沒變就不重寫（少寫 SD 卡）。寫不進去不影響服務。
+
+        `inactive`：值讀到了、但現在不會有效果的項目與原因（例如頭部沒有出力），設定頁不會對它們顯示「已生效」。
+        """
         body = {"service": self.service, "pid": os.getpid(), "schema_version": schema.SCHEMA_VERSION,
                 "revision": self.view.revision, "values": applied, "note": note}
+        if inactive:
+            body["inactive"] = {str(k): str(v)[:200] for k, v in inactive.items()}
         key = json.dumps(body, sort_keys=True, ensure_ascii=False)
         if key == self._reported:
             return

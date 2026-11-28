@@ -157,7 +157,7 @@ function refreshSavebar() {
 function applyText(s) { return s.apply === "restart" ? "改了要重啟 " + s.consumer : "約 1 秒內自動生效"; }
 function effectChip(s) {
   const e = s.effect || {};
-  const cls = { applied: "ok", pending: "warn", restart_needed: "warn", service_down: "off", not_reading: "bad", failed: "bad" }[e.state] || "off";
+  const cls = { applied: "ok", inactive: "warn", pending: "warn", restart_needed: "warn", service_down: "off", not_reading: "bad", failed: "bad" }[e.state] || "off";
   return h("span", { class: "chip " + cls, "data-effect": s.key }, e.label || "");
 }
 function lockedLoosen(s) {  // 隱私設定：這一頁不能往寬鬆的方向改

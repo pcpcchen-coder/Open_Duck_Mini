@@ -172,6 +172,28 @@ def test_effects_follow_what_services_report(served, store):
     assert by()["head.speed_deg_s"]["state"] == "not_reading"
 
 
+def test_inactive_reason_replaces_applied(served, store):
+    """duckd 回報「讀到了但現在不會動」（例如頭沒有出力）：不顯示「已生效」，照實顯示原因。"""
+    c, _ = served(services={"duckd": "active"})
+    by = lambda: {s["key"]: s["effect"] for s in c.call("/api/state")[1]["settings"]}  # noqa: E731
+    w = Watcher(store.directory, "duckd")
+    w.report({"features.presence_head_motion": True, "features.gestures": True},
+             inactive={"features.presence_head_motion": "頭部沒有出力：duckd 沒有接手頭部"})
+    e = by()
+    assert e["features.presence_head_motion"]["state"] == "inactive"
+    assert "頭部沒有出力" in e["features.presence_head_motion"]["label"] and "已生效" not in e["features.presence_head_motion"]["label"]
+    assert e["features.gestures"]["state"] == "applied"
+    w.report({"features.presence_head_motion": True, "features.gestures": True})  # 頭接手了：原因消失
+    assert by()["features.presence_head_motion"]["state"] == "applied"
+
+
+def test_head_auto_engage_defaults_off():
+    from duck_settings import schema
+
+    s = next(x for x in schema.SETTINGS if x.key == "features.head_auto_engage")
+    assert s.default is False and s.consumer == "duckd" and s.type == "bool"
+
+
 def test_expression_previews_are_rendered_by_duck_eyes(served):
     import duck_eyes
 

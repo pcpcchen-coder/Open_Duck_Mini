@@ -180,8 +180,14 @@ def _build() -> tuple[Setting, ...]:
     add = s.append
 
     # ------------------------------------------------------------ 功能開關
+    add(Setting("features.head_auto_engage", "features", "對話時讓頭出力", "bool", False,
+                "開著：對話開始（被叫醒、在聽、在想、在說）時 duckd 接手頭頸 4 顆舵機，頭才會跟著對話動；"
+                "對話結束 2 分鐘後放開，回到接手時的位置與扭力狀態。只碰頭部，腿不動。"
+                "舵機控制台連著匯流排、緊急停止、低電壓或過熱時不會接手（30 秒後再試）。關著：頭不會自己出力。",
+                consumer=DUCKD, basis="ADR-0014 補充 §A（2026-11-28）；只在 mock 上測過，實機還沒驗證"))
     add(Setting("features.track_sound", "features", "聽聲轉頭", "bool", True,
-                "有人說話時把頭轉向聲音。關掉後 Nous 要求聽聲轉頭會被拒絕，正在進行的也會停。",
+                "有人說話時把頭轉向聲音。只在對話中（被叫醒、在聽、在想、在說）才轉，對話外頭停在原地。"
+                "關掉後 Nous 要求聽聲轉頭會被拒絕，正在進行的也會停。",
                 consumer=DUCKD, basis=_HW_TEST))
     add(Setting("features.gestures", "features", "具名動作（點頭、搖頭、歪頭、張望）", "bool", True,
                 "Nous 可以要求鴨子做動作庫裡的動作。關掉後一律拒絕。", consumer=DUCKD))

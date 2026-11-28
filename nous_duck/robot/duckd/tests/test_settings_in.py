@@ -96,7 +96,7 @@ def test_main_build_uses_settings_unless_command_line_overrides(tmp_path):
     assert json.loads((tmp_path / "applied" / "duckd.json").read_text())["values"]["head.speed_deg_s"] == 25.0
     core, _ = build(args(settings_dir=None))  # 沒有設定來源：和以前一樣（30°/s、不設視窗）
     assert core.arbiter.limits.head_max_speed == pytest.approx(math.radians(30)) and core.arbiter.limits.head_window is None
-    assert core.settings_status is None and core.features == {"track_sound": True, "gestures": True, "presence_head_motion": True, "speaking_bob": True}
+    assert core.settings_status is None and core.features == {"track_sound": True, "gestures": True, "presence_head_motion": True, "speaking_bob": True, "head_auto_engage": False}
 
 
 def test_track_sound_switch_refuses_and_ends_tracking():

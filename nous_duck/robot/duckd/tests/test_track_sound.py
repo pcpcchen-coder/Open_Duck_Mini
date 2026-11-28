@@ -107,6 +107,8 @@ class Rig:
         self.t = [100.0]
         self.p = PerceptInput(lambda: self.t[0])
         self.h = make_harness(percept=self.p)
+        # 聽聲轉頭只在對話中動（ADR-0014 補充 §B）：這些測試都在「在聽」的時候
+        self.h.cmd("presence", {"state": "listening"})
 
     def run(self, seconds, speak_deg=None, alive=True):
         for i in range(round(seconds / 0.02)):
@@ -201,3 +203,18 @@ def test_head_mounted_mic_bearing_is_converted_with_current_head_yaw():
         r.h.run(0.02)
     assert r.h.body.head["head_yaw"] == pytest.approx(D(30) if D(30) <= 0.5 else 0.5, abs=0.03)
     assert len(r.h.events("tracking_acquired")) == 1
+
+
+def test_sound_tracking_pauses_outside_conversation():
+    """對話外（idle）頭不跟著聲音轉，回到對話才繼續（電視開著也不會被帶走）。"""
+    r = Rig()
+    r.run(0.5)  # 聲音來源先回報存活
+    assert r.h.cmd("track", {"target": "sound"})["status"] == "accepted"
+    r.h.cmd("presence", {"state": "idle"})
+    r.run(3.0, speak_deg=20.0)
+    assert r.h.core.tracking == "sound" and r.h.core.tracking_paused
+    assert abs(r.h.arbiter.head_goal["head_yaw"]) < 0.01
+    r.h.cmd("presence", {"state": "listening"})
+    r.run(3.0, speak_deg=20.0)
+    assert not r.h.core.tracking_paused
+    assert r.h.arbiter.head_goal["head_yaw"] > 0.1

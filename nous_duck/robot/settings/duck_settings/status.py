@@ -142,7 +142,11 @@ def effects(view: View, directory: Path, services: dict[str, dict]) -> dict[str,
             out[s.key] = {"state": "failed", "label": f"{s.consumer} 套用失敗：{why}"[:200]}
             continue
         shown = f"{running:g}" if isinstance(running, float) else ("開" if running is True else "關" if running is False else str(running))
-        if running == view.values[s.key]:
+        why_idle = (rep.get("inactive") or {}).get(s.key) if isinstance(rep.get("inactive"), dict) else None
+        if running == view.values[s.key] and why_idle:
+            # 值讀到了，但現在不會有效果（例如頭部沒有出力）：不寫「已生效」，照實說原因
+            out[s.key] = {"state": "inactive", "label": f"已讀到，但現在不會動：{why_idle}"[:200], "running": running}
+        elif running == view.values[s.key]:
             out[s.key] = {"state": "applied", "label": "已生效", "running": running}
         elif s.apply == "restart":
             out[s.key] = {"state": "restart_needed", "label": f"要重啟 {s.consumer} 才生效（現在用的是 {shown}）", "running": running}
