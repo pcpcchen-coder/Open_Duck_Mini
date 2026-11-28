@@ -86,5 +86,5 @@
 
 - 部署：`deploy_duckd.sh` → 啟動 duckd；`deploy_settings.sh` 只複製檔案、**沒有重啟**正在跑的 duck-settings（頁面還是舊版、`eyes.brightness` 仍是「硬體未到」），所以另外 `sudo systemctl restart duck-settings`。
 - 在 Pi 上用設定頁的 API（和頁面送的一樣）存 `eyes.brightness=0.5`、`eyes.fps=8`：約 1 秒內 duckd 回報 `brightness 0.5`、`fps_target 8`、**實際 8.0 fps**；設定頁兩項都顯示「已生效」。改回 `eyes.fps=15`：實際 15.0 fps。頭**沒接手**。
-- 亮度留在 0.5 給使用者目視；**畫面變暗還沒經使用者確認**。
+- 亮度留在 0.5 給使用者目視：使用者回覆「Dimmer, works」（兩片眼睛確實變暗）。
 - 無頭瀏覽器（Mac，模擬的 duckd）：改亮度、改幀率都顯示「已生效」，幀率 30 被拒絕。
