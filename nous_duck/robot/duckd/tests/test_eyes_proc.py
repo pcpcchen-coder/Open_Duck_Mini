@@ -78,3 +78,11 @@ def test_capability_degraded_only_while_child_reports_real_panels(proc):
     assert cap["status"] == "degraded"
     eyes._child_stats_at = time.monotonic() - 10  # 回報過期：不再說有實體螢幕
     assert eyes.panel_kind == "virtual_png"
+
+
+def test_brightness_and_fps_reach_child(proc):
+    eyes = proc()
+    assert wait_for(lambda: eyes.stats().get("frames", 0) > 0)
+    eyes.set_brightness(0.3)
+    eyes.set_fps(5)
+    assert wait_for(lambda: eyes.stats().get("brightness") == 0.3 and eyes.stats().get("fps_target") == 5.0)

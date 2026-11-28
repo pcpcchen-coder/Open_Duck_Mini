@@ -10,6 +10,7 @@
 """
 from __future__ import annotations
 
+import collections
 import logging
 import os
 import queue
@@ -44,6 +45,8 @@ class EyesOutput:
         self._de = duck_eyes
         self.panel_path = Path(panel_path) if panel_path else None
         self.fps = fps
+        self.brightness = 1.0  # 畫面亮度（軟體調暗；背光沒有 PWM）
+        self._shown_at: collections.deque = collections.deque(maxlen=64)  # 最近送出的時間，算實際幀率
         self._lock = threading.Lock()
         self._anim = duck_eyes.EyeAnimator("neutral", seed=seed, t0=0.0)
         self._t0 = time.monotonic()
@@ -101,12 +104,30 @@ class EyesOutput:
         with self._lock:
             self._audio_level, self._gaze = audio_level, gaze
 
+    #: 亮度與幀率的範圍（和 duck_settings 的 eyes.brightness／eyes.fps 一致；這裡再夾一次，不信任呼叫端）
+    BRIGHTNESS_RANGE = (0.1, 1.0)
+    FPS_RANGE = (2.0, 20.0)
+
+    def set_brightness(self, value: float) -> None:
+        lo, hi = self.BRIGHTNESS_RANGE
+        with self._lock:
+            self.brightness = min(hi, max(lo, float(value)))
+
+    def set_fps(self, value: float) -> None:
+        lo, hi = self.FPS_RANGE
+        with self._lock:
+            self.fps = min(hi, max(lo, float(value)))
+
     def apply_snapshot(self, snap: dict) -> None:
         """眼睛子行程用：照父行程（duckd）送來的快照畫。表情已經由父行程決定（含 express 到期），這裡不再判斷。"""
         with self._lock:
             self._base, self._override = snap["expression"], None
             self._device = snap["device"]
             self._audio_level, self._gaze = snap.get("audio_level"), snap.get("gaze")
+        if "brightness" in snap:
+            self.set_brightness(snap["brightness"])
+        if "fps" in snap:
+            self.set_fps(snap["fps"])
 
     @property
     def expression(self) -> str:
@@ -128,8 +149,12 @@ class EyesOutput:
             self._anim.set_expression(self._current(), t)
             frame = self._anim.frame(t, self._de.Inputs(gaze=self._gaze, audio_level=self._audio_level))
             device = self._device
+            brightness = self.brightness
         t0 = time.perf_counter()
         left, right = self._de.render_frame(frame, device, t)
+        if brightness < 1.0:
+            k = int(round(brightness * 256))
+            left, right = ((img.astype(self._np.uint16) * k >> 8).astype(self._np.uint8) for img in (left, right))
         self.render_ms.append((time.perf_counter() - t0) * 1000.0)
         if len(self.render_ms) > 200:
             del self.render_ms[:100]
@@ -152,6 +177,7 @@ class EyesOutput:
 
     def show(self, left, right) -> None:
         """送到實體螢幕（有的話）並寫虛擬面板。"""
+        self._shown_at.append(time.monotonic())
         if self.hardware is not None:
             t0 = time.perf_counter()
             self.hardware.show(left, right)
@@ -192,10 +218,9 @@ class EyesOutput:
         self._queue: queue.Queue = queue.Queue(maxsize=1)
 
         def render_loop() -> None:
-            period = 1.0 / self.fps
             next_t = time.monotonic()
             while True:
-                next_t += period
+                next_t += 1.0 / self.fps  # 每圈重讀：設定頁改幀率即時生效
                 wait = next_t - time.monotonic()
                 if wait < 0:  # 落後就不追，從現在重新起算
                     next_t, wait = time.monotonic(), 0.0
@@ -242,7 +267,11 @@ class EyesOutput:
                 logging.getLogger("duckd.eyes").exception("關閉實體螢幕失敗")
 
     def stats(self) -> dict:
-        out: dict = {"panel": self.panel_kind, "frames": self.frames, "expression": self.expression}
+        out: dict = {"panel": self.panel_kind, "frames": self.frames, "expression": self.expression,
+                     "brightness": self.brightness, "fps_target": self.fps}
+        recent = [t for t in self._shown_at if time.monotonic() - t <= 3.0]
+        if len(recent) >= 2:
+            out["fps_actual"] = round((len(recent) - 1) / (recent[-1] - recent[0]), 1)  # 最近 3 秒
         if self.hardware_error:
             out["hardware_error"] = self.hardware_error
         ms = sorted(self.render_ms)

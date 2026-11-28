@@ -47,7 +47,9 @@ def test_startup_values_come_from_settings_and_are_reported(tmp_path):
     store.apply({"head.speed_deg_s": 45, "head.window_deg": 20, "hearing.settle_s": 1.4, "features.gestures": False}, "web")
     si = SettingsInput(tmp_path)
     assert si.startup == {"head.speed_deg_s": 45.0, "head.window_deg": 20.0} and si.status()["ok"]
-    h = make_harness(percept=FakePercept())
+    from duckd.eyes_out import EyesOutput
+
+    h = make_harness(percept=FakePercept(), eyes=EyesOutput(None))  # 眼睛的設定只有眼睛渲染在跑時才回報
     assert si.poll(h.core, force=True)
     assert h.core.sound.cfg.settle_s == 1.4 and h.core.features["gestures"] is False
     report = json.loads((tmp_path / "applied" / "duckd.json").read_text())

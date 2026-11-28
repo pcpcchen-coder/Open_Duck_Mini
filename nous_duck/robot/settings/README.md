@@ -46,8 +46,9 @@
 | presence → 表情 | `duckd/presence.py` 的 `EXPRESSION` | duckd | 原本改程式；現在即時 | 已實作 | `eyes.presence.<狀態>` 8 項 |
 | presence → 頭部小動作的角度與節奏 | `duckd/presence.py` 的常數 | duckd | 原本改程式 | 已實作 | 開關兩個（`features.presence_head_motion`、`features.speaking_bob`）＋幅度倍率 `head.presence_amplitude`（0～1）；個別角度沒接 |
 | 動作庫的動作內容 | `duckd/library/*.json` | duckd | 重新部署 | 已實作 | 沒接（動作要過載入檢查，ADR-0015） |
-| 眼睛虛擬面板的更新率 | `--eyes-fps 1` | duckd | 要重啟 | 已實作 | 沒接 |
-| 眼睛亮度、夜間調暗 | `duck_eyes/status.py` 的常數 | — | — | 硬體未到 | `eyes.brightness`（停用） |
+| 眼睛幀率 | `--eyes-fps`（服務預設 15） | duckd | 原本要重啟；現在即時 | 已實作 | `eyes.fps`（2～20，進階） |
+| 眼睛畫面亮度 | 沒有（全亮） | duckd | 即時 | 已實作（**軟體調暗**：BLK 在 GPIO 6，沒有硬體 PWM，背光一直全亮、不省電） | `eyes.brightness`（0.1～1） |
+| 夜間自動調暗 | `duck_eyes/status.py` 的常數 | — | — | 規劃中 | 沒接 |
 | 眨眼間隔 | 各表情的定義（`duck_eyes/expressions.py`） | duck_eyes | 改程式 | 已實作 | `eyes.auto_blink`（停用：還沒有開關可接） |
 | 麥克風裝在哪、正前方校正值、角度方向、是否校正 | Pi 的 `~/duck/doa/config/doa.json` | duck-doa | 原本要重啟；現在即時 | 已實作 | `calibration.mic.*` 4 項（量測值） |
 | 語音能量門檻、判斷語音的方式 | 同上 | duck-doa | 原本要重啟；現在即時 | 已實作 | `hearing.min_speech_energy`、`speech_source` |

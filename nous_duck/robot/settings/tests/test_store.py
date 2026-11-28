@@ -38,7 +38,7 @@ def test_one_bad_value_rejects_the_whole_batch_with_reasons(store):
 
 def test_unimplemented_settings_cannot_be_written_by_anyone(store):
     for source in ("web", "duck_link", "local_cli"):
-        for key, value in (("audio.volume_cap_night", 0.1), ("privacy.camera", False), ("features.track_face", False), ("eyes.brightness", 0.5)):
+        for key, value in (("audio.volume_cap_night", 0.1), ("privacy.camera", False), ("features.track_face", False), ("eyes.auto_blink", False)):
             with pytest.raises(SaveError) as e:
                 store.apply({key: value}, source)
             assert "還不能設定" in e.value.errors[key]

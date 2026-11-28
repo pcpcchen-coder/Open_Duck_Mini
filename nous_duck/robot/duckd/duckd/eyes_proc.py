@@ -125,6 +125,8 @@ class EyesProcess(EyesOutput):
                 "device": self._device,
                 "audio_level": self._audio_level,
                 "gaze": self._gaze,
+                "brightness": self.brightness,
+                "fps": self.fps,
             }
 
     # ---- 子行程管理 ----
